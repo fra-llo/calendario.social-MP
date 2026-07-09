@@ -247,6 +247,7 @@ document.addEventListener("click", (event) => {
 applySettings();
 renderColorPalette();
 purgeExpiredTrash();
+closeHamburgerMenu();
 render();
 initCloud();
 

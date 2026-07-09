@@ -408,12 +408,12 @@ body.is-dark .period-button:focus-visible {
   font-size: 1.1rem;
 }
 
-.hamburger-panel {
+#hamburgerPanel {
   position: absolute;
   z-index: 12;
   right: 0;
   top: calc(100% + 8px);
-  display: none;
+  display: none !important;
   gap: 6px;
   min-width: 220px;
   border: 1px solid var(--line);
@@ -423,12 +423,12 @@ body.is-dark .period-button:focus-visible {
   box-shadow: var(--shadow);
 }
 
-.hamburger-panel[hidden] {
+#hamburgerPanel[hidden] {
   display: none !important;
 }
 
-.hamburger-panel.is-open {
-  display: grid;
+#hamburgerPanel.is-open {
+  display: grid !important;
 }
 
 .menu-item {
