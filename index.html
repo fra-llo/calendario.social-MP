@@ -26,6 +26,7 @@
           <div class="hamburger-panel" id="hamburgerPanel" hidden>
             <button class="menu-item" id="settingsButton" type="button">Impostazioni</button>
             <button class="menu-item" id="statsButton" type="button">Statistiche</button>
+            <button class="menu-item" id="printButton" type="button">Stampa</button>
             <button class="menu-item" id="trashButton" type="button">Cestino</button>
             <button class="menu-item" id="logoutButton" type="button" hidden>Esci</button>
           </div>
@@ -114,21 +115,25 @@
       <section class="workspace">
         <header class="calendar-toolbar">
           <div class="period-controls">
-            <button class="icon-button" id="previousPeriod" type="button" aria-label="Periodo precedente">‹</button>
+            <button class="icon-button" id="previousPeriod" type="button" aria-label="Periodo precedente" title="Periodo precedente">‹</button>
             <button class="period-button" id="periodButton" type="button" aria-label="Scegli una data">
               <span id="periodLabel"></span>
             </button>
-            <button class="icon-button" id="nextPeriod" type="button" aria-label="Periodo successivo">›</button>
+            <button class="icon-button" id="nextPeriod" type="button" aria-label="Periodo successivo" title="Periodo successivo">›</button>
+            <button class="secondary-action compact-action" id="todayButton" type="button" title="Torna a oggi">Oggi</button>
           </div>
           <div class="toolbar-actions">
+            <button class="primary-action compact-action" id="toolbarNewPostButton" type="button" title="Nuovo contenuto">+ Nuovo</button>
+            <button class="secondary-action compact-action filter-action" id="filterToolbarButton" type="button" title="Apri ricerca e filtri">
+              Filtri <span id="filterBadge" hidden>0</span>
+            </button>
+            <button class="secondary-action compact-action" id="resetFiltersButton" type="button" hidden>Reset filtri</button>
             <div class="view-switch" aria-label="Tipo vista">
-              <button id="monthViewButton" type="button" aria-pressed="true">Mese</button>
-              <button id="weekViewButton" type="button" aria-pressed="false">Settimana</button>
-              <button id="dayViewButton" type="button" aria-pressed="false">Giorno</button>
-              <button id="listViewButton" type="button" aria-pressed="false">Lista</button>
+              <button id="monthViewButton" type="button" aria-pressed="true" title="Vista mese">Mese</button>
+              <button id="weekViewButton" type="button" aria-pressed="false" title="Vista settimana">Settimana</button>
+              <button id="dayViewButton" type="button" aria-pressed="false" title="Vista giorno">Giorno</button>
+              <button id="listViewButton" type="button" aria-pressed="false" title="Vista lista">Lista</button>
             </div>
-            <button class="secondary-action" id="todayButton" type="button">Oggi</button>
-            <button class="secondary-action" id="printButton" type="button">Stampa</button>
           </div>
         </header>
 

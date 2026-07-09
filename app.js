@@ -70,6 +70,9 @@ const sidebarResizer = document.querySelector("#sidebarResizer");
 const sidebarReopen = document.querySelector("#sidebarReopen");
 const periodLabel = document.querySelector("#periodLabel");
 const periodButton = document.querySelector("#periodButton");
+const filterBadge = document.querySelector("#filterBadge");
+const filterToolbarButton = document.querySelector("#filterToolbarButton");
+const resetFiltersButton = document.querySelector("#resetFiltersButton");
 const postDialog = document.querySelector("#postDialog");
 const postForm = document.querySelector("#postForm");
 const datePickerDialog = document.querySelector("#datePickerDialog");
@@ -194,8 +197,14 @@ let resizingSidebar = false;
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
 document.querySelector("#todayButton").addEventListener("click", goToToday);
-document.querySelector("#printButton").addEventListener("click", () => window.print());
+document.querySelector("#printButton").addEventListener("click", () => {
+  closeHamburgerMenu();
+  window.print();
+});
 document.querySelector("#newPostButton").addEventListener("click", () => openPostDialog());
+document.querySelector("#toolbarNewPostButton").addEventListener("click", () => openPostDialog());
+filterToolbarButton.addEventListener("click", openFiltersPanel);
+resetFiltersButton.addEventListener("click", resetFilters);
 document.querySelector("#settingsButton").addEventListener("click", openSettingsDialog);
 document.querySelector("#statsButton").addEventListener("click", openStatsDialog);
 document.querySelector("#trashButton").addEventListener("click", openTrashDialog);
@@ -282,6 +291,7 @@ function render() {
   renderStats();
   renderPlatformStats();
   renderWarnings();
+  updateFilterToolbar();
   if (statsDialog.open) renderThemeDistribution();
 }
 
@@ -1132,6 +1142,44 @@ function renderWarnings() {
     ok.textContent = "Nessun avviso per questo mese.";
     container.append(ok);
   }
+}
+
+function openFiltersPanel() {
+  const filtersPanel = document.querySelector(".sidebar .collapsible-panel");
+  if (document.body.classList.contains("is-sidebar-collapsed")) reopenSidebar();
+  if (filtersPanel) {
+    filtersPanel.open = true;
+    filtersPanel.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+}
+
+function updateFilterToolbar() {
+  const count = getActiveFilterCount();
+  filterBadge.textContent = String(count);
+  filterBadge.hidden = count === 0;
+  resetFiltersButton.hidden = count === 0;
+  filterToolbarButton.classList.toggle("has-active-filters", count > 0);
+}
+
+function getActiveFilterCount() {
+  return [
+    searchInput.value.trim(),
+    platformFilter.value !== "all",
+    statusFilter.value !== "all",
+    priorityFilter.value !== "all",
+    themeFilter.value !== "all",
+    ownerFilter.value.trim(),
+  ].filter(Boolean).length;
+}
+
+function resetFilters() {
+  searchInput.value = "";
+  platformFilter.value = "all";
+  statusFilter.value = "all";
+  priorityFilter.value = "all";
+  themeFilter.value = "all";
+  ownerFilter.value = "";
+  render();
 }
 
 function filteredPosts() {

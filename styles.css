@@ -537,7 +537,7 @@ body.is-dark .period-button:focus-visible {
 .period-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -546,9 +546,36 @@ body.is-dark .period-button:focus-visible {
 }
 
 .toolbar-actions {
-  flex: 0 1 auto;
+  flex: 1 1 420px;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.compact-action {
+  min-height: 34px;
+  padding: 0 11px;
+  white-space: nowrap;
+}
+
+.filter-action {
+  position: relative;
+}
+
+.filter-action.has-active-filters {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+#filterBadge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 5px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--accent);
+  font-size: 0.72rem;
+  line-height: 1;
 }
 
 .hamburger-menu {
@@ -640,6 +667,7 @@ body.is-dark .period-button:focus-visible {
 
 .view-switch {
   display: flex;
+  flex: 0 1 auto;
   gap: 4px;
   padding: 3px;
   border: 1px solid var(--line);
@@ -656,6 +684,7 @@ body.is-dark .period-button:focus-visible {
   background: transparent;
   font-size: 0.88rem;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .calendar-toolbar .secondary-action {
@@ -1120,6 +1149,16 @@ form footer > div {
     justify-content: flex-start;
   }
 
+  .view-switch {
+    order: 1;
+  }
+
+  #toolbarNewPostButton,
+  #filterToolbarButton,
+  #resetFiltersButton {
+    order: 2;
+  }
+
   h1 {
     max-width: none;
   }
@@ -1164,6 +1203,19 @@ form footer > div {
 
   .view-switch button {
     flex: 1;
+  }
+
+  .toolbar-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .toolbar-actions .view-switch {
+    grid-column: 1 / -1;
+  }
+
+  .toolbar-actions .compact-action {
+    width: 100%;
   }
 
   .period-button,
