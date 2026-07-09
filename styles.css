@@ -380,10 +380,6 @@ body.is-dark .period-button:focus-visible {
   line-height: 1.35;
 }
 
-.utility-actions {
-  grid-template-columns: 1fr;
-}
-
 .workspace {
   min-width: 0;
   padding: 28px;
@@ -402,6 +398,83 @@ body.is-dark .period-button:focus-visible {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.hamburger-menu {
+  position: relative;
+}
+
+.hamburger-button {
+  font-size: 1.1rem;
+}
+
+.hamburger-panel {
+  position: absolute;
+  z-index: 12;
+  right: 0;
+  top: calc(100% + 8px);
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  border: 0;
+  border-radius: 7px;
+  padding: 0 10px;
+  color: var(--ink);
+  background: transparent;
+  font-weight: 850;
+  text-align: left;
+}
+
+.menu-item:hover {
+  background: rgba(107, 103, 96, 0.12);
+}
+
+.collapsible-panel {
+  display: block;
+}
+
+.collapsible-panel summary,
+.members-details summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 900;
+  list-style: none;
+}
+
+.collapsible-panel summary::-webkit-details-marker,
+.members-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-panel summary::after,
+.members-details summary::after {
+  content: "Apri";
+  float: right;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.collapsible-panel[open] summary::after,
+.members-details[open] summary::after {
+  content: "Chiudi";
+}
+
+.collapsible-panel .platform-stats,
+.members-details .member-list {
+  margin-top: 12px;
 }
 
 .view-switch {

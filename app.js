@@ -79,6 +79,8 @@ const settingsDialog = document.querySelector("#settingsDialog");
 const settingsForm = document.querySelector("#settingsForm");
 const authBanner = document.querySelector("#authBanner");
 const authStatus = document.querySelector("#authStatus");
+const hamburgerButton = document.querySelector("#hamburgerButton");
+const hamburgerPanel = document.querySelector("#hamburgerPanel");
 const undoToast = document.querySelector("#undoToast");
 const undoMessage = document.querySelector("#undoMessage");
 const trashDialog = document.querySelector("#trashDialog");
@@ -178,6 +180,7 @@ document.querySelector("#printButton").addEventListener("click", () => window.pr
 document.querySelector("#newPostButton").addEventListener("click", () => openPostDialog());
 document.querySelector("#settingsButton").addEventListener("click", openSettingsDialog);
 document.querySelector("#trashButton").addEventListener("click", openTrashDialog);
+hamburgerButton.addEventListener("click", toggleHamburgerMenu);
 periodButton.addEventListener("click", openDatePicker);
 document.querySelector("#closeDatePicker").addEventListener("click", closeDatePicker);
 document.querySelector("#cancelDatePicker").addEventListener("click", closeDatePicker);
@@ -243,9 +246,13 @@ document.addEventListener("keydown", (event) => {
   }
   if (event.key === "Escape" && postDialog.open) closePostDialog();
 });
+document.addEventListener("click", (event) => {
+  if (!hamburgerPanel.hidden && !event.target.closest(".hamburger-menu")) closeHamburgerMenu();
+});
 
 applySettings();
 renderColorPalette();
+purgeExpiredTrash();
 render();
 initCloud();
 
@@ -373,6 +380,7 @@ function subscribeCloudData() {
 
     state.posts = snapshot.docs.map((doc) => normalizePost({ ...doc.data(), id: doc.id }));
     persistPosts(false);
+    purgeExpiredTrash();
     createDailyBackup();
     render();
   });
@@ -422,6 +430,7 @@ function register() {
 }
 
 function logout() {
+  closeHamburgerMenu();
   if (cloud.auth) cloud.auth.signOut();
 }
 
@@ -572,6 +581,7 @@ function renderMembers() {
 }
 
 function openTrashDialog() {
+  closeHamburgerMenu();
   renderTrash();
   trashDialog.showModal();
 }
@@ -660,6 +670,26 @@ function clearUndo() {
   undoAction = null;
   undoToast.hidden = true;
   clearTimeout(undoTimer);
+}
+
+function purgeExpiredTrash() {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 30);
+  const expired = state.posts.filter((post) => post.deletedAt && new Date(post.deletedAt) < cutoff);
+  if (!expired.length) return;
+  state.posts = state.posts.filter((post) => !expired.some((item) => item.id === post.id));
+  persistPosts(false);
+  if (cloudActive()) expired.forEach((post) => deleteCloudPost(post.id));
+}
+
+function toggleHamburgerMenu() {
+  hamburgerPanel.hidden = !hamburgerPanel.hidden;
+  hamburgerButton.setAttribute("aria-expanded", String(!hamburgerPanel.hidden));
+}
+
+function closeHamburgerMenu() {
+  hamburgerPanel.hidden = true;
+  hamburgerButton.setAttribute("aria-expanded", "false");
 }
 
 function addMember() {
@@ -1042,6 +1072,7 @@ function renderHistory(history) {
 }
 
 function openSettingsDialog() {
+  closeHamburgerMenu();
   renderTargetSettings();
   defaultViewSetting.value = state.settings.defaultView;
   maxPostsPerDaySetting.value = state.settings.warningRules.maxPostsPerDay;

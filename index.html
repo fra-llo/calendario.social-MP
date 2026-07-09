@@ -21,7 +21,6 @@
       <span id="authStatus">Modalita locale</span>
       <div>
         <button class="secondary-action" id="loginButton" type="button">Login</button>
-        <button class="secondary-action" id="logoutButton" type="button" hidden>Esci</button>
       </div>
     </section>
 
@@ -33,8 +32,6 @@
         </div>
 
         <button class="primary-action" id="newPostButton" type="button">+ Nuovo contenuto</button>
-        <button class="secondary-action" id="settingsButton" type="button">Opzioni</button>
-        <button class="secondary-action" id="trashButton" type="button">Cestino</button>
 
         <section class="panel">
           <h2>Ricerca e filtri</h2>
@@ -86,10 +83,6 @@
             <input id="compactToggle" type="checkbox">
             Layout compatto
           </label>
-          <label class="check-row">
-            <input id="darkModeToggle" type="checkbox">
-            Modalita scura
-          </label>
         </section>
 
         <section class="panel stats">
@@ -99,29 +92,16 @@
           <div><span id="publishedCount">0</span><small>pubblicati</small></div>
         </section>
 
-        <section class="panel">
-          <h2>Piattaforme</h2>
+        <details class="panel collapsible-panel">
+          <summary>Piattaforme</summary>
           <div class="platform-stats" id="platformStats"></div>
-        </section>
+        </details>
 
         <section class="panel">
           <h2>Avvisi</h2>
           <div class="warning-list" id="warningList"></div>
         </section>
 
-        <section class="panel utility-actions">
-          <h2>Dati</h2>
-          <button class="secondary-action" id="exportCsvButton" type="button">Esporta CSV</button>
-          <button class="secondary-action" id="backupButton" type="button">Backup JSON</button>
-          <label class="file-button">
-            Importa CSV
-            <input id="importCsvInput" type="file" accept=".csv,text/csv">
-          </label>
-          <label class="file-button">
-            Ripristina backup
-            <input id="restoreInput" type="file" accept=".json,application/json">
-          </label>
-        </section>
       </aside>
 
       <section class="workspace">
@@ -142,6 +122,18 @@
             </div>
             <button class="secondary-action" id="todayButton" type="button">Oggi</button>
             <button class="secondary-action" id="printButton" type="button">Stampa</button>
+            <div class="hamburger-menu">
+              <button class="icon-button hamburger-button" id="hamburgerButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
+              <div class="hamburger-panel" id="hamburgerPanel" hidden>
+                <button class="menu-item" id="settingsButton" type="button">Impostazioni</button>
+                <button class="menu-item" id="trashButton" type="button">Cestino</button>
+                <label class="menu-item check-row">
+                  <input id="darkModeToggle" type="checkbox">
+                  Modalita scura
+                </label>
+                <button class="menu-item" id="logoutButton" type="button" hidden>Esci</button>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -374,7 +366,7 @@
     <dialog id="settingsDialog">
       <form id="settingsForm" method="dialog" class="settings-form">
         <header>
-          <h2>Opzioni calendario</h2>
+          <h2>Impostazioni</h2>
           <button class="ghost-button" id="closeSettings" type="button" aria-label="Chiudi">x</button>
         </header>
 
@@ -440,6 +432,22 @@
         </section>
 
         <section class="settings-section">
+          <h3>Backup e salvataggi</h3>
+          <div class="settings-grid">
+            <button class="secondary-action" id="exportCsvButton" type="button">Esporta CSV</button>
+            <button class="secondary-action" id="backupButton" type="button">Backup JSON</button>
+            <label class="file-button">
+              Importa CSV
+              <input id="importCsvInput" type="file" accept=".csv,text/csv">
+            </label>
+            <label class="file-button">
+              Ripristina backup
+              <input id="restoreInput" type="file" accept=".json,application/json">
+            </label>
+          </div>
+        </section>
+
+        <section class="settings-section">
           <h3>Accessi</h3>
           <p class="form-note" id="accessNote">Accedi per gestire la lista utenti.</p>
           <div class="access-current">
@@ -463,7 +471,10 @@
             </div>
             <button class="secondary-action" id="addMemberButton" type="button">Aggiungi utente</button>
           </div>
-          <div class="member-list" id="memberList"></div>
+          <details class="members-details">
+            <summary>Utenti autorizzati</summary>
+            <div class="member-list" id="memberList"></div>
+          </details>
         </section>
 
         <footer>
