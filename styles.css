@@ -1,5 +1,6 @@
 :root {
   color-scheme: light;
+  --sidebar-width: 270px;
   --bg: #f4f2ed;
   --surface: #ffffff;
   --surface-soft: #fbfaf7;
@@ -38,6 +39,11 @@ body {
   color: var(--ink);
   background: var(--bg);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.is-resizing-sidebar {
+  cursor: col-resize;
+  user-select: none;
 }
 
 button,
@@ -129,7 +135,7 @@ button {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 330px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width) 6px minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -137,9 +143,24 @@ button {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 26px;
+  padding: 24px;
   border-right: 1px solid var(--line);
   background: var(--surface-soft);
+  overflow: hidden;
+}
+
+.sidebar-resizer {
+  width: 6px;
+  min-height: 100%;
+  border: 0;
+  padding: 0;
+  cursor: col-resize;
+  background: transparent;
+}
+
+.sidebar-resizer:hover,
+.sidebar-resizer:focus-visible {
+  background: rgba(15, 118, 110, 0.2);
 }
 
 .eyebrow {
@@ -159,8 +180,8 @@ h3 {
 }
 
 h1 {
-  max-width: 18ch;
-  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  max-width: 16ch;
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
   line-height: 1.08;
 }
 
@@ -905,6 +926,10 @@ form footer > div {
 @media (max-width: 1080px) {
   .app-shell {
     grid-template-columns: 1fr;
+  }
+
+  .sidebar-resizer {
+    display: none;
   }
 
   .sidebar {

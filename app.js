@@ -57,6 +57,7 @@ const listView = document.querySelector("#listView");
 const weekdays = document.querySelector("#weekdays");
 const appShell = document.querySelector(".app-shell");
 const authGate = document.querySelector("#authGate");
+const sidebarResizer = document.querySelector("#sidebarResizer");
 const periodLabel = document.querySelector("#periodLabel");
 const periodButton = document.querySelector("#periodButton");
 const postDialog = document.querySelector("#postDialog");
@@ -171,6 +172,7 @@ const cloud = {
 
 let undoAction = null;
 let undoTimer = null;
+let resizingSidebar = false;
 
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
@@ -179,6 +181,7 @@ document.querySelector("#printButton").addEventListener("click", () => window.pr
 document.querySelector("#newPostButton").addEventListener("click", () => openPostDialog());
 document.querySelector("#settingsButton").addEventListener("click", openSettingsDialog);
 document.querySelector("#trashButton").addEventListener("click", openTrashDialog);
+sidebarResizer.addEventListener("pointerdown", startSidebarResize);
 hamburgerButton.addEventListener("click", toggleHamburgerMenu);
 periodButton.addEventListener("click", openDatePicker);
 document.querySelector("#closeDatePicker").addEventListener("click", closeDatePicker);
@@ -245,6 +248,7 @@ document.addEventListener("click", (event) => {
 });
 
 applySettings();
+applySidebarWidth();
 renderColorPalette();
 purgeExpiredTrash();
 closeHamburgerMenu();
@@ -453,6 +457,37 @@ function setAppLocked(locked) {
 
 function cloudActive() {
   return Boolean(cloud.enabled && cloud.user && cloud.db);
+}
+
+function applySidebarWidth() {
+  const storedWidth = Number(localStorage.getItem("social-content-calendar-sidebar-width"));
+  const width = clampSidebarWidth(storedWidth || 270);
+  document.documentElement.style.setProperty("--sidebar-width", `${width}px`);
+}
+
+function startSidebarResize(event) {
+  resizingSidebar = true;
+  sidebarResizer.setPointerCapture(event.pointerId);
+  document.body.classList.add("is-resizing-sidebar");
+  window.addEventListener("pointermove", resizeSidebar);
+  window.addEventListener("pointerup", stopSidebarResize, { once: true });
+}
+
+function resizeSidebar(event) {
+  if (!resizingSidebar) return;
+  const width = clampSidebarWidth(event.clientX);
+  document.documentElement.style.setProperty("--sidebar-width", `${width}px`);
+  localStorage.setItem("social-content-calendar-sidebar-width", String(width));
+}
+
+function stopSidebarResize() {
+  resizingSidebar = false;
+  document.body.classList.remove("is-resizing-sidebar");
+  window.removeEventListener("pointermove", resizeSidebar);
+}
+
+function clampSidebarWidth(width) {
+  return Math.min(330, Math.max(230, Number(width) || 270));
 }
 
 function postsCollection() {
