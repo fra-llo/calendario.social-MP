@@ -455,7 +455,9 @@ body.is-dark .period-button:focus-visible {
 .stats-panel {
   display: grid;
   gap: 18px;
-  width: min(980px, 94vw);
+  width: min(1280px, 96vw);
+  max-height: min(880px, calc(100vh - 32px));
+  overflow: auto;
   padding: 22px;
 }
 
@@ -474,7 +476,7 @@ body.is-dark .period-button:focus-visible {
 
 .stats-summary-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -504,7 +506,7 @@ body.is-dark .period-button:focus-visible {
 
 .stats-layout {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -516,6 +518,19 @@ body.is-dark .period-button:focus-visible {
   border-radius: 8px;
   padding: 14px;
   background: var(--surface);
+}
+
+.stats-card:nth-child(1),
+.stats-card:nth-child(2) {
+  grid-column: span 6;
+}
+
+.stats-card:nth-child(3) {
+  grid-column: span 7;
+}
+
+.stats-card:nth-child(4) {
+  grid-column: span 5;
 }
 
 .stats-card-heading {
@@ -559,7 +574,7 @@ body.is-dark .period-button:focus-visible {
 
 .theme-bar-row {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) 46px;
+  grid-template-columns: 36px minmax(0, 1fr) 58px;
   align-items: center;
   gap: 10px;
 }
@@ -595,7 +610,7 @@ body.is-dark .period-button:focus-visible {
 
 .stats-bar-row {
   display: grid;
-  grid-template-columns: 110px minmax(0, 1fr) 58px;
+  grid-template-columns: 132px minmax(0, 1fr) 72px;
   align-items: center;
   gap: 10px;
 }
@@ -630,6 +645,7 @@ body.is-dark .period-button:focus-visible {
 }
 
 .stats-insights p {
+  margin: 0;
   border-left: 3px solid var(--warning);
   padding-left: 9px;
   color: var(--muted);
@@ -1475,6 +1491,21 @@ form footer > div {
   h1 {
     max-width: none;
   }
+
+  .stats-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stats-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-card:nth-child(1),
+  .stats-card:nth-child(2),
+  .stats-card:nth-child(3),
+  .stats-card:nth-child(4) {
+    grid-column: auto;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1562,6 +1593,12 @@ form footer > div {
   .stats-summary-grid,
   .stats-layout {
     grid-template-columns: 1fr;
+  }
+
+  .stats-panel {
+    width: min(100vw - 20px, 720px);
+    max-height: calc(100vh - 20px);
+    padding: 16px;
   }
 
   .stats-card-heading {
