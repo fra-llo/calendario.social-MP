@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
+    <section class="auth-gate" id="authGate" hidden>
+      <div class="auth-card">
+        <p class="eyebrow">Accesso richiesto</p>
+        <h1>Calendario contenuti social</h1>
+        <p>Accedi con Google per visualizzare e modificare il calendario condiviso.</p>
+        <button class="primary-action" id="gateGoogleLoginButton" type="button">Accedi con Google</button>
+        <button class="secondary-action" id="gateLogoutButton" type="button" hidden>Cambia account</button>
+      </div>
+    </section>
+
     <section class="auth-banner" id="authBanner">
       <span id="authStatus">Modalita locale</span>
       <div>

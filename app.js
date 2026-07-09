@@ -41,6 +41,8 @@ const state = {
 const calendarGrid = document.querySelector("#calendarGrid");
 const listView = document.querySelector("#listView");
 const weekdays = document.querySelector("#weekdays");
+const appShell = document.querySelector(".app-shell");
+const authGate = document.querySelector("#authGate");
 const periodLabel = document.querySelector("#periodLabel");
 const periodButton = document.querySelector("#periodButton");
 const postDialog = document.querySelector("#postDialog");
@@ -168,6 +170,8 @@ document.querySelector("#closeLogin").addEventListener("click", closeLoginDialog
 document.querySelector("#cancelLogin").addEventListener("click", closeLoginDialog);
 document.querySelector("#registerButton").addEventListener("click", register);
 document.querySelector("#googleLoginButton").addEventListener("click", loginWithGoogle);
+document.querySelector("#gateGoogleLoginButton").addEventListener("click", loginWithGoogle);
+document.querySelector("#gateLogoutButton").addEventListener("click", logout);
 loginForm.addEventListener("submit", login);
 document.querySelector("#closeSettings").addEventListener("click", closeSettingsDialog);
 document.querySelector("#cancelSettings").addEventListener("click", closeSettingsDialog);
@@ -235,6 +239,8 @@ function initCloud() {
     cloud.db = firebase.firestore();
     cloud.enabled = true;
     cloud.ready = true;
+    cloud.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    setAppLocked(true);
     cloud.auth.onAuthStateChanged(handleAuthState);
   } catch (error) {
     setAuthStatus(`Errore Firebase: ${error.message}`, "error");
@@ -256,11 +262,13 @@ function handleAuthState(user) {
 
   if (!user) {
     unsubscribeCloud();
+    setAppLocked(true);
     setAuthStatus("Firebase configurato - effettua il login", "local");
     return;
   }
 
   closeLoginDialog();
+  setAppLocked(false);
   setAuthStatus(`Connesso: ${user.email} - verifica accessi`, "cloud");
   ensureMembership().then((member) => {
     cloud.member = member;
@@ -269,6 +277,7 @@ function handleAuthState(user) {
     subscribeMembers();
   }).catch((error) => {
     unsubscribeCloud();
+    setAppLocked(true);
     setAuthStatus("Accesso non autorizzato. Chiedi a un admin di aggiungerti.", "error");
     accessNote.textContent = error.message;
   });
@@ -390,6 +399,18 @@ function setAuthStatus(message, mode) {
   authStatus.textContent = message;
   authBanner.classList.toggle("is-cloud", mode === "cloud");
   authBanner.classList.toggle("is-error", mode === "error");
+}
+
+function setAppLocked(locked) {
+  if (!cloud.enabled) {
+    authGate.hidden = true;
+    appShell.hidden = false;
+    return;
+  }
+  document.querySelector("#gateGoogleLoginButton").hidden = Boolean(cloud.user);
+  document.querySelector("#gateLogoutButton").hidden = !cloud.user;
+  authGate.hidden = !locked;
+  appShell.hidden = locked;
 }
 
 function cloudActive() {
