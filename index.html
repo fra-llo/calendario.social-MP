@@ -25,6 +25,7 @@
           <button class="icon-button hamburger-button" id="hamburgerButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
           <div class="hamburger-panel" id="hamburgerPanel" hidden>
             <button class="menu-item" id="settingsButton" type="button">Impostazioni</button>
+            <button class="menu-item" id="statsButton" type="button">Statistiche</button>
             <button class="menu-item" id="trashButton" type="button">Cestino</button>
             <button class="menu-item" id="logoutButton" type="button" hidden>Esci</button>
           </div>
@@ -78,6 +79,10 @@
               <option value="Media">Media</option>
               <option value="Bassa">Bassa</option>
             </select>
+          </label>
+          <label>
+            Tema
+            <select id="themeFilter"></select>
           </label>
           <label>
             Responsabile
@@ -174,6 +179,24 @@
         </header>
         <p class="form-note">I contenuti eliminati restano recuperabili finche non li cancelli definitivamente.</p>
         <div class="trash-list" id="trashList"></div>
+      </section>
+    </dialog>
+
+    <dialog id="statsDialog">
+      <section class="stats-panel">
+        <header>
+          <h2>Statistiche</h2>
+          <button class="ghost-button" id="closeStats" type="button" aria-label="Chiudi">x</button>
+        </header>
+        <section class="theme-distribution">
+          <p class="eyebrow">Distribuzione temi</p>
+          <label>
+            Tema
+            <select id="statsThemeFilter"></select>
+          </label>
+          <div class="theme-stack" id="themeStack"></div>
+          <div class="theme-bars" id="themeBars"></div>
+        </section>
       </section>
     </dialog>
 
@@ -303,6 +326,10 @@
             </select>
           </label>
           <label>
+            Tema
+            <select id="postTheme"></select>
+          </label>
+          <label>
             Tag
             <input id="postTags" type="text" maxlength="120" placeholder="Es. promo, tutorial, lancio">
           </label>
@@ -416,6 +443,10 @@
         <section class="settings-section">
           <h3>Liste personalizzabili</h3>
           <label>
+            Temi disponibili
+            <textarea id="themesSetting" rows="4" placeholder="Icona | Nome | Colore"></textarea>
+          </label>
+          <label>
             Formati disponibili
             <textarea id="formatsSetting" rows="3" placeholder="Uno per riga"></textarea>
           </label>
@@ -425,7 +456,7 @@
           </label>
           <label>
             Template contenuti
-            <textarea id="templatesSetting" rows="5" placeholder="Nome | Piattaforma | Formato | Obiettivo | Asset"></textarea>
+            <textarea id="templatesSetting" rows="5" placeholder="Nome | Piattaforma | Formato | Obiettivo | tema-id | Asset"></textarea>
           </label>
         </section>
 

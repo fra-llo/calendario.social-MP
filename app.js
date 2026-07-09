@@ -21,6 +21,15 @@ const defaultMonthlyTargets = {
 };
 const defaultFormats = ["Reel", "Carosello", "Story", "Short", "Post", "Live", "Video"];
 const defaultGoals = ["Awareness", "Vendita", "Community", "Educazione", "Engagement"];
+const defaultThemes = [
+  { id: "ambiente", name: "Ambiente", icon: "🌿", color: "#16a34a" },
+  { id: "sport", name: "Sport", icon: "⚽", color: "#2563eb" },
+  { id: "salute", name: "Salute", icon: "💊", color: "#dc2626" },
+  { id: "cultura", name: "Cultura", icon: "🎨", color: "#7c3aed" },
+  { id: "lavoro", name: "Lavoro", icon: "💼", color: "#d97706" },
+  { id: "innovazione", name: "Innovazione", icon: "💡", color: "#0891b2" },
+  { id: "persone", name: "Persone", icon: "😊", color: "#c2185b" },
+];
 const pastelColors = [
   { value: "#a7f3d0", label: "Verde pastello" },
   { value: "#bae6fd", label: "Azzurro pastello" },
@@ -36,12 +45,12 @@ const pastelColors = [
   { value: "#f5d0fe", label: "Magenta pastello" },
 ];
 const defaultTemplates = {
-  "Reel educativo": { platform: "Instagram", format: "Reel", goal: "Educazione", assets: "Video breve, sottotitoli, cover", checklist: { idea: true } },
-  "Carosello tips": { platform: "Instagram", format: "Carosello", goal: "Educazione", assets: "Grafiche, copy slide, CTA", checklist: { idea: true, copy: true } },
-  "Behind the scenes": { platform: "TikTok", format: "Video", goal: "Community", assets: "Clip backstage, audio trend", checklist: { idea: true } },
-  "Recensione cliente": { platform: "Facebook", format: "Post", goal: "Awareness", assets: "Testimonianza, immagine cliente", checklist: { idea: true, copy: true } },
-  "Post LinkedIn": { platform: "LinkedIn", format: "Post", goal: "Awareness", assets: "Hook, insight, CTA", checklist: { idea: true, copy: true } },
-  "Short YouTube": { platform: "YouTube", format: "Short", goal: "Engagement", assets: "Video verticale, titolo, thumbnail", checklist: { idea: true } },
+  "Reel educativo": { platform: "Instagram", format: "Reel", goal: "Educazione", theme: "innovazione", assets: "Video breve, sottotitoli, cover", checklist: { idea: true } },
+  "Carosello tips": { platform: "Instagram", format: "Carosello", goal: "Educazione", theme: "cultura", assets: "Grafiche, copy slide, CTA", checklist: { idea: true, copy: true } },
+  "Behind the scenes": { platform: "TikTok", format: "Video", goal: "Community", theme: "persone", assets: "Clip backstage, audio trend", checklist: { idea: true } },
+  "Recensione cliente": { platform: "Facebook", format: "Post", goal: "Awareness", theme: "lavoro", assets: "Testimonianza, immagine cliente", checklist: { idea: true, copy: true } },
+  "Post LinkedIn": { platform: "LinkedIn", format: "Post", goal: "Awareness", theme: "lavoro", assets: "Hook, insight, CTA", checklist: { idea: true, copy: true } },
+  "Short YouTube": { platform: "YouTube", format: "Short", goal: "Engagement", theme: "persone", assets: "Video verticale, titolo, thumbnail", checklist: { idea: true } },
 };
 
 const initialSettings = loadSettings();
@@ -72,6 +81,7 @@ const searchInput = document.querySelector("#searchInput");
 const platformFilter = document.querySelector("#platformFilter");
 const statusFilter = document.querySelector("#statusFilter");
 const priorityFilter = document.querySelector("#priorityFilter");
+const themeFilter = document.querySelector("#themeFilter");
 const ownerFilter = document.querySelector("#ownerFilter");
 const darkModeToggle = document.querySelector("#darkModeToggle");
 const historyBox = document.querySelector("#historyBox");
@@ -86,6 +96,10 @@ const undoToast = document.querySelector("#undoToast");
 const undoMessage = document.querySelector("#undoMessage");
 const trashDialog = document.querySelector("#trashDialog");
 const trashList = document.querySelector("#trashList");
+const statsDialog = document.querySelector("#statsDialog");
+const statsThemeFilter = document.querySelector("#statsThemeFilter");
+const themeStack = document.querySelector("#themeStack");
+const themeBars = document.querySelector("#themeBars");
 const loginDialog = document.querySelector("#loginDialog");
 const loginForm = document.querySelector("#loginForm");
 const loginEmail = document.querySelector("#loginEmail");
@@ -100,6 +114,7 @@ const maxGapDaysSetting = document.querySelector("#maxGapDaysSetting");
 const targetWarningsSetting = document.querySelector("#targetWarningsSetting");
 const formatsSetting = document.querySelector("#formatsSetting");
 const goalsSetting = document.querySelector("#goalsSetting");
+const themesSetting = document.querySelector("#themesSetting");
 const templatesSetting = document.querySelector("#templatesSetting");
 const currentUserUid = document.querySelector("#currentUserUid");
 const accessNote = document.querySelector("#accessNote");
@@ -142,6 +157,7 @@ const fields = {
   color: document.querySelector("#postColor"),
   owner: document.querySelector("#postOwner"),
   goal: document.querySelector("#postGoal"),
+  theme: document.querySelector("#postTheme"),
   tags: document.querySelector("#postTags"),
   assetLink: document.querySelector("#postAssetLink"),
   assets: document.querySelector("#postAssets"),
@@ -181,6 +197,7 @@ document.querySelector("#todayButton").addEventListener("click", goToToday);
 document.querySelector("#printButton").addEventListener("click", () => window.print());
 document.querySelector("#newPostButton").addEventListener("click", () => openPostDialog());
 document.querySelector("#settingsButton").addEventListener("click", openSettingsDialog);
+document.querySelector("#statsButton").addEventListener("click", openStatsDialog);
 document.querySelector("#trashButton").addEventListener("click", openTrashDialog);
 sidebarResizer.addEventListener("pointerdown", startSidebarResize);
 sidebarReopen.addEventListener("click", reopenSidebar);
@@ -189,6 +206,7 @@ periodButton.addEventListener("click", openDatePicker);
 document.querySelector("#closeDatePicker").addEventListener("click", closeDatePicker);
 document.querySelector("#cancelDatePicker").addEventListener("click", closeDatePicker);
 document.querySelector("#closeTrash").addEventListener("click", closeTrashDialog);
+document.querySelector("#closeStats").addEventListener("click", closeStatsDialog);
 document.querySelector("#closeDialog").addEventListener("click", closePostDialog);
 document.querySelector("#cancelPost").addEventListener("click", closePostDialog);
 deletePostButton.addEventListener("click", deleteCurrentPost);
@@ -223,10 +241,12 @@ Object.entries(viewButtons).forEach(([viewMode, button]) => {
   button.addEventListener("click", () => setViewMode(viewMode));
 });
 
-[searchInput, platformFilter, statusFilter, priorityFilter, ownerFilter].forEach((control) => {
+[searchInput, platformFilter, statusFilter, priorityFilter, themeFilter, ownerFilter].forEach((control) => {
   control.addEventListener("input", render);
   control.addEventListener("change", render);
 });
+
+statsThemeFilter.addEventListener("change", renderThemeDistribution);
 
 darkModeToggle.addEventListener("change", () => {
   state.settings.dark = darkModeToggle.checked;
@@ -262,6 +282,7 @@ function render() {
   renderStats();
   renderPlatformStats();
   renderWarnings();
+  if (statsDialog.open) renderThemeDistribution();
 }
 
 function initCloud() {
@@ -646,6 +667,17 @@ function closeTrashDialog() {
   trashDialog.close();
 }
 
+function openStatsDialog() {
+  closeHamburgerMenu();
+  populateStatsThemeFilter();
+  renderThemeDistribution();
+  if (!statsDialog.open) statsDialog.showModal();
+}
+
+function closeStatsDialog() {
+  statsDialog.close();
+}
+
 function renderTrash() {
   const deletedPosts = trashedPosts().sort((a, b) => String(b.deletedAt || "").localeCompare(String(a.deletedAt || "")));
   trashList.innerHTML = "";
@@ -935,9 +967,11 @@ function isValidColor(color) {
 
 function getPostChipMeta(post) {
   const fieldsToShow = state.settings.visibleFields;
+  const theme = getTheme(post.theme);
   return [
     fieldsToShow.time && post.time ? post.time : "",
     fieldsToShow.platform ? post.platform : "",
+    theme ? `${theme.icon} ${theme.name}` : "",
     fieldsToShow.status ? post.status : "",
     fieldsToShow.approval ? post.approval || "Bozza" : "",
     fieldsToShow.priority ? post.priority || "Media" : "",
@@ -971,7 +1005,8 @@ function renderListView() {
     main.append(title, meta);
 
     const detail = document.createElement("p");
-    detail.textContent = [post.format, post.goal, post.owner, post.tags].filter(Boolean).join(" - ");
+    const theme = getTheme(post.theme);
+    detail.textContent = [post.format, post.goal, theme ? `${theme.icon} ${theme.name}` : "", post.owner, post.tags].filter(Boolean).join(" - ");
 
     const actions = document.createElement("div");
     const edit = document.createElement("button");
@@ -1007,6 +1042,55 @@ function renderPlatformStats() {
     const item = document.createElement("div");
     item.innerHTML = `<span>${platform}</span><strong>${count}/${state.settings.monthlyTargets[platform]}</strong>`;
     container.append(item);
+  });
+}
+
+function renderThemeDistribution() {
+  const monthPosts = getMonthPosts(state.posts);
+  const themes = state.settings.themes;
+  const selectedTheme = statsThemeFilter.value || "all";
+  const total = monthPosts.length || 0;
+  const distribution = themes.map((theme) => {
+    const count = monthPosts.filter((post) => resolveThemeId(post.theme) === theme.id).length;
+    return {
+      ...theme,
+      count,
+      percentage: total ? Math.round((count / total) * 100) : 0,
+    };
+  });
+  const visibleDistribution = selectedTheme === "all"
+    ? distribution
+    : distribution.filter((theme) => theme.id === selectedTheme);
+
+  themeStack.innerHTML = "";
+  themeBars.innerHTML = "";
+
+  if (!total) {
+    const empty = document.createElement("p");
+    empty.className = "empty-day";
+    empty.textContent = "Nessun contenuto nel mese selezionato.";
+    themeBars.append(empty);
+    return;
+  }
+
+  distribution.filter((theme) => theme.count > 0).forEach((theme) => {
+    const segment = document.createElement("span");
+    segment.style.backgroundColor = theme.color;
+    segment.style.width = `${Math.max(theme.percentage, 2)}%`;
+    segment.title = `${theme.icon} ${theme.name}: ${theme.percentage}%`;
+    themeStack.append(segment);
+  });
+
+  visibleDistribution.forEach((theme) => {
+    const row = document.createElement("div");
+    row.className = "theme-bar-row";
+    row.innerHTML = `
+      <span class="theme-label">${theme.icon}</span>
+      <span class="theme-meter"><span style="width: ${theme.percentage}%; background-color: ${theme.color}"></span></span>
+      <strong>${theme.percentage}%</strong>
+    `;
+    row.querySelector(".theme-label").title = theme.name;
+    themeBars.append(row);
   });
 }
 
@@ -1054,12 +1138,14 @@ function filteredPosts() {
   const query = searchInput.value.trim().toLowerCase();
   const owner = ownerFilter.value.trim().toLowerCase();
   return activePosts().filter((post) => {
+    const theme = getTheme(post.theme);
     const searchable = [
       post.title,
       post.platform,
       post.status,
       post.format,
       post.goal,
+      theme?.name || "",
       post.owner,
       post.tags,
       post.assets,
@@ -1070,6 +1156,7 @@ function filteredPosts() {
       && (platformFilter.value === "all" || post.platform === platformFilter.value)
       && (statusFilter.value === "all" || post.status === statusFilter.value)
       && (priorityFilter.value === "all" || post.priority === priorityFilter.value)
+      && (themeFilter.value === "all" || resolveThemeId(post.theme) === themeFilter.value)
       && (!owner || String(post.owner || "").toLowerCase().includes(owner));
   });
 }
@@ -1095,6 +1182,7 @@ function openPostDialog(post = {}) {
   fields.owner.value = normalized.owner || "";
   ensureSelectOption(fields.goal, normalized.goal);
   fields.goal.value = state.settings.goals.includes(normalized.goal) ? normalized.goal : state.settings.goals[0];
+  fields.theme.value = state.settings.themes.some((theme) => theme.id === normalized.theme) ? normalized.theme : state.settings.themes[0]?.id || "";
   fields.tags.value = normalized.tags || "";
   fields.assetLink.value = normalized.assetLink || "";
   fields.assets.value = normalized.assets || "";
@@ -1141,7 +1229,8 @@ function openSettingsDialog() {
   });
   formatsSetting.value = state.settings.formats.join("\n");
   goalsSetting.value = state.settings.goals.join("\n");
-  templatesSetting.value = templatesToText(state.settings.templates);
+  themesSetting.value = themesToText(state.settings.themes);
+  templatesSetting.value = templatesToText(state.settings.templates, state.settings.themes);
   if (!settingsDialog.open) settingsDialog.showModal();
 }
 
@@ -1172,6 +1261,7 @@ function saveSettings(event) {
   targetSettings.querySelectorAll("input[data-platform]").forEach((input) => {
     monthlyTargets[input.dataset.platform] = Number(input.value) || 0;
   });
+  const themes = parseThemes(themesSetting.value);
 
   state.settings = normalizeSettings({
     ...state.settings,
@@ -1187,10 +1277,13 @@ function saveSettings(event) {
     ),
     formats: parseLines(formatsSetting.value),
     goals: parseLines(goalsSetting.value),
-    templates: parseTemplates(templatesSetting.value),
+    themes,
+    templates: parseTemplates(templatesSetting.value, themes),
   });
+  normalizePostThemes();
   state.viewMode = state.settings.defaultView;
   persistSettings();
+  persistPosts(cloudActive());
   applySettings();
   closeSettingsDialog();
   render();
@@ -1198,11 +1291,21 @@ function saveSettings(event) {
 
 function resetSettings() {
   state.settings = getDefaultSettings();
+  normalizePostThemes();
   state.viewMode = state.settings.defaultView;
   persistSettings();
+  persistPosts(cloudActive());
   applySettings();
   openSettingsDialog();
   render();
+}
+
+function normalizePostThemes() {
+  const validThemeIds = state.settings.themes.map((theme) => theme.id);
+  const fallbackTheme = validThemeIds[0] || defaultThemes[0].id;
+  state.posts = state.posts.map((post) => (
+    validThemeIds.includes(post.theme) ? post : { ...post, theme: fallbackTheme }
+  ));
 }
 
 function savePost(event) {
@@ -1244,6 +1347,7 @@ function collectPostFromForm() {
     color: fields.color.value,
     owner: fields.owner.value.trim(),
     goal: fields.goal.value,
+    theme: fields.theme.value,
     tags: fields.tags.value.trim(),
     assetLink: fields.assetLink.value.trim(),
     assets: fields.assets.value.trim(),
@@ -1327,6 +1431,7 @@ function applyTemplate() {
   fields.format.value = template.format;
   ensureSelectOption(fields.goal, template.goal);
   fields.goal.value = template.goal;
+  if (state.settings.themes.some((theme) => theme.id === template.theme)) fields.theme.value = template.theme;
   fields.assets.value = template.assets;
   fields.checkIdea.checked = Boolean(template.checklist.idea);
   fields.checkCopy.checked = Boolean(template.checklist.copy);
@@ -1404,7 +1509,7 @@ function goToToday() {
 
 function exportCsv() {
   const rows = [
-    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "tags", "assetLink", "assets", "copy", "notes"],
+    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "theme", "tags", "assetLink", "assets", "copy", "notes"],
     ...activePosts().map((post) => [
       post.id,
       post.title,
@@ -1418,6 +1523,7 @@ function exportCsv() {
       post.color,
       post.owner,
       post.goal,
+      post.theme,
       post.tags,
       post.assetLink,
       post.assets,
@@ -1480,6 +1586,7 @@ function applySettings() {
   document.body.classList.toggle("is-dark", state.settings.dark);
   populateTemplateSelect();
   populateGoalSelect();
+  populateThemeSelects();
   populateFormatOptions();
 }
 
@@ -1531,6 +1638,7 @@ function getDefaultSettings() {
     },
     formats: [...defaultFormats],
     goals: [...defaultGoals],
+    themes: structuredCloneSafe(defaultThemes),
     templates: structuredCloneSafe(defaultTemplates),
   };
 }
@@ -1546,6 +1654,7 @@ function normalizeSettings(settings) {
     visibleFields: { ...defaults.visibleFields, ...(settings.visibleFields || {}) },
     formats: Array.isArray(settings.formats) && settings.formats.length ? settings.formats : defaults.formats,
     goals: Array.isArray(settings.goals) && settings.goals.length ? settings.goals : defaults.goals,
+    themes: normalizeThemes(settings.themes || defaults.themes),
     templates: settings.templates && Object.keys(settings.templates).length ? settings.templates : defaults.templates,
   };
 }
@@ -1588,23 +1697,117 @@ function populateFormatOptions() {
   });
 }
 
+function populateThemeSelects() {
+  const currentPostTheme = fields.theme.value;
+  const currentFilter = themeFilter.value || "all";
+  fields.theme.innerHTML = "";
+  themeFilter.innerHTML = "";
+
+  const all = document.createElement("option");
+  all.value = "all";
+  all.textContent = "Tutti i temi";
+  themeFilter.append(all);
+
+  state.settings.themes.forEach((theme) => {
+    const postOption = document.createElement("option");
+    postOption.value = theme.id;
+    postOption.textContent = `${theme.icon} ${theme.name}`;
+    fields.theme.append(postOption);
+
+    const filterOption = document.createElement("option");
+    filterOption.value = theme.id;
+    filterOption.textContent = `${theme.icon} ${theme.name}`;
+    themeFilter.append(filterOption);
+  });
+
+  fields.theme.value = state.settings.themes.some((theme) => theme.id === currentPostTheme)
+    ? currentPostTheme
+    : state.settings.themes[0]?.id || "";
+  themeFilter.value = currentFilter === "all" || state.settings.themes.some((theme) => theme.id === currentFilter)
+    ? currentFilter
+    : "all";
+}
+
+function populateStatsThemeFilter() {
+  const currentValue = statsThemeFilter.value || "all";
+  statsThemeFilter.innerHTML = "";
+  const all = document.createElement("option");
+  all.value = "all";
+  all.textContent = "✓ Tutti i temi";
+  statsThemeFilter.append(all);
+  state.settings.themes.forEach((theme) => {
+    const option = document.createElement("option");
+    option.value = theme.id;
+    option.textContent = `${theme.icon} ${theme.name}`;
+    statsThemeFilter.append(option);
+  });
+  statsThemeFilter.value = currentValue === "all" || state.settings.themes.some((theme) => theme.id === currentValue)
+    ? currentValue
+    : "all";
+}
+
 function getTemplates() {
   return state.settings.templates;
+}
+
+function getTheme(themeId) {
+  return state.settings.themes.find((theme) => theme.id === resolveThemeId(themeId)) || state.settings.themes[0] || null;
+}
+
+function resolveThemeId(themeId) {
+  return state.settings.themes.some((theme) => theme.id === themeId)
+    ? themeId
+    : state.settings.themes[0]?.id || defaultThemes[0].id;
 }
 
 function parseLines(value) {
   return value.split("\n").map((item) => item.trim()).filter(Boolean);
 }
 
-function parseTemplates(value) {
+function normalizeThemes(themes) {
+  const normalized = Array.isArray(themes) ? themes.map((theme, index) => {
+    const name = String(theme.name || "").trim();
+    if (!name) return null;
+    return {
+      id: theme.id || slugify(name) || `tema-${index + 1}`,
+      name,
+      icon: String(theme.icon || "•").trim().slice(0, 4),
+      color: isValidColor(theme.color) ? theme.color : defaultThemes[index % defaultThemes.length].color,
+    };
+  }).filter(Boolean) : [];
+  return normalized.length ? normalized : structuredCloneSafe(defaultThemes);
+}
+
+function parseThemes(value) {
+  const themes = parseLines(value).map((line, index) => {
+    const [icon, name, color] = line.split("|").map((item) => item.trim());
+    if (!name) return null;
+    return {
+      id: slugify(name) || `tema-${index + 1}`,
+      icon: icon || "•",
+      name,
+      color: isValidColor(color) ? color : defaultThemes[index % defaultThemes.length].color,
+    };
+  }).filter(Boolean);
+  return themes.length ? themes : structuredCloneSafe(defaultThemes);
+}
+
+function themesToText(themes) {
+  return normalizeThemes(themes).map((theme) => (
+    [theme.icon, theme.name, theme.color].join(" | ")
+  )).join("\n");
+}
+
+function parseTemplates(value, themes = state.settings.themes) {
   const parsed = {};
   parseLines(value).forEach((line) => {
-    const [name, platform, format, goal, assets] = line.split("|").map((item) => item.trim());
+    const [name, platform, format, goal, theme, assets] = line.split("|").map((item) => item.trim());
     if (!name) return;
     parsed[name] = {
       platform: platforms.includes(platform) ? platform : "Instagram",
       format: format || "",
       goal: goal || state.settings.goals[0] || "Awareness",
+      theme: themes.some((item) => item.id === theme) ? theme : themes[0]?.id || defaultThemes[0].id,
       assets: assets || "",
       checklist: { idea: true },
     };
@@ -1612,14 +1815,23 @@ function parseTemplates(value) {
   return Object.keys(parsed).length ? parsed : structuredCloneSafe(defaultTemplates);
 }
 
-function templatesToText(templates) {
+function templatesToText(templates, themes = state.settings.themes) {
   return Object.entries(templates).map(([name, template]) => (
-    [name, template.platform, template.format, template.goal, template.assets].join(" | ")
+    [name, template.platform, template.format, template.goal, template.theme || themes[0]?.id || defaultThemes[0].id, template.assets].join(" | ")
   )).join("\n");
 }
 
 function structuredCloneSafe(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function slugify(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function ensureSelectOption(select, value) {
@@ -1648,6 +1860,7 @@ function seedPosts() {
       color: "#a7f3d0",
       owner: "",
       goal: "Educazione",
+      theme: "innovazione",
       tags: "tutorial",
       assets: "Grafiche, copy slide",
       notes: "Trasformare una domanda frequente in 5 slide.",
@@ -1665,6 +1878,7 @@ function seedPosts() {
       color: "#fecaca",
       owner: "",
       goal: "Engagement",
+      theme: "persone",
       tags: "trend",
       assets: "Clip verticale, audio",
       notes: "Agganciare il trend al tema della pagina.",
@@ -1686,6 +1900,7 @@ function normalizePost(post) {
     color: isValidColor(post.color) ? post.color : pastelColors[0].value,
     owner: post.owner || "",
     goal: post.goal || "Awareness",
+    theme: post.theme || post.category || defaultThemes[0].id,
     tags: post.tags || "",
     assetLink: post.assetLink || "",
     assets: post.assets || "",
@@ -1719,6 +1934,7 @@ function rowToPost(row) {
     color: row.color,
     owner: row.owner,
     goal: row.goal,
+    theme: row.theme,
     tags: row.tags,
     assetLink: row.assetLink,
     assets: row.assets,

@@ -445,6 +445,68 @@ body.is-dark .period-button:focus-visible {
   line-height: 1.35;
 }
 
+.stats-panel {
+  width: min(460px, 92vw);
+}
+
+.theme-distribution {
+  display: grid;
+  gap: 14px;
+}
+
+.theme-distribution label {
+  font-weight: 850;
+}
+
+.theme-stack {
+  display: flex;
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(107, 103, 96, 0.12);
+}
+
+.theme-stack span {
+  display: block;
+  min-width: 4px;
+}
+
+.theme-bars {
+  display: grid;
+  gap: 13px;
+}
+
+.theme-bar-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 46px;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-label {
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.theme-meter {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(107, 103, 96, 0.1);
+}
+
+.theme-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.theme-bar-row strong {
+  color: var(--muted);
+  text-align: right;
+}
+
 .workspace {
   grid-column: 3;
   grid-row: 1;
