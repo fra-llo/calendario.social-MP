@@ -103,6 +103,11 @@ const statsDialog = document.querySelector("#statsDialog");
 const statsThemeFilter = document.querySelector("#statsThemeFilter");
 const themeStack = document.querySelector("#themeStack");
 const themeBars = document.querySelector("#themeBars");
+const dayDialog = document.querySelector("#dayDialog");
+const dayDialogTitle = document.querySelector("#dayDialogTitle");
+const dayDialogSummary = document.querySelector("#dayDialogSummary");
+const dayDialogList = document.querySelector("#dayDialogList");
+const addDayDialogPost = document.querySelector("#addDayDialogPost");
 const loginDialog = document.querySelector("#loginDialog");
 const loginForm = document.querySelector("#loginForm");
 const loginEmail = document.querySelector("#loginEmail");
@@ -216,6 +221,12 @@ document.querySelector("#closeDatePicker").addEventListener("click", closeDatePi
 document.querySelector("#cancelDatePicker").addEventListener("click", closeDatePicker);
 document.querySelector("#closeTrash").addEventListener("click", closeTrashDialog);
 document.querySelector("#closeStats").addEventListener("click", closeStatsDialog);
+document.querySelector("#closeDayDialog").addEventListener("click", closeDayDialog);
+addDayDialogPost.addEventListener("click", () => {
+  const date = addDayDialogPost.dataset.date;
+  closeDayDialog();
+  openPostDialog({ date });
+});
 document.querySelector("#closeDialog").addEventListener("click", closePostDialog);
 document.querySelector("#cancelPost").addEventListener("click", closePostDialog);
 deletePostButton.addEventListener("click", deleteCurrentPost);
@@ -859,34 +870,58 @@ function createDayCell(date, todayKey) {
   const dayPosts = filteredPosts()
     .filter((post) => post.date === dateKey)
     .sort(sortPosts);
+  const isMonthView = state.viewMode === "month";
 
   const cell = document.createElement("section");
   cell.className = "day-cell";
   cell.dataset.date = dateKey;
   if (date.getMonth() !== visibleMonth && state.viewMode === "month") cell.classList.add("is-muted");
   if (dateKey === todayKey) cell.classList.add("is-today");
+  if (dayPosts.length === 0) cell.classList.add("is-empty");
+  if (dayPosts.length >= state.settings.warningRules.maxPostsPerDay) cell.classList.add("is-heavy");
   cell.addEventListener("dragover", allowDrop);
   cell.addEventListener("drop", dropPostOnDay);
 
   const top = document.createElement("div");
   top.className = "day-top";
 
-  const number = document.createElement("span");
-  number.className = "day-number";
-  number.textContent = state.viewMode === "month" ? date.getDate() : formatWeekDayHeading(date);
+  const dayButton = document.createElement("button");
+  dayButton.className = "day-number";
+  dayButton.type = "button";
+  dayButton.textContent = isMonthView ? date.getDate() : formatWeekDayHeading(date);
+  dayButton.setAttribute("aria-label", `Apri dettaglio ${formatDateForLabel(date)}`);
+  dayButton.addEventListener("click", () => openDayDialog(dateKey));
 
   const addButton = document.createElement("button");
   addButton.className = "add-day";
   addButton.type = "button";
   addButton.textContent = "+";
   addButton.setAttribute("aria-label", `Aggiungi contenuto per ${formatDateForLabel(date)}`);
-  addButton.addEventListener("click", () => openPostDialog({ date: dateKey }));
+  addButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openPostDialog({ date: dateKey });
+  });
 
-  top.append(number, addButton);
+  const count = document.createElement("span");
+  count.className = "day-count";
+  count.textContent = `${dayPosts.length}`;
+  count.title = `${dayPosts.length} contenuti`;
+
+  top.append(dayButton, count, addButton);
 
   const list = document.createElement("div");
   list.className = "post-list";
-  dayPosts.forEach((post) => list.append(createPostChip(post)));
+  const visiblePosts = isMonthView ? dayPosts.slice(0, 3) : dayPosts;
+  visiblePosts.forEach((post) => list.append(createPostChip(post)));
+
+  if (isMonthView && dayPosts.length > visiblePosts.length) {
+    const more = document.createElement("button");
+    more.className = "more-posts";
+    more.type = "button";
+    more.textContent = `+ ${dayPosts.length - visiblePosts.length} altri`;
+    more.addEventListener("click", () => openDayDialog(dateKey));
+    list.append(more);
+  }
 
   if (state.viewMode === "day" && dayPosts.length === 0) {
     const empty = document.createElement("p");
@@ -926,6 +961,90 @@ function createPostChip(post) {
     chip.append(progress);
   }
   return chip;
+}
+
+function openDayDialog(dateKey) {
+  const date = parseDateKey(dateKey);
+  const dayPosts = filteredPosts()
+    .filter((post) => post.date === dateKey)
+    .sort(sortPosts);
+  dayDialogTitle.textContent = formatFullDate(date);
+  addDayDialogPost.dataset.date = dateKey;
+  renderDayDialogSummary(dayPosts);
+  renderDayDialogList(dayPosts);
+  if (!dayDialog.open) dayDialog.showModal();
+}
+
+function closeDayDialog() {
+  dayDialog.close();
+}
+
+function renderDayDialogSummary(dayPosts) {
+  const platformsCount = new Set(dayPosts.map((post) => post.platform)).size;
+  const readyCount = dayPosts.filter((post) => ["Pronto", "Programmato", "Pubblicato"].includes(post.status)).length;
+  const themesCount = new Set(dayPosts.map((post) => resolveThemeId(post.theme))).size;
+  dayDialogSummary.innerHTML = "";
+  [
+    ["Contenuti", dayPosts.length],
+    ["Piattaforme", platformsCount],
+    ["Temi", themesCount],
+    ["Pronti", readyCount],
+  ].forEach(([label, value]) => {
+    const item = document.createElement("div");
+    item.innerHTML = `<strong>${value}</strong><span>${label}</span>`;
+    dayDialogSummary.append(item);
+  });
+}
+
+function renderDayDialogList(dayPosts) {
+  dayDialogList.innerHTML = "";
+  if (!dayPosts.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-day";
+    empty.textContent = "Nessun contenuto programmato per questa giornata.";
+    dayDialogList.append(empty);
+    return;
+  }
+  dayPosts.forEach((post) => {
+    const item = document.createElement("article");
+    item.className = "day-detail-item";
+    applyPostColor(item, post.color);
+
+    const theme = getTheme(post.theme);
+    const main = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = post.title;
+    const meta = document.createElement("p");
+    meta.textContent = [
+      post.time || "Ora non impostata",
+      post.platform,
+      post.status,
+      post.priority || "Media",
+      theme ? `${theme.icon} ${theme.name}` : "",
+    ].filter(Boolean).join(" - ");
+    main.append(title, meta);
+
+    const actions = document.createElement("div");
+    const edit = document.createElement("button");
+    edit.className = "secondary-action";
+    edit.type = "button";
+    edit.textContent = "Modifica";
+    edit.addEventListener("click", () => {
+      closeDayDialog();
+      openPostDialog(post);
+    });
+    const duplicate = document.createElement("button");
+    duplicate.className = "secondary-action";
+    duplicate.type = "button";
+    duplicate.textContent = "Duplica";
+    duplicate.addEventListener("click", () => {
+      closeDayDialog();
+      duplicatePost(post.id);
+    });
+    actions.append(edit, duplicate);
+    item.append(main, actions);
+    dayDialogList.append(item);
+  });
 }
 
 function applyPostColor(element, color) {
