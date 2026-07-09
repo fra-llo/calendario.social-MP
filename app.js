@@ -71,7 +71,6 @@ const platformFilter = document.querySelector("#platformFilter");
 const statusFilter = document.querySelector("#statusFilter");
 const priorityFilter = document.querySelector("#priorityFilter");
 const ownerFilter = document.querySelector("#ownerFilter");
-const compactToggle = document.querySelector("#compactToggle");
 const darkModeToggle = document.querySelector("#darkModeToggle");
 const historyBox = document.querySelector("#historyBox");
 const historyList = document.querySelector("#historyList");
@@ -224,11 +223,6 @@ Object.entries(viewButtons).forEach(([viewMode, button]) => {
   control.addEventListener("change", render);
 });
 
-compactToggle.addEventListener("change", () => {
-  state.settings.compact = compactToggle.checked;
-  persistSettings();
-  applySettings();
-});
 darkModeToggle.addEventListener("change", () => {
   state.settings.dark = darkModeToggle.checked;
   persistSettings();
@@ -1418,9 +1412,7 @@ function restoreBackup(event) {
 }
 
 function applySettings() {
-  compactToggle.checked = Boolean(state.settings.compact);
   darkModeToggle.checked = Boolean(state.settings.dark);
-  document.body.classList.toggle("is-compact", state.settings.compact);
   document.body.classList.toggle("is-dark", state.settings.dark);
   populateTemplateSelect();
   populateGoalSelect();
@@ -1456,7 +1448,6 @@ function persistSettings(syncCloud = true) {
 
 function getDefaultSettings() {
   return {
-    compact: false,
     dark: false,
     defaultView: "month",
     monthlyTargets: { ...defaultMonthlyTargets },

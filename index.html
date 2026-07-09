@@ -21,6 +21,14 @@
       <span id="authStatus">Modalita locale</span>
       <div>
         <button class="secondary-action" id="loginButton" type="button">Login</button>
+        <div class="hamburger-menu">
+          <button class="icon-button hamburger-button" id="hamburgerButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
+          <div class="hamburger-panel" id="hamburgerPanel" hidden>
+            <button class="menu-item" id="settingsButton" type="button">Impostazioni</button>
+            <button class="menu-item" id="trashButton" type="button">Cestino</button>
+            <button class="menu-item" id="logoutButton" type="button" hidden>Esci</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -77,14 +85,6 @@
           </label>
         </section>
 
-        <section class="panel compact-panel">
-          <h2>Vista rapida</h2>
-          <label class="check-row">
-            <input id="compactToggle" type="checkbox">
-            Layout compatto
-          </label>
-        </section>
-
         <section class="panel stats">
           <h2>Riepilogo mese</h2>
           <div><span id="monthCount">0</span><small>contenuti</small></div>
@@ -97,10 +97,10 @@
           <div class="platform-stats" id="platformStats"></div>
         </details>
 
-        <section class="panel">
-          <h2>Avvisi</h2>
+        <details class="panel collapsible-panel">
+          <summary>Avvisi</summary>
           <div class="warning-list" id="warningList"></div>
-        </section>
+        </details>
 
       </aside>
 
@@ -122,18 +122,6 @@
             </div>
             <button class="secondary-action" id="todayButton" type="button">Oggi</button>
             <button class="secondary-action" id="printButton" type="button">Stampa</button>
-            <div class="hamburger-menu">
-              <button class="icon-button hamburger-button" id="hamburgerButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
-              <div class="hamburger-panel" id="hamburgerPanel" hidden>
-                <button class="menu-item" id="settingsButton" type="button">Impostazioni</button>
-                <button class="menu-item" id="trashButton" type="button">Cestino</button>
-                <label class="menu-item check-row">
-                  <input id="darkModeToggle" type="checkbox">
-                  Modalita scura
-                </label>
-                <button class="menu-item" id="logoutButton" type="button" hidden>Esci</button>
-              </div>
-            </div>
           </div>
         </header>
 
@@ -382,6 +370,14 @@
             </select>
           </label>
           <div class="settings-grid" id="targetSettings"></div>
+        </section>
+
+        <section class="settings-section">
+          <h3>Aspetto</h3>
+          <label class="check-row">
+            <input id="darkModeToggle" type="checkbox">
+            Modalita scura
+          </label>
         </section>
 
         <section class="settings-section">
