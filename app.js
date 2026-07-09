@@ -79,6 +79,10 @@ const settingsDialog = document.querySelector("#settingsDialog");
 const settingsForm = document.querySelector("#settingsForm");
 const authBanner = document.querySelector("#authBanner");
 const authStatus = document.querySelector("#authStatus");
+const undoToast = document.querySelector("#undoToast");
+const undoMessage = document.querySelector("#undoMessage");
+const trashDialog = document.querySelector("#trashDialog");
+const trashList = document.querySelector("#trashList");
 const loginDialog = document.querySelector("#loginDialog");
 const loginForm = document.querySelector("#loginForm");
 const loginEmail = document.querySelector("#loginEmail");
@@ -161,7 +165,11 @@ const cloud = {
   settingsUnsubscribe: null,
   membersUnsubscribe: null,
   migrationDone: false,
+  lastBackupDate: "",
 };
+
+let undoAction = null;
+let undoTimer = null;
 
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
@@ -169,9 +177,11 @@ document.querySelector("#todayButton").addEventListener("click", goToToday);
 document.querySelector("#printButton").addEventListener("click", () => window.print());
 document.querySelector("#newPostButton").addEventListener("click", () => openPostDialog());
 document.querySelector("#settingsButton").addEventListener("click", openSettingsDialog);
+document.querySelector("#trashButton").addEventListener("click", openTrashDialog);
 periodButton.addEventListener("click", openDatePicker);
 document.querySelector("#closeDatePicker").addEventListener("click", closeDatePicker);
 document.querySelector("#cancelDatePicker").addEventListener("click", closeDatePicker);
+document.querySelector("#closeTrash").addEventListener("click", closeTrashDialog);
 document.querySelector("#closeDialog").addEventListener("click", closePostDialog);
 document.querySelector("#cancelPost").addEventListener("click", closePostDialog);
 deletePostButton.addEventListener("click", deleteCurrentPost);
@@ -193,6 +203,7 @@ document.querySelector("#googleLoginButton").addEventListener("click", loginWith
 document.querySelector("#gateGoogleLoginButton").addEventListener("click", loginWithGoogle);
 document.querySelector("#gateLogoutButton").addEventListener("click", logout);
 colorMenuButton.addEventListener("click", toggleColorMenu);
+document.querySelector("#undoButton").addEventListener("click", runUndo);
 loginForm.addEventListener("submit", login);
 document.querySelector("#closeSettings").addEventListener("click", closeSettingsDialog);
 document.querySelector("#cancelSettings").addEventListener("click", closeSettingsDialog);
@@ -362,6 +373,7 @@ function subscribeCloudData() {
 
     state.posts = snapshot.docs.map((doc) => normalizePost({ ...doc.data(), id: doc.id }));
     persistPosts(false);
+    createDailyBackup();
     render();
   });
 }
@@ -462,6 +474,28 @@ function saveCloudSettings() {
   settingsDocument().set(stripUndefined(state.settings), { merge: true });
 }
 
+function backupsCollection() {
+  return workspaceDocument().collection("backups");
+}
+
+function createDailyBackup() {
+  if (!cloudActive()) return;
+  const backupDate = toDateKey(new Date());
+  if (cloud.lastBackupDate === backupDate) return;
+  cloud.lastBackupDate = backupDate;
+  const backupRef = backupsCollection().doc(backupDate);
+  backupRef.get().then((snapshot) => {
+    if (snapshot.exists) return;
+    return backupRef.set(stripUndefined({
+      createdAt: new Date().toISOString(),
+      createdBy: cloud.user.uid,
+      posts: state.posts,
+      settings: state.settings,
+      postCount: state.posts.length,
+    }));
+  });
+}
+
 function syncAllCloudPosts() {
   if (!cloudActive()) return;
   const batch = cloud.db.batch();
@@ -535,6 +569,97 @@ function renderMembers() {
     }
     memberList.append(row);
   });
+}
+
+function openTrashDialog() {
+  renderTrash();
+  trashDialog.showModal();
+}
+
+function closeTrashDialog() {
+  trashDialog.close();
+}
+
+function renderTrash() {
+  const deletedPosts = trashedPosts().sort((a, b) => String(b.deletedAt || "").localeCompare(String(a.deletedAt || "")));
+  trashList.innerHTML = "";
+
+  if (!deletedPosts.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-day";
+    empty.textContent = "Il cestino e vuoto.";
+    trashList.append(empty);
+    return;
+  }
+
+  deletedPosts.forEach((post) => {
+    const item = document.createElement("article");
+    item.className = "trash-item";
+
+    const info = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = post.title;
+    const meta = document.createElement("p");
+    meta.textContent = `${formatShortDate(parseDateKey(post.date))} - ${post.platform} - eliminato ${formatDateTime(post.deletedAt)}`;
+    info.append(title, meta);
+
+    const actions = document.createElement("div");
+    actions.className = "trash-actions";
+    const restore = document.createElement("button");
+    restore.className = "secondary-action";
+    restore.type = "button";
+    restore.textContent = "Ripristina";
+    restore.addEventListener("click", () => restorePost(post.id));
+
+    const remove = document.createElement("button");
+    remove.className = "danger-action";
+    remove.type = "button";
+    remove.textContent = "Elimina definitivamente";
+    remove.addEventListener("click", () => permanentlyDeletePost(post.id));
+
+    actions.append(restore, remove);
+    item.append(info, actions);
+    trashList.append(item);
+  });
+}
+
+function restorePost(id) {
+  const post = state.posts.find((item) => item.id === id);
+  if (!post) return;
+  post.deletedAt = "";
+  post.deletedBy = "";
+  post.history = [...(post.history || []), historyEntry("Ripristinato dal cestino")];
+  persistPosts();
+  saveCloudPost(post);
+  renderTrash();
+  render();
+}
+
+function permanentlyDeletePost(id) {
+  state.posts = state.posts.filter((post) => post.id !== id);
+  persistPosts();
+  deleteCloudPost(id);
+  renderTrash();
+  render();
+}
+
+function showUndo(message, action) {
+  undoAction = action;
+  undoMessage.textContent = message;
+  undoToast.hidden = false;
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(clearUndo, 9000);
+}
+
+function runUndo() {
+  if (undoAction) undoAction();
+  clearUndo();
+}
+
+function clearUndo() {
+  undoAction = null;
+  undoToast.hidden = true;
+  clearTimeout(undoTimer);
 }
 
 function addMember() {
@@ -840,7 +965,7 @@ function renderWarnings() {
 function filteredPosts() {
   const query = searchInput.value.trim().toLowerCase();
   const owner = ownerFilter.value.trim().toLowerCase();
-  return state.posts.filter((post) => {
+  return activePosts().filter((post) => {
     const searchable = [
       post.title,
       post.platform,
@@ -1049,9 +1174,14 @@ function collectPostFromForm() {
 function deleteCurrentPost() {
   const id = fields.id.value;
   if (!id) return;
-  state.posts = state.posts.filter((post) => post.id !== id);
+  const post = state.posts.find((item) => item.id === id);
+  if (!post) return;
+  post.deletedAt = new Date().toISOString();
+  post.deletedBy = cloud.user?.uid || "local";
+  post.history = [...(post.history || []), historyEntry("Spostato nel cestino")];
   persistPosts();
-  deleteCloudPost(id);
+  saveCloudPost(post);
+  showUndo("Contenuto spostato nel cestino.", () => restorePost(id));
   closePostDialog();
   render();
 }
@@ -1063,7 +1193,7 @@ function duplicateCurrentPost() {
 }
 
 function duplicatePost(id) {
-  const source = state.posts.find((post) => post.id === id);
+  const source = activePosts().find((post) => post.id === id);
   if (!source) return;
   const nextDate = parseDateKey(source.date);
   nextDate.setDate(nextDate.getDate() + 1);
@@ -1080,6 +1210,7 @@ function duplicatePost(id) {
   state.visibleDate = nextDate;
   persistPosts();
   saveCloudPost(copy);
+  showUndo("Contenuto duplicato.", () => permanentlyDeletePost(copy.id));
   render();
 }
 
@@ -1124,13 +1255,21 @@ function allowDrop(event) {
 function dropPostOnDay(event) {
   event.preventDefault();
   const id = event.dataTransfer.getData("text/plain");
-  const post = state.posts.find((item) => item.id === id);
+  const post = activePosts().find((item) => item.id === id);
   if (!post) return;
+  const previousDate = post.date;
   post.date = event.currentTarget.dataset.date;
   post.history = [...(post.history || []), historyEntry(`Spostato al ${post.date}`)];
   state.visibleDate = parseDateKey(post.date);
   persistPosts();
   saveCloudPost(post);
+  showUndo("Contenuto spostato.", () => {
+    post.date = previousDate;
+    post.history = [...(post.history || []), historyEntry(`Spostamento annullato: ${previousDate}`)];
+    persistPosts();
+    saveCloudPost(post);
+    render();
+  });
   render();
 }
 
@@ -1177,7 +1316,7 @@ function goToToday() {
 function exportCsv() {
   const rows = [
     ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "tags", "assetLink", "assets", "copy", "notes"],
-    ...state.posts.map((post) => [
+    ...activePosts().map((post) => [
       post.id,
       post.title,
       post.date,
@@ -1467,6 +1606,8 @@ function normalizePost(post) {
     copy: post.copy || "",
     notes: post.notes || "",
     recurrence: post.recurrence || "none",
+    deletedAt: post.deletedAt || "",
+    deletedBy: post.deletedBy || "",
     checklist: {
       idea: Boolean(post.checklist?.idea),
       copy: Boolean(post.checklist?.copy),
@@ -1540,10 +1681,18 @@ function getMondayBasedDay(date) {
 function getMonthPosts(posts) {
   const year = state.visibleDate.getFullYear();
   const month = state.visibleDate.getMonth();
-  return posts.filter((post) => {
+  return posts.filter((post) => !post.deletedAt).filter((post) => {
     const postDate = parseDateKey(post.date);
     return postDate.getFullYear() === year && postDate.getMonth() === month;
   });
+}
+
+function activePosts() {
+  return state.posts.filter((post) => !post.deletedAt);
+}
+
+function trashedPosts() {
+  return state.posts.filter((post) => post.deletedAt);
 }
 
 function groupBy(items, key) {
@@ -1593,6 +1742,17 @@ function formatFullDate(date) {
 
 function formatShortDate(date) {
   return new Intl.DateTimeFormat("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
+}
+
+function formatDateTime(value) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("it-IT", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 function formatMonthLabel(date) {

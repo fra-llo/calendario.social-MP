@@ -34,6 +34,7 @@
 
         <button class="primary-action" id="newPostButton" type="button">+ Nuovo contenuto</button>
         <button class="secondary-action" id="settingsButton" type="button">Opzioni</button>
+        <button class="secondary-action" id="trashButton" type="button">Cestino</button>
 
         <section class="panel">
           <h2>Ricerca e filtri</h2>
@@ -158,6 +159,11 @@
       </section>
     </main>
 
+    <section class="undo-toast" id="undoToast" hidden>
+      <span id="undoMessage"></span>
+      <button class="secondary-action" id="undoButton" type="button">Annulla</button>
+    </section>
+
     <dialog id="datePickerDialog">
       <form id="datePickerForm" method="dialog">
         <header>
@@ -176,6 +182,17 @@
           </div>
         </footer>
       </form>
+    </dialog>
+
+    <dialog id="trashDialog">
+      <section class="trash-panel">
+        <header>
+          <h2>Cestino</h2>
+          <button class="ghost-button" id="closeTrash" type="button" aria-label="Chiudi">x</button>
+        </header>
+        <p class="form-note">I contenuti eliminati restano recuperabili finche non li cancelli definitivamente.</p>
+        <div class="trash-list" id="trashList"></div>
+      </section>
     </dialog>
 
     <dialog id="postDialog">

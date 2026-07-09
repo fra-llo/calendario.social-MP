@@ -47,6 +47,10 @@ service cloud.firestore {
       match /settings/{settingId} {
         allow read, write: if isMember(workspaceId);
       }
+
+      match /backups/{backupId} {
+        allow read, write: if isMember(workspaceId);
+      }
     }
   }
 }

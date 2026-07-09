@@ -17,6 +17,7 @@ La struttura dati usata dall'app e':
 
 - `workspaces/default/posts/{postId}`
 - `workspaces/default/settings/main`
+- `workspaces/default/backups/{YYYY-MM-DD}`
 
 Le regole in `firestore.rules` permettono lettura e scrittura solo agli utenti autenticati.
 
@@ -32,3 +33,9 @@ Poi, da `Opzioni > Accessi`, l'admin puo':
 - scegliere ruolo `editor` o `admin`
 
 Un utente non presente in `workspaces/default/members/{uid}` non puo leggere o modificare il calendario.
+
+## Cestino e backup
+
+Quando elimini un contenuto viene marcato con `deletedAt` e resta nel cestino finche non lo cancelli definitivamente.
+
+L'app crea automaticamente un backup giornaliero su Firestore in `workspaces/default/backups/{YYYY-MM-DD}` quando un utente autorizzato accede e sincronizza i dati.

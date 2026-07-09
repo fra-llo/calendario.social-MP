@@ -110,6 +110,23 @@ button {
   color: var(--danger);
 }
 
+.undo-toast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(520px, calc(100vw - 36px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 330px minmax(0, 1fr);
@@ -626,6 +643,51 @@ body.is-dark .period-button:focus-visible {
 .history-box p {
   color: var(--muted);
   font-size: 0.82rem;
+}
+
+.trash-panel {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+.trash-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.trash-list {
+  display: grid;
+  gap: 10px;
+}
+
+.trash-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--danger);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--surface-soft);
+}
+
+.trash-item h3,
+.trash-item p {
+  margin: 0;
+}
+
+.trash-item p {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.trash-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .settings-form {
