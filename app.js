@@ -485,6 +485,7 @@ function resizeSidebar(event) {
   if (event.clientX < 120) {
     collapseSidebar();
     localStorage.setItem("social-content-calendar-sidebar-width", "0");
+    stopSidebarResize();
     return;
   }
   const width = clampSidebarWidth(event.clientX);
@@ -1736,7 +1737,18 @@ function getCalendarStartDate() {
 function getDaysToRender() {
   if (state.viewMode === "day") return 1;
   if (state.viewMode === "week") return 7;
-  return 42;
+  if (state.viewMode === "list") return 0;
+  return getMonthDaysToRender();
+}
+
+function getMonthDaysToRender() {
+  const year = state.visibleDate.getFullYear();
+  const month = state.visibleDate.getMonth();
+  const start = startOfCalendar(year, month);
+  const lastDay = new Date(year, month + 1, 0);
+  const end = new Date(lastDay);
+  end.setDate(lastDay.getDate() + (6 - getMondayBasedDay(lastDay)));
+  return daysBetween(start, end) + 1;
 }
 
 function getPeriodLabel(start) {

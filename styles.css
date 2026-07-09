@@ -150,13 +150,17 @@ button {
 }
 
 body.is-sidebar-collapsed .app-shell {
-  grid-template-columns: 0 6px minmax(0, 1fr);
+  grid-template-columns: 0 0 minmax(0, 1fr);
 }
 
 body.is-sidebar-collapsed .sidebar {
   padding-left: 0;
   padding-right: 0;
   border-right: 0;
+}
+
+body.is-sidebar-collapsed .workspace {
+  padding-left: 72px;
 }
 
 .sidebar-resizer {
@@ -170,12 +174,12 @@ body.is-sidebar-collapsed .sidebar {
 
 .sidebar-reopen {
   position: fixed;
-  left: 8px;
-  top: 58px;
+  left: 12px;
+  top: 64px;
   z-index: 10;
   display: none;
-  width: 34px;
-  height: 44px;
+  width: 36px;
+  height: 48px;
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);
@@ -188,6 +192,10 @@ body.is-sidebar-collapsed .sidebar {
 body.is-sidebar-collapsed .sidebar-reopen {
   display: grid;
   place-items: center;
+}
+
+body.is-sidebar-collapsed .sidebar-resizer {
+  display: none;
 }
 
 .sidebar-resizer:hover,
@@ -543,20 +551,27 @@ body.is-dark .period-button:focus-visible {
 .view-switch {
   display: flex;
   gap: 4px;
-  padding: 4px;
+  padding: 3px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(107, 103, 96, 0.12);
 }
 
 .view-switch button {
-  min-height: 34px;
+  min-height: 30px;
   border: 0;
   border-radius: 6px;
-  padding: 0 10px;
+  padding: 0 8px;
   color: var(--muted);
   background: transparent;
+  font-size: 0.88rem;
   font-weight: 900;
+}
+
+.calendar-toolbar .secondary-action {
+  min-height: 34px;
+  padding: 0 11px;
+  font-size: 0.9rem;
 }
 
 .view-switch button[aria-pressed="true"] {
@@ -964,6 +979,10 @@ form footer > div {
     grid-template-columns: 1fr;
   }
 
+  body.is-sidebar-collapsed .workspace {
+    padding-left: 28px;
+  }
+
   .sidebar-resizer {
     display: none;
   }
@@ -988,13 +1007,31 @@ form footer > div {
     padding: 18px;
   }
 
+  body.is-sidebar-collapsed .workspace {
+    padding-left: 18px;
+  }
+
   .calendar-toolbar,
   .toolbar-actions,
-  .period-controls,
   form footer,
   .form-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .period-controls {
+    width: 100%;
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .period-controls .period-button {
+    flex: 1;
+    text-align: center;
+  }
+
+  .period-controls .icon-button {
+    flex: 0 0 40px;
   }
 
   .view-switch {
