@@ -21,6 +21,20 @@ const defaultMonthlyTargets = {
 };
 const defaultFormats = ["Reel", "Carosello", "Story", "Short", "Post", "Live", "Video"];
 const defaultGoals = ["Awareness", "Vendita", "Community", "Educazione", "Engagement"];
+const pastelColors = [
+  "#a7f3d0",
+  "#bae6fd",
+  "#c7d2fe",
+  "#ddd6fe",
+  "#fbcfe8",
+  "#fecaca",
+  "#fed7aa",
+  "#fef3c7",
+  "#d9f99d",
+  "#ccfbf1",
+  "#e5e7eb",
+  "#f5d0fe",
+];
 const defaultTemplates = {
   "Reel educativo": { platform: "Instagram", format: "Reel", goal: "Educazione", assets: "Video breve, sottotitoli, cover", checklist: { idea: true } },
   "Carosello tips": { platform: "Instagram", format: "Carosello", goal: "Educazione", assets: "Grafiche, copy slide, CTA", checklist: { idea: true, copy: true } },
@@ -95,6 +109,7 @@ const visibleFieldSettings = {
   owner: document.querySelector("#showOwnerSetting"),
   checklist: document.querySelector("#showChecklistSetting"),
 };
+const colorPalette = document.querySelector("#colorPalette");
 
 const viewButtons = {
   month: document.querySelector("#monthViewButton"),
@@ -215,6 +230,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 applySettings();
+renderColorPalette();
 render();
 initCloud();
 
@@ -659,6 +675,28 @@ function applyPostColor(element, color) {
   element.style.backgroundColor = `${color}1a`;
 }
 
+function renderColorPalette() {
+  colorPalette.innerHTML = "";
+  pastelColors.forEach((color) => {
+    const button = document.createElement("button");
+    button.className = "color-swatch";
+    button.type = "button";
+    button.style.backgroundColor = color;
+    button.dataset.color = color;
+    button.setAttribute("aria-label", `Seleziona colore ${color}`);
+    button.addEventListener("click", () => setSelectedColor(color));
+    colorPalette.append(button);
+  });
+}
+
+function setSelectedColor(color) {
+  const selectedColor = isValidColor(color) ? color : pastelColors[0];
+  fields.color.value = selectedColor;
+  colorPalette.querySelectorAll(".color-swatch").forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.color === selectedColor);
+  });
+}
+
 function isValidColor(color) {
   return /^#[0-9a-f]{6}$/i.test(String(color || ""));
 }
@@ -821,7 +859,7 @@ function openPostDialog(post = {}) {
   fields.status.value = normalized.status || "Idea";
   fields.approval.value = normalized.approval || "Bozza";
   fields.priority.value = normalized.priority || "Media";
-  fields.color.value = normalized.color || "#0f766e";
+  setSelectedColor(normalized.color || pastelColors[0]);
   fields.owner.value = normalized.owner || "";
   ensureSelectOption(fields.goal, normalized.goal);
   fields.goal.value = state.settings.goals.includes(normalized.goal) ? normalized.goal : state.settings.goals[0];
@@ -1363,7 +1401,7 @@ function seedPosts() {
       status: "Da scrivere",
       approval: "Bozza",
       priority: "Media",
-      color: "#0f766e",
+      color: "#a7f3d0",
       owner: "",
       goal: "Educazione",
       tags: "tutorial",
@@ -1380,7 +1418,7 @@ function seedPosts() {
       status: "Idea",
       approval: "Bozza",
       priority: "Alta",
-      color: "#dc2626",
+      color: "#fecaca",
       owner: "",
       goal: "Engagement",
       tags: "trend",
@@ -1401,7 +1439,7 @@ function normalizePost(post) {
     status: post.status || "Idea",
     approval: post.approval || "Bozza",
     priority: post.priority || "Media",
-    color: isValidColor(post.color) ? post.color : "#0f766e",
+    color: isValidColor(post.color) ? post.color : pastelColors[0],
     owner: post.owner || "",
     goal: post.goal || "Awareness",
     tags: post.tags || "",
