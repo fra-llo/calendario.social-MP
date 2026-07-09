@@ -1,0 +1,52 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberDoc(workspaceId) {
+      return /databases/$(database)/documents/workspaces/$(workspaceId)/members/$(request.auth.uid);
+    }
+
+    function isMember(workspaceId) {
+      return signedIn() && exists(memberDoc(workspaceId));
+    }
+
+    function isAdmin(workspaceId) {
+      return isMember(workspaceId) && get(memberDoc(workspaceId)).data.role == "admin";
+    }
+
+    function workspaceDoc(workspaceId) {
+      return /databases/$(database)/documents/workspaces/$(workspaceId);
+    }
+
+    match /workspaces/{workspaceId} {
+      allow get: if signedIn();
+      allow list: if isMember(workspaceId);
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && !exists(workspaceDoc(workspaceId));
+      allow update, delete: if isAdmin(workspaceId);
+
+      match /members/{memberId} {
+        allow get: if isMember(workspaceId) || (signedIn() && request.auth.uid == memberId);
+        allow list: if isMember(workspaceId);
+        allow create: if signedIn()
+          && request.auth.uid == memberId
+          && !exists(workspaceDoc(workspaceId))
+          && request.resource.data.role == "admin";
+        allow create, update, delete: if isAdmin(workspaceId);
+      }
+
+      match /posts/{postId} {
+        allow read, write: if isMember(workspaceId);
+      }
+
+      match /settings/{settingId} {
+        allow read, write: if isMember(workspaceId);
+      }
+    }
+  }
+}

@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Calendario contenuti social</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <section class="auth-banner" id="authBanner">
+      <span id="authStatus">Modalita locale</span>
+      <div>
+        <button class="secondary-action" id="loginButton" type="button">Login</button>
+        <button class="secondary-action" id="logoutButton" type="button" hidden>Esci</button>
+      </div>
+    </section>
+
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div>
+          <p class="eyebrow">Planner editoriale</p>
+          <h1>Calendario contenuti social</h1>
+        </div>
+
+        <button class="primary-action" id="newPostButton" type="button">+ Nuovo contenuto</button>
+        <button class="secondary-action" id="settingsButton" type="button">Opzioni</button>
+
+        <section class="panel">
+          <h2>Ricerca e filtri</h2>
+          <label>
+            Cerca
+            <input id="searchInput" type="search" placeholder="Titolo, note, tag, formato...">
+          </label>
+          <label>
+            Piattaforma
+            <select id="platformFilter">
+              <option value="all">Tutte</option>
+              <option value="Instagram">Instagram</option>
+              <option value="TikTok">TikTok</option>
+              <option value="Facebook">Facebook</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="YouTube">YouTube</option>
+              <option value="X">X</option>
+            </select>
+          </label>
+          <label>
+            Stato
+            <select id="statusFilter">
+              <option value="all">Tutti</option>
+              <option value="Idea">Idea</option>
+              <option value="Da scrivere">Da scrivere</option>
+              <option value="Pronto">Pronto</option>
+              <option value="Programmato">Programmato</option>
+              <option value="Pubblicato">Pubblicato</option>
+            </select>
+          </label>
+          <label>
+            Priorita
+            <select id="priorityFilter">
+              <option value="all">Tutte</option>
+              <option value="Alta">Alta</option>
+              <option value="Media">Media</option>
+              <option value="Bassa">Bassa</option>
+            </select>
+          </label>
+          <label>
+            Responsabile
+            <input id="ownerFilter" type="text" placeholder="Es. Francesca">
+          </label>
+        </section>
+
+        <section class="panel compact-panel">
+          <h2>Vista rapida</h2>
+          <label class="check-row">
+            <input id="compactToggle" type="checkbox">
+            Layout compatto
+          </label>
+          <label class="check-row">
+            <input id="darkModeToggle" type="checkbox">
+            Modalita scura
+          </label>
+        </section>
+
+        <section class="panel stats">
+          <h2>Riepilogo mese</h2>
+          <div><span id="monthCount">0</span><small>contenuti</small></div>
+          <div><span id="readyCount">0</span><small>pronti o programmati</small></div>
+          <div><span id="publishedCount">0</span><small>pubblicati</small></div>
+        </section>
+
+        <section class="panel">
+          <h2>Piattaforme</h2>
+          <div class="platform-stats" id="platformStats"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Avvisi</h2>
+          <div class="warning-list" id="warningList"></div>
+        </section>
+
+        <section class="panel utility-actions">
+          <h2>Dati</h2>
+          <button class="secondary-action" id="exportCsvButton" type="button">Esporta CSV</button>
+          <button class="secondary-action" id="backupButton" type="button">Backup JSON</button>
+          <label class="file-button">
+            Importa CSV
+            <input id="importCsvInput" type="file" accept=".csv,text/csv">
+          </label>
+          <label class="file-button">
+            Ripristina backup
+            <input id="restoreInput" type="file" accept=".json,application/json">
+          </label>
+        </section>
+      </aside>
+
+      <section class="workspace">
+        <header class="calendar-toolbar">
+          <div class="period-controls">
+            <button class="icon-button" id="previousPeriod" type="button" aria-label="Periodo precedente">‹</button>
+            <button class="period-button" id="periodButton" type="button" aria-label="Scegli una data">
+              <span id="periodLabel"></span>
+            </button>
+            <button class="icon-button" id="nextPeriod" type="button" aria-label="Periodo successivo">›</button>
+          </div>
+          <div class="toolbar-actions">
+            <div class="view-switch" aria-label="Tipo vista">
+              <button id="monthViewButton" type="button" aria-pressed="true">Mese</button>
+              <button id="weekViewButton" type="button" aria-pressed="false">Settimana</button>
+              <button id="dayViewButton" type="button" aria-pressed="false">Giorno</button>
+              <button id="listViewButton" type="button" aria-pressed="false">Lista</button>
+            </div>
+            <button class="secondary-action" id="todayButton" type="button">Oggi</button>
+            <button class="secondary-action" id="printButton" type="button">Stampa</button>
+          </div>
+        </header>
+
+        <div class="weekdays" id="weekdays" aria-hidden="true">
+          <span>Lun</span>
+          <span>Mar</span>
+          <span>Mer</span>
+          <span>Gio</span>
+          <span>Ven</span>
+          <span>Sab</span>
+          <span>Dom</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="list-view" id="listView" hidden></div>
+      </section>
+    </main>
+
+    <dialog id="datePickerDialog">
+      <form id="datePickerForm" method="dialog">
+        <header>
+          <h2>Seleziona data</h2>
+          <button class="ghost-button" id="closeDatePicker" type="button" aria-label="Chiudi">x</button>
+        </header>
+        <label>
+          Vai alla data
+          <input id="jumpDate" type="date" required>
+        </label>
+        <footer>
+          <span></span>
+          <div>
+            <button class="secondary-action" id="cancelDatePicker" type="button">Annulla</button>
+            <button class="primary-action" type="submit">Vai</button>
+          </div>
+        </footer>
+      </form>
+    </dialog>
+
+    <dialog id="postDialog">
+      <form id="postForm" method="dialog">
+        <header>
+          <h2 id="dialogTitle">Nuovo contenuto</h2>
+          <button class="ghost-button" id="closeDialog" type="button" aria-label="Chiudi">x</button>
+        </header>
+
+        <input id="postId" type="hidden">
+
+        <div class="form-row">
+          <label>
+            Template
+            <select id="templateSelect">
+              <option value="">Nessun template</option>
+              <option value="Reel educativo">Reel educativo</option>
+              <option value="Carosello tips">Carosello tips</option>
+              <option value="Behind the scenes">Behind the scenes</option>
+              <option value="Recensione cliente">Recensione cliente</option>
+              <option value="Post LinkedIn">Post LinkedIn</option>
+              <option value="Short YouTube">Short YouTube</option>
+            </select>
+          </label>
+          <label>
+            Rubrica ricorrente
+            <select id="postRecurrence">
+              <option value="none">Non ricorrente</option>
+              <option value="weekly">Ogni settimana</option>
+              <option value="monthly">Ogni mese</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          Titolo
+          <input id="postTitle" type="text" maxlength="100" required placeholder="Es. Reel dietro le quinte">
+        </label>
+
+        <div class="form-row">
+          <label>
+            Data
+            <input id="postDate" type="date" required>
+          </label>
+          <label>
+            Ora
+            <input id="postTime" type="time">
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>
+            Piattaforma
+            <select id="postPlatform" required>
+              <option>Instagram</option>
+              <option>TikTok</option>
+              <option>Facebook</option>
+              <option>LinkedIn</option>
+              <option>YouTube</option>
+              <option>X</option>
+            </select>
+          </label>
+          <label>
+            Formato
+            <input id="postFormat" type="text" maxlength="40" placeholder="Es. Reel, carosello, short" list="formatOptions">
+            <datalist id="formatOptions"></datalist>
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>
+            Stato
+            <select id="postStatus" required>
+              <option>Idea</option>
+              <option>Da scrivere</option>
+              <option>Pronto</option>
+              <option>Programmato</option>
+              <option>Pubblicato</option>
+            </select>
+          </label>
+          <label>
+            Approvazione
+            <select id="postApproval">
+              <option>Bozza</option>
+              <option>Da revisionare</option>
+              <option>Approvato</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>
+            Priorita
+            <select id="postPriority">
+              <option>Media</option>
+              <option>Alta</option>
+              <option>Bassa</option>
+            </select>
+          </label>
+          <label>
+            Responsabile
+            <input id="postOwner" type="text" maxlength="60" placeholder="Es. Mario">
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>
+            Obiettivo
+            <select id="postGoal">
+              <option>Awareness</option>
+              <option>Vendita</option>
+              <option>Community</option>
+              <option>Educazione</option>
+              <option>Engagement</option>
+            </select>
+          </label>
+          <label>
+            Tag
+            <input id="postTags" type="text" maxlength="120" placeholder="Es. promo, tutorial, lancio">
+          </label>
+        </div>
+
+        <label>
+          Link asset
+          <input id="postAssetLink" type="url" placeholder="Canva, Drive, Dropbox, CapCut...">
+        </label>
+
+        <label>
+          Asset necessari
+          <input id="postAssets" type="text" maxlength="160" placeholder="Foto prodotto, video, grafiche, hashtag...">
+        </label>
+
+        <fieldset>
+          <legend>Checklist</legend>
+          <label class="check-row"><input id="checkIdea" type="checkbox"> Idea definita</label>
+          <label class="check-row"><input id="checkCopy" type="checkbox"> Copy scritto</label>
+          <label class="check-row"><input id="checkCreative" type="checkbox"> Creativita pronta</label>
+          <label class="check-row"><input id="checkReview" type="checkbox"> Revisione fatta</label>
+          <label class="check-row"><input id="checkScheduled" type="checkbox"> Programmato</label>
+        </fieldset>
+
+        <label>
+          Copy pubblico
+          <textarea id="postCopy" rows="4" placeholder="Testo del post, caption, hook..."></textarea>
+        </label>
+
+        <label>
+          Note interne
+          <textarea id="postNotes" rows="4" placeholder="Indicazioni, approvazioni, dubbi, cose da controllare..."></textarea>
+        </label>
+
+        <section class="history-box" id="historyBox" hidden>
+          <h3>Storico modifiche</h3>
+          <div id="historyList"></div>
+        </section>
+
+        <footer>
+          <button class="danger-action" id="deletePost" type="button">Elimina</button>
+          <div>
+            <button class="secondary-action" id="duplicatePost" type="button">Duplica</button>
+            <button class="secondary-action" id="cancelPost" type="button">Annulla</button>
+            <button class="primary-action" type="submit">Salva</button>
+          </div>
+        </footer>
+      </form>
+    </dialog>
+
+    <dialog id="settingsDialog">
+      <form id="settingsForm" method="dialog" class="settings-form">
+        <header>
+          <h2>Opzioni calendario</h2>
+          <button class="ghost-button" id="closeSettings" type="button" aria-label="Chiudi">x</button>
+        </header>
+
+        <section class="settings-section">
+          <h3>Pianificazione</h3>
+          <label>
+            Vista predefinita
+            <select id="defaultViewSetting">
+              <option value="month">Mese</option>
+              <option value="week">Settimana</option>
+              <option value="day">Giorno</option>
+              <option value="list">Lista</option>
+            </select>
+          </label>
+          <div class="settings-grid" id="targetSettings"></div>
+        </section>
+
+        <section class="settings-section">
+          <h3>Avvisi</h3>
+          <div class="form-row">
+            <label>
+              Max contenuti nello stesso giorno
+              <input id="maxPostsPerDaySetting" type="number" min="1" max="30" required>
+            </label>
+            <label>
+              Max giorni senza contenuti per piattaforma
+              <input id="maxGapDaysSetting" type="number" min="1" max="60" required>
+            </label>
+          </div>
+          <label class="check-row">
+            <input id="targetWarningsSetting" type="checkbox">
+            Avvisa quando una piattaforma e sotto target mensile
+          </label>
+        </section>
+
+        <section class="settings-section">
+          <h3>Campi visibili nei blocchi</h3>
+          <div class="settings-grid">
+            <label class="check-row"><input id="showTimeSetting" type="checkbox"> Ora</label>
+            <label class="check-row"><input id="showPlatformSetting" type="checkbox"> Piattaforma</label>
+            <label class="check-row"><input id="showStatusSetting" type="checkbox"> Stato</label>
+            <label class="check-row"><input id="showApprovalSetting" type="checkbox"> Approvazione</label>
+            <label class="check-row"><input id="showPrioritySetting" type="checkbox"> Priorita</label>
+            <label class="check-row"><input id="showOwnerSetting" type="checkbox"> Responsabile</label>
+            <label class="check-row"><input id="showChecklistSetting" type="checkbox"> Checklist</label>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3>Liste personalizzabili</h3>
+          <label>
+            Formati disponibili
+            <textarea id="formatsSetting" rows="3" placeholder="Uno per riga"></textarea>
+          </label>
+          <label>
+            Obiettivi disponibili
+            <textarea id="goalsSetting" rows="3" placeholder="Uno per riga"></textarea>
+          </label>
+          <label>
+            Template contenuti
+            <textarea id="templatesSetting" rows="5" placeholder="Nome | Piattaforma | Formato | Obiettivo | Asset"></textarea>
+          </label>
+        </section>
+
+        <section class="settings-section">
+          <h3>Accessi</h3>
+          <p class="form-note" id="accessNote">Accedi per gestire la lista utenti.</p>
+          <div class="access-current">
+            <span>Il tuo UID</span>
+            <code id="currentUserUid">Non connesso</code>
+            <button class="secondary-action" id="copyUidButton" type="button">Copia UID</button>
+          </div>
+          <div class="form-row">
+            <label>
+              UID utente da aggiungere
+              <input id="memberUidInput" type="text" placeholder="UID Firebase dell'utente">
+            </label>
+            <label>
+              Ruolo
+              <select id="memberRoleInput">
+                <option value="editor">Editor</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+          </div>
+          <button class="secondary-action" id="addMemberButton" type="button">Aggiungi utente</button>
+          <div class="member-list" id="memberList"></div>
+        </section>
+
+        <footer>
+          <button class="secondary-action" id="resetSettings" type="button">Ripristina default</button>
+          <div>
+            <button class="secondary-action" id="cancelSettings" type="button">Annulla</button>
+            <button class="primary-action" type="submit">Salva opzioni</button>
+          </div>
+        </footer>
+      </form>
+    </dialog>
+
+    <dialog id="loginDialog">
+      <form id="loginForm" method="dialog">
+        <header>
+          <h2>Accesso calendario</h2>
+          <button class="ghost-button" id="closeLogin" type="button" aria-label="Chiudi">x</button>
+        </header>
+        <p class="form-note" id="loginNote">Accedi con email e password per sincronizzare il calendario condiviso.</p>
+        <button class="secondary-action" id="googleLoginButton" type="button">Accedi con Google</button>
+        <label>
+          Email
+          <input id="loginEmail" type="email" autocomplete="email" required>
+        </label>
+        <label>
+          Password
+          <input id="loginPassword" type="password" autocomplete="current-password" required minlength="6">
+        </label>
+        <footer>
+          <button class="secondary-action" id="registerButton" type="button">Crea account</button>
+          <div>
+            <button class="secondary-action" id="cancelLogin" type="button">Annulla</button>
+            <button class="primary-action" type="submit">Entra</button>
+          </div>
+        </footer>
+      </form>
+    </dialog>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
