@@ -22,18 +22,18 @@ const defaultMonthlyTargets = {
 const defaultFormats = ["Reel", "Carosello", "Story", "Short", "Post", "Live", "Video"];
 const defaultGoals = ["Awareness", "Vendita", "Community", "Educazione", "Engagement"];
 const pastelColors = [
-  "#a7f3d0",
-  "#bae6fd",
-  "#c7d2fe",
-  "#ddd6fe",
-  "#fbcfe8",
-  "#fecaca",
-  "#fed7aa",
-  "#fef3c7",
-  "#d9f99d",
-  "#ccfbf1",
-  "#e5e7eb",
-  "#f5d0fe",
+  { value: "#a7f3d0", label: "Verde pastello" },
+  { value: "#bae6fd", label: "Azzurro pastello" },
+  { value: "#c7d2fe", label: "Blu lavanda" },
+  { value: "#ddd6fe", label: "Lilla pastello" },
+  { value: "#fbcfe8", label: "Rosa pastello" },
+  { value: "#fecaca", label: "Corallo pastello" },
+  { value: "#fed7aa", label: "Pesca pastello" },
+  { value: "#fef3c7", label: "Giallo pastello" },
+  { value: "#d9f99d", label: "Lime pastello" },
+  { value: "#ccfbf1", label: "Menta pastello" },
+  { value: "#e5e7eb", label: "Grigio chiaro" },
+  { value: "#f5d0fe", label: "Magenta pastello" },
 ];
 const defaultTemplates = {
   "Reel educativo": { platform: "Instagram", format: "Reel", goal: "Educazione", assets: "Video breve, sottotitoli, cover", checklist: { idea: true } },
@@ -110,6 +110,9 @@ const visibleFieldSettings = {
   checklist: document.querySelector("#showChecklistSetting"),
 };
 const colorPalette = document.querySelector("#colorPalette");
+const colorMenuButton = document.querySelector("#colorMenuButton");
+const selectedColorSwatch = document.querySelector("#selectedColorSwatch");
+const selectedColorLabel = document.querySelector("#selectedColorLabel");
 
 const viewButtons = {
   month: document.querySelector("#monthViewButton"),
@@ -189,6 +192,7 @@ document.querySelector("#registerButton").addEventListener("click", register);
 document.querySelector("#googleLoginButton").addEventListener("click", loginWithGoogle);
 document.querySelector("#gateGoogleLoginButton").addEventListener("click", loginWithGoogle);
 document.querySelector("#gateLogoutButton").addEventListener("click", logout);
+colorMenuButton.addEventListener("click", toggleColorMenu);
 loginForm.addEventListener("submit", login);
 document.querySelector("#closeSettings").addEventListener("click", closeSettingsDialog);
 document.querySelector("#cancelSettings").addEventListener("click", closeSettingsDialog);
@@ -679,22 +683,37 @@ function renderColorPalette() {
   colorPalette.innerHTML = "";
   pastelColors.forEach((color) => {
     const button = document.createElement("button");
-    button.className = "color-swatch";
+    button.className = "color-option";
     button.type = "button";
-    button.style.backgroundColor = color;
-    button.dataset.color = color;
-    button.setAttribute("aria-label", `Seleziona colore ${color}`);
-    button.addEventListener("click", () => setSelectedColor(color));
+    button.dataset.color = color.value;
+    button.innerHTML = `<span class="color-swatch" style="background-color: ${color.value}"></span><span>${color.label}</span>`;
+    button.addEventListener("click", () => {
+      setSelectedColor(color.value);
+      closeColorMenu();
+    });
     colorPalette.append(button);
   });
 }
 
 function setSelectedColor(color) {
-  const selectedColor = isValidColor(color) ? color : pastelColors[0];
+  const selectedColor = isValidColor(color) ? color : pastelColors[0].value;
+  const option = pastelColors.find((item) => item.value === selectedColor) || pastelColors[0];
   fields.color.value = selectedColor;
-  colorPalette.querySelectorAll(".color-swatch").forEach((button) => {
+  selectedColorSwatch.style.backgroundColor = selectedColor;
+  selectedColorLabel.textContent = option.label;
+  colorPalette.querySelectorAll(".color-option").forEach((button) => {
     button.classList.toggle("is-selected", button.dataset.color === selectedColor);
   });
+}
+
+function toggleColorMenu() {
+  colorPalette.hidden = !colorPalette.hidden;
+  colorMenuButton.setAttribute("aria-expanded", String(!colorPalette.hidden));
+}
+
+function closeColorMenu() {
+  colorPalette.hidden = true;
+  colorMenuButton.setAttribute("aria-expanded", "false");
 }
 
 function isValidColor(color) {
@@ -859,7 +878,7 @@ function openPostDialog(post = {}) {
   fields.status.value = normalized.status || "Idea";
   fields.approval.value = normalized.approval || "Bozza";
   fields.priority.value = normalized.priority || "Media";
-  setSelectedColor(normalized.color || pastelColors[0]);
+  setSelectedColor(normalized.color || pastelColors[0].value);
   fields.owner.value = normalized.owner || "";
   ensureSelectOption(fields.goal, normalized.goal);
   fields.goal.value = state.settings.goals.includes(normalized.goal) ? normalized.goal : state.settings.goals[0];
@@ -1439,7 +1458,7 @@ function normalizePost(post) {
     status: post.status || "Idea",
     approval: post.approval || "Bozza",
     priority: post.priority || "Media",
-    color: isValidColor(post.color) ? post.color : pastelColors[0],
+    color: isValidColor(post.color) ? post.color : pastelColors[0].value,
     owner: post.owner || "",
     goal: post.goal || "Awareness",
     tags: post.tags || "",

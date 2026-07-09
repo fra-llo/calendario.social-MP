@@ -278,7 +278,13 @@
           <label>
             Colore categoria
             <input id="postColor" type="hidden" value="#a7f3d0">
-            <div class="color-palette" id="colorPalette" aria-label="Palette colori pastello"></div>
+            <div class="color-menu" id="colorMenu">
+              <button class="color-menu-trigger" id="colorMenuButton" type="button" aria-expanded="false">
+                <span class="selected-swatch" id="selectedColorSwatch"></span>
+                <span id="selectedColorLabel">Verde pastello</span>
+              </button>
+              <div class="color-menu-options" id="colorPalette" hidden></div>
+            </div>
           </label>
           <label>
             Responsabile

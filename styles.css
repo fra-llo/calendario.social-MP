@@ -206,23 +206,57 @@ legend {
   width: auto;
 }
 
-.color-palette {
+.color-menu {
+  position: relative;
+}
+
+.color-menu-trigger,
+.color-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: var(--ink);
+  background: var(--surface);
+  text-align: left;
+  font-weight: 800;
+}
+
+.color-menu-options {
+  position: absolute;
+  z-index: 5;
+  inset: calc(100% + 6px) 0 auto 0;
   display: grid;
-  grid-template-columns: repeat(6, 34px);
-  gap: 8px;
+  gap: 6px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
-.color-swatch {
-  width: 34px;
-  height: 34px;
-  border: 2px solid var(--line);
+.color-option {
+  min-height: 36px;
+  padding: 7px 8px;
+}
+
+.color-option.is-selected {
+  border-color: var(--accent);
+  background: rgba(15, 118, 110, 0.1);
+}
+
+.color-swatch,
+.selected-swatch {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
   border-radius: 50%;
-  padding: 0;
-}
-
-.color-swatch.is-selected {
-  border-color: var(--ink);
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.22);
 }
 
 .primary-action,
