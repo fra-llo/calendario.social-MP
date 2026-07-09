@@ -114,6 +114,7 @@ const fields = {
   status: document.querySelector("#postStatus"),
   approval: document.querySelector("#postApproval"),
   priority: document.querySelector("#postPriority"),
+  color: document.querySelector("#postColor"),
   owner: document.querySelector("#postOwner"),
   goal: document.querySelector("#postGoal"),
   tags: document.querySelector("#postTags"),
@@ -631,6 +632,7 @@ function createPostChip(post) {
   chip.dataset.id = post.id;
   chip.dataset.platform = post.platform;
   chip.dataset.priority = post.priority || "Media";
+  applyPostColor(chip, post.color);
   chip.addEventListener("click", () => openPostDialog(post));
   chip.addEventListener("dragstart", (event) => {
     event.dataTransfer.setData("text/plain", post.id);
@@ -649,6 +651,16 @@ function createPostChip(post) {
     chip.append(progress);
   }
   return chip;
+}
+
+function applyPostColor(element, color) {
+  if (!isValidColor(color)) return;
+  element.style.borderLeftColor = color;
+  element.style.backgroundColor = `${color}1a`;
+}
+
+function isValidColor(color) {
+  return /^#[0-9a-f]{6}$/i.test(String(color || ""));
 }
 
 function getPostChipMeta(post) {
@@ -679,6 +691,7 @@ function renderListView() {
     const row = document.createElement("article");
     row.className = "list-item";
     row.dataset.platform = post.platform;
+    applyPostColor(row, post.color);
 
     const main = document.createElement("div");
     const title = document.createElement("h3");
@@ -808,6 +821,7 @@ function openPostDialog(post = {}) {
   fields.status.value = normalized.status || "Idea";
   fields.approval.value = normalized.approval || "Bozza";
   fields.priority.value = normalized.priority || "Media";
+  fields.color.value = normalized.color || "#0f766e";
   fields.owner.value = normalized.owner || "";
   ensureSelectOption(fields.goal, normalized.goal);
   fields.goal.value = state.settings.goals.includes(normalized.goal) ? normalized.goal : state.settings.goals[0];
@@ -956,6 +970,7 @@ function collectPostFromForm() {
     status: fields.status.value,
     approval: fields.approval.value,
     priority: fields.priority.value,
+    color: fields.color.value,
     owner: fields.owner.value.trim(),
     goal: fields.goal.value,
     tags: fields.tags.value.trim(),
@@ -1104,7 +1119,7 @@ function goToToday() {
 
 function exportCsv() {
   const rows = [
-    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "owner", "goal", "tags", "assetLink", "assets", "copy", "notes"],
+    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "tags", "assetLink", "assets", "copy", "notes"],
     ...state.posts.map((post) => [
       post.id,
       post.title,
@@ -1115,6 +1130,7 @@ function exportCsv() {
       post.status,
       post.approval,
       post.priority,
+      post.color,
       post.owner,
       post.goal,
       post.tags,
@@ -1347,6 +1363,7 @@ function seedPosts() {
       status: "Da scrivere",
       approval: "Bozza",
       priority: "Media",
+      color: "#0f766e",
       owner: "",
       goal: "Educazione",
       tags: "tutorial",
@@ -1363,6 +1380,7 @@ function seedPosts() {
       status: "Idea",
       approval: "Bozza",
       priority: "Alta",
+      color: "#dc2626",
       owner: "",
       goal: "Engagement",
       tags: "trend",
@@ -1383,6 +1401,7 @@ function normalizePost(post) {
     status: post.status || "Idea",
     approval: post.approval || "Bozza",
     priority: post.priority || "Media",
+    color: isValidColor(post.color) ? post.color : "#0f766e",
     owner: post.owner || "",
     goal: post.goal || "Awareness",
     tags: post.tags || "",
@@ -1413,6 +1432,7 @@ function rowToPost(row) {
     status: row.status,
     approval: row.approval,
     priority: row.priority,
+    color: row.color,
     owner: row.owner,
     goal: row.goal,
     tags: row.tags,
