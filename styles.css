@@ -97,7 +97,7 @@ button {
   font-weight: 800;
 }
 
-.auth-banner div {
+.auth-banner > div {
   display: flex;
   gap: 8px;
 }
@@ -421,6 +421,10 @@ body.is-dark .period-button:focus-visible {
   padding: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.hamburger-panel[hidden] {
+  display: none !important;
 }
 
 .hamburger-panel.is-open {
