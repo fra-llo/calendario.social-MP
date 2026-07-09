@@ -413,7 +413,7 @@ body.is-dark .period-button:focus-visible {
   z-index: 12;
   right: 0;
   top: calc(100% + 8px);
-  display: grid;
+  display: none;
   gap: 6px;
   min-width: 220px;
   border: 1px solid var(--line);
@@ -421,6 +421,10 @@ body.is-dark .period-button:focus-visible {
   padding: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.hamburger-panel.is-open {
+  display: grid;
 }
 
 .menu-item {

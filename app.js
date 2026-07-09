@@ -677,11 +677,13 @@ function purgeExpiredTrash() {
 }
 
 function toggleHamburgerMenu() {
-  hamburgerPanel.hidden = !hamburgerPanel.hidden;
-  hamburgerButton.setAttribute("aria-expanded", String(!hamburgerPanel.hidden));
+  const isOpen = hamburgerPanel.classList.toggle("is-open");
+  hamburgerPanel.hidden = !isOpen;
+  hamburgerButton.setAttribute("aria-expanded", String(isOpen));
 }
 
 function closeHamburgerMenu() {
+  hamburgerPanel.classList.remove("is-open");
   hamburgerPanel.hidden = true;
   hamburgerButton.setAttribute("aria-expanded", "false");
 }
