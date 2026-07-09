@@ -480,6 +480,8 @@ body.is-dark .period-button:focus-visible {
   content: "Chiudi";
 }
 
+.collapsible-panel > label:first-of-type,
+.collapsible-panel > div:first-of-type,
 .collapsible-panel .platform-stats,
 .members-details .member-list {
   margin-top: 12px;

@@ -41,8 +41,8 @@
 
         <button class="primary-action" id="newPostButton" type="button">+ Nuovo contenuto</button>
 
-        <section class="panel">
-          <h2>Ricerca e filtri</h2>
+        <details class="panel collapsible-panel">
+          <summary>Ricerca e filtri</summary>
           <label>
             Cerca
             <input id="searchInput" type="search" placeholder="Titolo, note, tag, formato...">
@@ -83,14 +83,14 @@
             Responsabile
             <input id="ownerFilter" type="text" placeholder="Es. Francesca">
           </label>
-        </section>
+        </details>
 
-        <section class="panel stats">
-          <h2>Riepilogo mese</h2>
+        <details class="panel stats collapsible-panel">
+          <summary>Riepilogo mese</summary>
           <div><span id="monthCount">0</span><small>contenuti</small></div>
           <div><span id="readyCount">0</span><small>pronti o programmati</small></div>
           <div><span id="publishedCount">0</span><small>pubblicati</small></div>
-        </section>
+        </details>
 
         <details class="panel collapsible-panel">
           <summary>Piattaforme</summary>
