@@ -409,7 +409,17 @@
           <button class="ghost-button" id="closeSettings" type="button" aria-label="Chiudi">x</button>
         </header>
 
-        <section class="settings-section">
+        <nav class="settings-tabs" aria-label="Sezioni impostazioni">
+          <button type="button" data-settings-tab-button="general" aria-pressed="true">Generale</button>
+          <button type="button" data-settings-tab-button="appearance" aria-pressed="false">Aspetto</button>
+          <button type="button" data-settings-tab-button="alerts" aria-pressed="false">Avvisi</button>
+          <button type="button" data-settings-tab-button="fields" aria-pressed="false">Campi</button>
+          <button type="button" data-settings-tab-button="content" aria-pressed="false">Contenuti</button>
+          <button type="button" data-settings-tab-button="backup" aria-pressed="false">Backup</button>
+          <button type="button" data-settings-tab-button="access" aria-pressed="false">Accessi</button>
+        </nav>
+
+        <section class="settings-section" data-settings-tab="general">
           <h3>Pianificazione</h3>
           <label>
             Vista predefinita
@@ -423,7 +433,7 @@
           <div class="settings-grid" id="targetSettings"></div>
         </section>
 
-        <section class="settings-section">
+        <section class="settings-section" data-settings-tab="appearance">
           <h3>Aspetto</h3>
           <label class="check-row">
             <input id="darkModeToggle" type="checkbox">
@@ -431,7 +441,7 @@
           </label>
         </section>
 
-        <section class="settings-section">
+        <section class="settings-section" data-settings-tab="alerts">
           <h3>Avvisi</h3>
           <div class="form-row">
             <label>
@@ -449,7 +459,7 @@
           </label>
         </section>
 
-        <section class="settings-section">
+        <section class="settings-section" data-settings-tab="fields">
           <h3>Campi visibili nei blocchi</h3>
           <div class="settings-grid">
             <label class="check-row"><input id="showTimeSetting" type="checkbox"> Ora</label>
@@ -462,12 +472,18 @@
           </div>
         </section>
 
-        <section class="settings-section">
-          <h3>Liste personalizzabili</h3>
-          <label>
+        <section class="settings-section" data-settings-tab="content">
+          <h3>Temi</h3>
+          <div class="theme-editor" id="themeEditor"></div>
+          <button class="secondary-action" id="addThemeSetting" type="button">+ Aggiungi tema</button>
+          <label class="is-hidden-setting">
             Temi disponibili
             <textarea id="themesSetting" rows="4" placeholder="Icona | Nome | Colore"></textarea>
           </label>
+        </section>
+
+        <section class="settings-section" data-settings-tab="content">
+          <h3>Liste personalizzabili</h3>
           <label>
             Formati disponibili
             <textarea id="formatsSetting" rows="3" placeholder="Uno per riga"></textarea>
@@ -482,7 +498,7 @@
           </label>
         </section>
 
-        <section class="settings-section">
+        <section class="settings-section" data-settings-tab="backup">
           <h3>Backup e salvataggi</h3>
           <div class="settings-grid">
             <button class="secondary-action" id="exportCsvButton" type="button">Esporta CSV</button>
@@ -498,7 +514,7 @@
           </div>
         </section>
 
-        <section class="settings-section">
+        <section class="settings-section" data-settings-tab="access">
           <h3>Accessi</h3>
           <p class="form-note" id="accessNote">Accedi per gestire la lista utenti.</p>
           <div class="access-current">

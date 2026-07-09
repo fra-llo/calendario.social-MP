@@ -123,6 +123,7 @@ const targetWarningsSetting = document.querySelector("#targetWarningsSetting");
 const formatsSetting = document.querySelector("#formatsSetting");
 const goalsSetting = document.querySelector("#goalsSetting");
 const themesSetting = document.querySelector("#themesSetting");
+const themeEditor = document.querySelector("#themeEditor");
 const templatesSetting = document.querySelector("#templatesSetting");
 const currentUserUid = document.querySelector("#currentUserUid");
 const accessNote = document.querySelector("#accessNote");
@@ -255,7 +256,12 @@ document.querySelector("#cancelSettings").addEventListener("click", closeSetting
 document.querySelector("#resetSettings").addEventListener("click", resetSettings);
 document.querySelector("#copyUidButton").addEventListener("click", copyCurrentUid);
 document.querySelector("#addMemberButton").addEventListener("click", addMember);
+document.querySelector("#addThemeSetting").addEventListener("click", addThemeSettingRow);
 settingsForm.addEventListener("submit", saveSettings);
+
+document.querySelectorAll("[data-settings-tab-button]").forEach((button) => {
+  button.addEventListener("click", () => setSettingsTab(button.dataset.settingsTabButton));
+});
 
 Object.entries(viewButtons).forEach(([viewMode, button]) => {
   button.addEventListener("click", () => setViewMode(viewMode));
@@ -1397,7 +1403,9 @@ function openSettingsDialog() {
   formatsSetting.value = state.settings.formats.join("\n");
   goalsSetting.value = state.settings.goals.join("\n");
   themesSetting.value = themesToText(state.settings.themes);
+  renderThemeEditor(state.settings.themes);
   templatesSetting.value = templatesToText(state.settings.templates, state.settings.themes);
+  setSettingsTab("general");
   if (!settingsDialog.open) settingsDialog.showModal();
 }
 
@@ -1428,7 +1436,8 @@ function saveSettings(event) {
   targetSettings.querySelectorAll("input[data-platform]").forEach((input) => {
     monthlyTargets[input.dataset.platform] = Number(input.value) || 0;
   });
-  const themes = parseThemes(themesSetting.value);
+  const themes = collectThemesFromEditor();
+  themesSetting.value = themesToText(themes);
 
   state.settings = normalizeSettings({
     ...state.settings,
@@ -1454,6 +1463,84 @@ function saveSettings(event) {
   applySettings();
   closeSettingsDialog();
   render();
+}
+
+function setSettingsTab(tab) {
+  document.querySelectorAll("[data-settings-tab-button]").forEach((button) => {
+    const active = button.dataset.settingsTabButton === tab;
+    button.setAttribute("aria-pressed", String(active));
+  });
+  document.querySelectorAll("[data-settings-tab]").forEach((section) => {
+    section.hidden = section.dataset.settingsTab !== tab;
+  });
+}
+
+function renderThemeEditor(themes) {
+  themeEditor.innerHTML = "";
+  normalizeThemes(themes).forEach((theme) => {
+    themeEditor.append(createThemeEditorRow(theme));
+  });
+}
+
+function createThemeEditorRow(theme = {}) {
+  const row = document.createElement("div");
+  row.className = "theme-editor-row";
+  row.dataset.themeId = theme.id || "";
+
+  const icon = document.createElement("input");
+  icon.type = "text";
+  icon.maxLength = 4;
+  icon.value = theme.icon || "•";
+  icon.setAttribute("aria-label", "Icona tema");
+
+  const name = document.createElement("input");
+  name.type = "text";
+  name.maxLength = 40;
+  name.value = theme.name || "";
+  name.placeholder = "Nome tema";
+  name.required = true;
+  name.setAttribute("aria-label", "Nome tema");
+
+  const color = document.createElement("input");
+  color.type = "color";
+  color.value = isValidColor(theme.color) ? theme.color : defaultThemes[0].color;
+  color.setAttribute("aria-label", "Colore tema");
+
+  const remove = document.createElement("button");
+  remove.className = "danger-action";
+  remove.type = "button";
+  remove.textContent = "Rimuovi";
+  remove.addEventListener("click", () => {
+    if (themeEditor.querySelectorAll(".theme-editor-row").length <= 1) return;
+    row.remove();
+  });
+
+  row.append(icon, name, color, remove);
+  return row;
+}
+
+function addThemeSettingRow() {
+  themeEditor.append(createThemeEditorRow({
+    id: "",
+    icon: "•",
+    name: "Nuovo tema",
+    color: defaultThemes[themeEditor.querySelectorAll(".theme-editor-row").length % defaultThemes.length].color,
+  }));
+}
+
+function collectThemesFromEditor() {
+  const themes = Array.from(themeEditor.querySelectorAll(".theme-editor-row")).map((row, index) => {
+    const [icon, name, color] = row.querySelectorAll("input");
+    const themeName = name.value.trim();
+    if (!themeName) return null;
+    return {
+      id: row.dataset.themeId || slugify(themeName) || `tema-${index + 1}`,
+      icon: icon.value.trim() || "•",
+      name: themeName,
+      color: isValidColor(color.value) ? color.value : defaultThemes[index % defaultThemes.length].color,
+    };
+  }).filter(Boolean);
+  return normalizeThemes(themes);
 }
 
 function resetSettings() {
