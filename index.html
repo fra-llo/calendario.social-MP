@@ -419,20 +419,22 @@
             <code id="currentUserUid">Non connesso</code>
             <button class="secondary-action" id="copyUidButton" type="button">Copia UID</button>
           </div>
-          <div class="form-row">
-            <label>
-              UID utente da aggiungere
-              <input id="memberUidInput" type="text" placeholder="UID Firebase dell'utente">
-            </label>
-            <label>
-              Ruolo
-              <select id="memberRoleInput">
-                <option value="editor">Editor</option>
-                <option value="admin">Admin</option>
-              </select>
-            </label>
+          <div class="admin-access-controls" id="adminAccessControls">
+            <div class="form-row">
+              <label>
+                UID utente da aggiungere
+                <input id="memberUidInput" type="text" placeholder="UID Firebase dell'utente">
+              </label>
+              <label>
+                Ruolo
+                <select id="memberRoleInput">
+                  <option value="editor">Editor</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </label>
+            </div>
+            <button class="secondary-action" id="addMemberButton" type="button">Aggiungi utente</button>
           </div>
-          <button class="secondary-action" id="addMemberButton" type="button">Aggiungi utente</button>
           <div class="member-list" id="memberList"></div>
         </section>
 

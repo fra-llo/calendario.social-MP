@@ -82,6 +82,7 @@ const goalsSetting = document.querySelector("#goalsSetting");
 const templatesSetting = document.querySelector("#templatesSetting");
 const currentUserUid = document.querySelector("#currentUserUid");
 const accessNote = document.querySelector("#accessNote");
+const adminAccessControls = document.querySelector("#adminAccessControls");
 const memberUidInput = document.querySelector("#memberUidInput");
 const memberRoleInput = document.querySelector("#memberRoleInput");
 const memberList = document.querySelector("#memberList");
@@ -475,6 +476,7 @@ function renderMembers() {
   accessNote.textContent = cloud.user
     ? isAdmin ? "Sei admin: puoi aggiungere utenti tramite UID." : "Sei editor: puoi vedere la lista, ma non modificarla."
     : "Accedi per gestire la lista utenti.";
+  adminAccessControls.hidden = !isAdmin;
   memberUidInput.disabled = !isAdmin;
   memberRoleInput.disabled = !isAdmin;
   document.querySelector("#addMemberButton").disabled = !isAdmin;
@@ -498,16 +500,18 @@ function renderMembers() {
     meta.textContent = `${member.role || "editor"} - ${member.uid}`;
     info.append(title, meta);
 
-    const actions = document.createElement("div");
-    const remove = document.createElement("button");
-    remove.className = "danger-action";
-    remove.type = "button";
-    remove.textContent = "Rimuovi";
-    remove.disabled = !isAdmin || member.uid === cloud.user.uid;
-    remove.addEventListener("click", () => removeMember(member.uid));
-    actions.append(remove);
-
-    row.append(info, actions);
+    row.append(info);
+    if (isAdmin) {
+      const actions = document.createElement("div");
+      const remove = document.createElement("button");
+      remove.className = "danger-action";
+      remove.type = "button";
+      remove.textContent = "Rimuovi";
+      remove.disabled = member.uid === cloud.user.uid;
+      remove.addEventListener("click", () => removeMember(member.uid));
+      actions.append(remove);
+      row.append(actions);
+    }
     memberList.append(row);
   });
 }
