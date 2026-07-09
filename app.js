@@ -58,6 +58,7 @@ const weekdays = document.querySelector("#weekdays");
 const appShell = document.querySelector(".app-shell");
 const authGate = document.querySelector("#authGate");
 const sidebarResizer = document.querySelector("#sidebarResizer");
+const sidebarReopen = document.querySelector("#sidebarReopen");
 const periodLabel = document.querySelector("#periodLabel");
 const periodButton = document.querySelector("#periodButton");
 const postDialog = document.querySelector("#postDialog");
@@ -182,6 +183,7 @@ document.querySelector("#newPostButton").addEventListener("click", () => openPos
 document.querySelector("#settingsButton").addEventListener("click", openSettingsDialog);
 document.querySelector("#trashButton").addEventListener("click", openTrashDialog);
 sidebarResizer.addEventListener("pointerdown", startSidebarResize);
+sidebarReopen.addEventListener("click", reopenSidebar);
 hamburgerButton.addEventListener("click", toggleHamburgerMenu);
 periodButton.addEventListener("click", openDatePicker);
 document.querySelector("#closeDatePicker").addEventListener("click", closeDatePicker);
@@ -461,7 +463,12 @@ function cloudActive() {
 
 function applySidebarWidth() {
   const storedWidth = Number(localStorage.getItem("social-content-calendar-sidebar-width"));
+  if (storedWidth === 0) {
+    collapseSidebar();
+    return;
+  }
   const width = clampSidebarWidth(storedWidth || 270);
+  document.body.classList.remove("is-sidebar-collapsed");
   document.documentElement.style.setProperty("--sidebar-width", `${width}px`);
 }
 
@@ -475,7 +482,13 @@ function startSidebarResize(event) {
 
 function resizeSidebar(event) {
   if (!resizingSidebar) return;
+  if (event.clientX < 120) {
+    collapseSidebar();
+    localStorage.setItem("social-content-calendar-sidebar-width", "0");
+    return;
+  }
   const width = clampSidebarWidth(event.clientX);
+  document.body.classList.remove("is-sidebar-collapsed");
   document.documentElement.style.setProperty("--sidebar-width", `${width}px`);
   localStorage.setItem("social-content-calendar-sidebar-width", String(width));
 }
@@ -488,6 +501,18 @@ function stopSidebarResize() {
 
 function clampSidebarWidth(width) {
   return Math.min(330, Math.max(230, Number(width) || 270));
+}
+
+function collapseSidebar() {
+  document.body.classList.add("is-sidebar-collapsed");
+  document.documentElement.style.setProperty("--sidebar-width", "0px");
+}
+
+function reopenSidebar() {
+  const width = 270;
+  document.body.classList.remove("is-sidebar-collapsed");
+  document.documentElement.style.setProperty("--sidebar-width", `${width}px`);
+  localStorage.setItem("social-content-calendar-sidebar-width", String(width));
 }
 
 function postsCollection() {

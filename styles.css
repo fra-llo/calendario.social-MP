@@ -149,6 +149,16 @@ button {
   overflow: hidden;
 }
 
+body.is-sidebar-collapsed .app-shell {
+  grid-template-columns: 0 6px minmax(0, 1fr);
+}
+
+body.is-sidebar-collapsed .sidebar {
+  padding-left: 0;
+  padding-right: 0;
+  border-right: 0;
+}
+
 .sidebar-resizer {
   width: 6px;
   min-height: 100%;
@@ -156,6 +166,28 @@ button {
   padding: 0;
   cursor: col-resize;
   background: transparent;
+}
+
+.sidebar-reopen {
+  position: fixed;
+  left: 8px;
+  top: 58px;
+  z-index: 10;
+  display: none;
+  width: 34px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+body.is-sidebar-collapsed .sidebar-reopen {
+  display: grid;
+  place-items: center;
 }
 
 .sidebar-resizer:hover,
@@ -928,8 +960,16 @@ form footer > div {
     grid-template-columns: 1fr;
   }
 
+  body.is-sidebar-collapsed .app-shell {
+    grid-template-columns: 1fr;
+  }
+
   .sidebar-resizer {
     display: none;
+  }
+
+  .sidebar-reopen {
+    display: none !important;
   }
 
   .sidebar {
