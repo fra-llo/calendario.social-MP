@@ -190,18 +190,38 @@
     <dialog id="statsDialog">
       <section class="stats-panel">
         <header>
-          <h2>Statistiche</h2>
+          <div>
+            <p class="eyebrow">Statistiche</p>
+            <h2 id="statsPeriodTitle">Statistiche</h2>
+          </div>
           <button class="ghost-button" id="closeStats" type="button" aria-label="Chiudi">x</button>
         </header>
-        <section class="theme-distribution">
-          <p class="eyebrow">Distribuzione temi</p>
-          <label>
-            Tema
-            <select id="statsThemeFilter"></select>
-          </label>
-          <div class="theme-stack" id="themeStack"></div>
-          <div class="theme-bars" id="themeBars"></div>
-        </section>
+        <div class="stats-summary-grid" id="statsSummaryGrid"></div>
+        <div class="stats-layout">
+          <section class="stats-card">
+            <h3>Piattaforme</h3>
+            <div class="stats-bars" id="statsPlatformBars"></div>
+          </section>
+          <section class="stats-card">
+            <h3>Stati</h3>
+            <div class="stats-bars" id="statsStatusBars"></div>
+          </section>
+          <section class="stats-card theme-distribution">
+            <div class="stats-card-heading">
+              <h3>Distribuzione temi</h3>
+              <label>
+                Tema
+                <select id="statsThemeFilter"></select>
+              </label>
+            </div>
+            <div class="theme-stack" id="themeStack"></div>
+            <div class="theme-bars" id="themeBars"></div>
+          </section>
+          <section class="stats-card">
+            <h3>Criticita</h3>
+            <div class="stats-insights" id="statsInsights"></div>
+          </section>
+        </div>
       </section>
     </dialog>
 

@@ -100,9 +100,14 @@ const undoMessage = document.querySelector("#undoMessage");
 const trashDialog = document.querySelector("#trashDialog");
 const trashList = document.querySelector("#trashList");
 const statsDialog = document.querySelector("#statsDialog");
+const statsPeriodTitle = document.querySelector("#statsPeriodTitle");
+const statsSummaryGrid = document.querySelector("#statsSummaryGrid");
+const statsPlatformBars = document.querySelector("#statsPlatformBars");
+const statsStatusBars = document.querySelector("#statsStatusBars");
 const statsThemeFilter = document.querySelector("#statsThemeFilter");
 const themeStack = document.querySelector("#themeStack");
 const themeBars = document.querySelector("#themeBars");
+const statsInsights = document.querySelector("#statsInsights");
 const dayDialog = document.querySelector("#dayDialog");
 const dayDialogTitle = document.querySelector("#dayDialogTitle");
 const dayDialogSummary = document.querySelector("#dayDialogSummary");
@@ -309,7 +314,7 @@ function render() {
   renderPlatformStats();
   renderWarnings();
   updateFilterToolbar();
-  if (statsDialog.open) renderThemeDistribution();
+  if (statsDialog.open) renderStatsDialog();
 }
 
 function initCloud() {
@@ -697,7 +702,7 @@ function closeTrashDialog() {
 function openStatsDialog() {
   closeHamburgerMenu();
   populateStatsThemeFilter();
-  renderThemeDistribution();
+  renderStatsDialog();
   if (!statsDialog.open) statsDialog.showModal();
 }
 
@@ -1180,8 +1185,87 @@ function renderPlatformStats() {
   });
 }
 
-function renderThemeDistribution() {
+function renderStatsDialog() {
   const monthPosts = getMonthPosts(state.posts);
+  statsPeriodTitle.textContent = formatMonthLabel(state.visibleDate);
+  renderStatsSummary(monthPosts);
+  renderStatsDistributionBars(statsPlatformBars, getPlatformStats(monthPosts), "target");
+  renderStatsDistributionBars(statsStatusBars, getStatusStats(monthPosts), "count");
+  renderThemeDistribution(monthPosts);
+  renderStatsInsights(monthPosts);
+}
+
+function renderStatsSummary(posts) {
+  const ready = posts.filter((post) => ["Pronto", "Programmato"].includes(post.status)).length;
+  const published = posts.filter((post) => post.status === "Pubblicato").length;
+  const missingAssets = posts.filter((post) => !post.assets && !post.assetLink).length;
+  const completion = posts.length ? Math.round((posts.reduce((sum, post) => sum + checklistProgress(post), 0) / posts.length)) : 0;
+  statsSummaryGrid.innerHTML = "";
+  [
+    ["Contenuti", posts.length],
+    ["Pronti/programmati", ready],
+    ["Pubblicati", published],
+    ["Checklist media", `${completion}%`],
+    ["Senza asset", missingAssets],
+    ["Giorni attivi", new Set(posts.map((post) => post.date)).size],
+  ].forEach(([label, value]) => {
+    const item = document.createElement("div");
+    item.className = "stats-summary-item";
+    item.innerHTML = `<strong>${value}</strong><span>${label}</span>`;
+    statsSummaryGrid.append(item);
+  });
+}
+
+function getPlatformStats(posts) {
+  return platforms.map((platform) => {
+    const count = posts.filter((post) => post.platform === platform).length;
+    const target = Number(state.settings.monthlyTargets[platform]) || 0;
+    return {
+      label: platform,
+      count,
+      target,
+      percentage: target ? Math.min(100, Math.round((count / target) * 100)) : 0,
+    };
+  });
+}
+
+function getStatusStats(posts) {
+  const statuses = ["Idea", "Da scrivere", "Pronto", "Programmato", "Pubblicato"];
+  const total = posts.length || 0;
+  return statuses.map((status) => {
+    const count = posts.filter((post) => post.status === status).length;
+    return {
+      label: status,
+      count,
+      target: total,
+      percentage: total ? Math.round((count / total) * 100) : 0,
+    };
+  });
+}
+
+function renderStatsDistributionBars(container, items, mode) {
+  container.innerHTML = "";
+  if (!items.some((item) => item.count > 0 || item.target > 0)) {
+    const empty = document.createElement("p");
+    empty.className = "empty-day";
+    empty.textContent = "Nessun dato disponibile.";
+    container.append(empty);
+    return;
+  }
+  items.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "stats-bar-row";
+    const value = mode === "target" ? `${item.count}/${item.target}` : `${item.count}`;
+    row.innerHTML = `
+      <span>${item.label}</span>
+      <span class="stats-meter"><span style="width: ${item.percentage}%"></span></span>
+      <strong>${value}</strong>
+    `;
+    container.append(row);
+  });
+}
+
+function renderThemeDistribution(monthPosts = getMonthPosts(state.posts)) {
   const themes = state.settings.themes;
   const selectedTheme = statsThemeFilter.value || "all";
   const total = monthPosts.length || 0;
@@ -1226,6 +1310,38 @@ function renderThemeDistribution() {
     `;
     row.querySelector(".theme-label").title = theme.name;
     themeBars.append(row);
+  });
+}
+
+function renderStatsInsights(posts) {
+  const insights = [];
+  const missingAssets = posts.filter((post) => !post.assets && !post.assetLink);
+  const missingOwner = posts.filter((post) => !post.owner);
+  const reviewNeeded = posts.filter((post) => post.approval === "Da revisionare");
+  const overloadedDays = Object.entries(groupBy(posts, "date"))
+    .filter(([, dayPosts]) => dayPosts.length > state.settings.warningRules.maxPostsPerDay);
+
+  if (missingAssets.length) insights.push(`${missingAssets.length} contenuti senza asset o link asset.`);
+  if (missingOwner.length) insights.push(`${missingOwner.length} contenuti senza responsabile.`);
+  if (reviewNeeded.length) insights.push(`${reviewNeeded.length} contenuti da revisionare.`);
+  overloadedDays.forEach(([date, dayPosts]) => {
+    insights.push(`${formatShortDate(parseDateKey(date))}: ${dayPosts.length} contenuti nello stesso giorno.`);
+  });
+  getPlatformStats(posts).forEach((item) => {
+    if (item.target && item.count < item.target) insights.push(`${item.label}: mancano ${item.target - item.count} contenuti per il target mensile.`);
+  });
+
+  statsInsights.innerHTML = "";
+  if (!insights.length) {
+    const ok = document.createElement("p");
+    ok.textContent = "Nessuna criticita rilevante per il mese selezionato.";
+    statsInsights.append(ok);
+    return;
+  }
+  insights.slice(0, 10).forEach((insight) => {
+    const item = document.createElement("p");
+    item.textContent = insight;
+    statsInsights.append(item);
   });
 }
 
