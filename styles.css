@@ -1123,14 +1123,6 @@ body.is-dark .period-button:focus-visible {
   place-items: center;
 }
 
-.list-item.is-incomplete {
-  background-image: linear-gradient(90deg, rgba(217, 119, 6, 0.08), transparent 42%);
-}
-
-.list-item.is-overdue {
-  border-color: rgba(180, 35, 24, 0.45);
-}
-
 .list-item[data-platform="TikTok"] { border-left-color: #111827; }
 .list-item[data-platform="Facebook"] { border-left-color: #2563eb; }
 .list-item[data-platform="LinkedIn"] { border-left-color: #0a66c2; }
