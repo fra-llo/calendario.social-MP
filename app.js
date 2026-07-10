@@ -1657,6 +1657,7 @@ function openPostDialog(post = {}) {
 
 function renderHistory(history) {
   historyBox.hidden = !history.length;
+  historyBox.open = false;
   historyList.innerHTML = "";
   history.slice().reverse().forEach((entry) => {
     const item = document.createElement("p");

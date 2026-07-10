@@ -28,7 +28,7 @@
             <button class="menu-item" id="statsButton" type="button">Statistiche</button>
             <button class="menu-item" id="printButton" type="button">Stampa</button>
             <button class="menu-item" id="trashButton" type="button">Cestino</button>
-            <button class="menu-item" id="logoutButton" type="button" hidden>Esci</button>
+            <button class="menu-item" id="logoutButton" type="button" hidden>Logout</button>
           </div>
         </div>
       </div>
@@ -449,10 +449,10 @@
           <textarea id="postNotes" rows="4" placeholder="Indicazioni, approvazioni, dubbi, cose da controllare..."></textarea>
         </label>
 
-        <section class="history-box" id="historyBox" hidden>
-          <h3>Storico modifiche</h3>
+        <details class="history-box" id="historyBox" hidden>
+          <summary>Storico modifiche</summary>
           <div id="historyList"></div>
-        </section>
+        </details>
 
         <footer>
           <button class="danger-action" id="deletePost" type="button">Elimina</button>

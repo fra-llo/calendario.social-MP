@@ -718,7 +718,7 @@ body.is-dark .period-button:focus-visible {
 }
 
 .period-controls {
-  flex: 1 1 360px;
+  flex: 0 1 auto;
 }
 
 .toolbar-actions {
@@ -788,7 +788,7 @@ body.is-dark .period-button:focus-visible {
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 12px;
   min-height: 38px;
   border: 0;
   border-radius: var(--radius);
@@ -804,10 +804,20 @@ body.is-dark .period-button:focus-visible {
   color: var(--accent);
 }
 
+.menu-item::before {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 22px;
+  width: 22px;
+  color: var(--ink);
+  font-size: 1.08rem;
+  line-height: 1;
+}
+
 #settingsButton::before { content: "⚙"; }
-#statsButton::before { content: "▦"; }
+#statsButton::before { content: "▥"; }
 #printButton::before { content: "⎙"; }
-#trashButton::before { content: "⌫"; }
+#trashButton::before { content: "🗑"; }
 #logoutButton::before { content: "↪"; }
 
 .collapsible-panel {
@@ -882,7 +892,7 @@ body.is-dark .period-button:focus-visible {
 }
 
 .period-button {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   min-height: 42px;
   border: 0;
@@ -1193,24 +1203,47 @@ body.is-dark .period-button:focus-visible {
 }
 
 .history-box {
-  display: grid;
-  gap: 8px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 12px;
   background: var(--surface-soft);
 }
 
-.history-box h3,
+.history-box summary {
+  cursor: pointer;
+  padding: 12px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 900;
+  list-style: none;
+}
+
+.history-box summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-box summary::after {
+  content: "Apri";
+  float: right;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.history-box[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.history-box[open] summary::after {
+  content: "Chiudi";
+}
+
+#historyList {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
 .history-box p {
   margin: 0;
-}
-
-.history-box h3 {
-  font-size: 0.95rem;
-}
-
-.history-box p {
   color: var(--muted);
   font-size: 0.82rem;
 }
