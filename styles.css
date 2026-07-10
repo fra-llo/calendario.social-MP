@@ -1,17 +1,21 @@
 :root {
   color-scheme: light;
   --sidebar-width: 270px;
-  --bg: #f4f2ed;
+  --bg: #f6f5f1;
   --surface: #ffffff;
-  --surface-soft: #fbfaf7;
-  --ink: #202124;
-  --muted: #6b6760;
-  --line: #ded9ce;
-  --accent: #0f766e;
-  --accent-dark: #115e59;
+  --surface-soft: #f9f8f4;
+  --ink: #1f2328;
+  --muted: #666c75;
+  --line: #dedbd2;
+  --accent: #0b7a75;
+  --accent-dark: #075f5b;
+  --accent-soft: rgba(11, 122, 117, 0.11);
   --danger: #b42318;
-  --warning: #9a6700;
-  --shadow: 0 20px 60px rgba(32, 33, 36, 0.12);
+  --warning: #a15c00;
+  --control: #ebe7de;
+  --shadow: 0 18px 50px rgba(31, 35, 40, 0.13);
+  --shadow-soft: 0 8px 26px rgba(31, 35, 40, 0.08);
+  --radius: 8px;
 }
 
 body.is-dark {
@@ -24,9 +28,12 @@ body.is-dark {
   --line: #3a3a3a;
   --accent: #2dd4bf;
   --accent-dark: #14b8a6;
+  --accent-soft: rgba(45, 212, 191, 0.16);
   --danger: #f87171;
   --warning: #facc15;
+  --control: #333333;
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --shadow-soft: 0 8px 26px rgba(0, 0, 0, 0.25);
 }
 
 * {
@@ -55,6 +62,22 @@ textarea {
 
 button {
   cursor: pointer;
+}
+
+button,
+input,
+select,
+textarea {
+  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 2px;
 }
 
 .auth-gate {
@@ -306,7 +329,7 @@ legend {
   gap: 9px;
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 9px 10px;
   color: var(--ink);
   background: var(--surface);
@@ -336,7 +359,7 @@ legend {
 
 .color-option.is-selected {
   border-color: var(--accent);
-  background: rgba(15, 118, 110, 0.1);
+  background: var(--accent-soft);
 }
 
 .color-swatch,
@@ -355,7 +378,7 @@ legend {
 .icon-button,
 .file-button {
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius);
   min-height: 40px;
   padding: 0 14px;
   font-weight: 800;
@@ -368,12 +391,13 @@ legend {
 
 .primary-action:hover {
   background: var(--accent-dark);
+  box-shadow: var(--shadow-soft);
 }
 
 .secondary-action,
 .file-button {
   color: var(--ink);
-  background: #e9e4d9;
+  background: var(--control);
 }
 
 body.is-dark .secondary-action,
@@ -381,7 +405,13 @@ body.is-dark .file-button,
 body.is-dark .icon-button,
 body.is-dark .period-button:hover,
 body.is-dark .period-button:focus-visible {
-  background: #333333;
+  background: var(--control);
+}
+
+.secondary-action:hover,
+.file-button:hover,
+.icon-button:hover {
+  background: color-mix(in srgb, var(--control) 84%, var(--accent) 16%);
 }
 
 .danger-action {
@@ -488,7 +518,7 @@ body.is-dark .period-button:focus-visible {
 
 .stats-summary-item {
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 12px;
   background: var(--surface-soft);
 }
@@ -521,9 +551,10 @@ body.is-dark .period-button:focus-visible {
   align-content: start;
   gap: 14px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 14px;
   background: var(--surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .stats-card:nth-child(1),
@@ -565,7 +596,7 @@ body.is-dark .period-button:focus-visible {
   height: 12px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(107, 103, 96, 0.12);
+  background: color-mix(in srgb, var(--muted) 14%, transparent);
 }
 
 .theme-stack span {
@@ -594,7 +625,7 @@ body.is-dark .period-button:focus-visible {
   height: 8px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(107, 103, 96, 0.1);
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
 }
 
 .theme-meter span {
@@ -634,7 +665,7 @@ body.is-dark .period-button:focus-visible {
   height: 8px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(107, 103, 96, 0.1);
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
 }
 
 .stats-meter span {
@@ -740,7 +771,7 @@ body.is-dark .period-button:focus-visible {
   gap: 6px;
   min-width: 220px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
@@ -760,7 +791,7 @@ body.is-dark .period-button:focus-visible {
   gap: 9px;
   min-height: 38px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius);
   padding: 0 10px;
   color: var(--ink);
   background: transparent;
@@ -769,8 +800,15 @@ body.is-dark .period-button:focus-visible {
 }
 
 .menu-item:hover {
-  background: rgba(107, 103, 96, 0.12);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
+
+#settingsButton::before { content: "⚙"; }
+#statsButton::before { content: "▦"; }
+#printButton::before { content: "⎙"; }
+#trashButton::before { content: "⌫"; }
+#logoutButton::before { content: "↪"; }
 
 .collapsible-panel {
   display: block;
@@ -914,12 +952,13 @@ body.is-dark .period-button:focus-visible {
   min-height: 144px;
   padding: 10px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--surface);
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.03);
 }
 
 .day-cell.is-muted {
-  background: rgba(107, 103, 96, 0.08);
+  background: color-mix(in srgb, var(--surface-soft) 82%, var(--line) 18%);
 }
 
 .day-cell.is-empty {
@@ -932,7 +971,7 @@ body.is-dark .period-button:focus-visible {
 
 .day-cell.is-today {
   border-color: var(--accent);
-  box-shadow: inset 0 0 0 2px var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent), var(--shadow-soft);
 }
 
 .day-top {
@@ -984,8 +1023,12 @@ body.is-dark .period-button:focus-visible {
   border: 0;
   border-radius: 50%;
   color: var(--accent);
-  background: rgba(15, 118, 110, 0.14);
+  background: var(--accent-soft);
   font-weight: 900;
+}
+
+.add-day:hover {
+  transform: translateY(-1px);
 }
 
 .post-list {
@@ -1014,7 +1057,7 @@ body.is-dark .period-button:focus-visible {
   width: 100%;
   border: 0;
   border-left: 4px solid var(--accent);
-  border-radius: 7px;
+  border-radius: var(--radius);
   padding: 8px;
   color: var(--ink);
   background: rgba(15, 118, 110, 0.1);
@@ -1023,6 +1066,7 @@ body.is-dark .period-button:focus-visible {
 
 .post-chip:hover {
   transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
 }
 
 .post-chip strong,
@@ -1047,12 +1091,6 @@ body.is-dark .period-button:focus-visible {
   box-shadow: inset 0 0 0 1px rgba(180, 35, 24, 0.18);
 }
 
-.post-chip[data-platform="TikTok"] { border-color: #111827; background: rgba(17, 24, 39, 0.08); }
-.post-chip[data-platform="Facebook"] { border-color: #2563eb; background: rgba(37, 99, 235, 0.1); }
-.post-chip[data-platform="LinkedIn"] { border-color: #0a66c2; background: rgba(10, 102, 194, 0.1); }
-.post-chip[data-platform="YouTube"] { border-color: #dc2626; background: rgba(220, 38, 38, 0.1); }
-.post-chip[data-platform="X"] { border-color: #525252; background: rgba(82, 82, 82, 0.1); }
-
 .list-view {
   display: grid;
   gap: 10px;
@@ -1062,7 +1100,7 @@ body.is-dark .period-button:focus-visible {
   display: grid;
   gap: 10px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 12px;
   margin-bottom: 12px;
   background: var(--surface-soft);
@@ -1109,9 +1147,14 @@ body.is-dark .period-button:focus-visible {
   align-items: center;
   border: 1px solid var(--line);
   border-left: 4px solid var(--accent);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 14px;
   background: var(--surface);
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
+}
+
+.list-item:hover {
+  box-shadow: var(--shadow-soft);
 }
 
 .list-item.is-table-row {
@@ -1153,7 +1196,7 @@ body.is-dark .period-button:focus-visible {
   display: grid;
   gap: 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 12px;
   background: var(--surface-soft);
 }
@@ -1197,7 +1240,7 @@ body.is-dark .period-button:focus-visible {
   align-items: center;
   border: 1px solid var(--line);
   border-left: 4px solid var(--danger);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 12px;
   background: var(--surface-soft);
 }
@@ -1312,7 +1355,7 @@ body.is-dark .period-button:focus-visible {
   flex: 0 0 auto;
   min-height: 34px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius);
   padding: 0 11px;
   color: var(--muted);
   background: transparent;
@@ -1322,6 +1365,7 @@ body.is-dark .period-button:focus-visible {
 .settings-tabs button[aria-pressed="true"] {
   color: #fff;
   background: var(--accent);
+  box-shadow: var(--shadow-soft);
 }
 
 .settings-section {
@@ -1336,7 +1380,8 @@ body.is-dark .period-button:focus-visible {
 }
 
 .settings-section h3 {
-  font-size: 1rem;
+  color: var(--ink);
+  font-size: 0.98rem;
 }
 
 .settings-grid {
@@ -1379,7 +1424,7 @@ body.is-dark .period-button:focus-visible {
   align-items: center;
   gap: 10px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 10px;
   background: var(--surface-soft);
 }
@@ -1406,7 +1451,7 @@ body.is-dark .period-button:focus-visible {
   justify-content: space-between;
   gap: 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 10px;
   background: var(--surface);
 }
@@ -1428,7 +1473,7 @@ dialog {
   width: min(760px, calc(100vw - 28px));
   max-height: calc(100vh - 28px);
   border: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 0;
   color: var(--ink);
   background: var(--surface);
@@ -1443,6 +1488,11 @@ form {
   display: grid;
   gap: 16px;
   padding: 22px;
+}
+
+form h2,
+dialog h2 {
+  letter-spacing: 0;
 }
 
 form header,

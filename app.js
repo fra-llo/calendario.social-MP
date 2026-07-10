@@ -3,6 +3,21 @@ const legacyStorageKey = "social-content-calendar-posts";
 const settingsKey = "social-content-calendar-settings-v2";
 
 const platforms = ["Instagram", "TikTok", "Facebook", "LinkedIn", "YouTube", "X"];
+const platformIcons = {
+  Instagram: "◎",
+  TikTok: "♪",
+  Facebook: "f",
+  LinkedIn: "in",
+  YouTube: "▶",
+  X: "X",
+};
+const statusIcons = {
+  Idea: "○",
+  "Da scrivere": "✎",
+  Pronto: "✓",
+  Programmato: "◷",
+  Pubblicato: "●",
+};
 const defaultRecommendedTimes = {
   Instagram: "11:00",
   TikTok: "19:00",
@@ -1125,13 +1140,21 @@ function getPostChipMeta(post) {
   const theme = getTheme(post.theme);
   return [
     fieldsToShow.time && post.time ? post.time : "",
-    fieldsToShow.platform ? post.platform : "",
+    fieldsToShow.platform ? formatPlatformLabel(post.platform) : "",
     theme ? `${theme.icon} ${theme.name}` : "",
-    fieldsToShow.status ? post.status : "",
+    fieldsToShow.status ? formatStatusLabel(post.status) : "",
     fieldsToShow.approval ? post.approval || "Bozza" : "",
     fieldsToShow.priority ? post.priority || "Media" : "",
     fieldsToShow.owner && post.owner ? post.owner : "",
   ].filter(Boolean).join(" - ");
+}
+
+function formatPlatformLabel(platform) {
+  return `${platformIcons[platform] || "•"} ${platform || "Piattaforma"}`;
+}
+
+function formatStatusLabel(status) {
+  return `${statusIcons[status] || "•"} ${status || "Stato"}`;
 }
 
 function renderListView() {
@@ -1188,7 +1211,7 @@ function createListRow(post) {
   const title = document.createElement("h3");
   title.textContent = post.title;
   const meta = document.createElement("p");
-  meta.textContent = `${formatShortDate(parseDateKey(post.date))} ${post.time || ""} - ${post.platform} - ${post.status} - ${post.priority || "Media"}`;
+  meta.textContent = `${formatShortDate(parseDateKey(post.date))} ${post.time || ""} - ${formatPlatformLabel(post.platform)} - ${formatStatusLabel(post.status)} - ${post.priority || "Media"}`;
   main.append(title, meta);
 
   const detail = document.createElement("p");
@@ -1323,7 +1346,7 @@ function renderPlatformStats() {
   platforms.forEach((platform) => {
     const count = monthPosts.filter((post) => post.platform === platform).length;
     const item = document.createElement("div");
-    item.innerHTML = `<span>${platform}</span><strong>${count}/${state.settings.monthlyTargets[platform]}</strong>`;
+    item.innerHTML = `<span>${formatPlatformLabel(platform)}</span><strong>${count}/${state.settings.monthlyTargets[platform]}</strong>`;
     container.append(item);
   });
 }
@@ -1364,7 +1387,7 @@ function getPlatformStats(posts) {
     const count = posts.filter((post) => post.platform === platform).length;
     const target = Number(state.settings.monthlyTargets[platform]) || 0;
     return {
-      label: platform,
+      label: formatPlatformLabel(platform),
       count,
       target,
       percentage: target ? Math.min(100, Math.round((count / target) * 100)) : 0,
@@ -1378,7 +1401,7 @@ function getStatusStats(posts) {
   return statuses.map((status) => {
     const count = posts.filter((post) => post.status === status).length;
     return {
-      label: status,
+      label: formatStatusLabel(status),
       count,
       target: total,
       percentage: total ? Math.round((count / total) * 100) : 0,
