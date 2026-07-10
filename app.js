@@ -1,7 +1,6 @@
 const storageKey = "social-content-calendar-posts-v2";
 const legacyStorageKey = "social-content-calendar-posts";
 const settingsKey = "social-content-calendar-settings-v2";
-const postDraftKey = "social-content-calendar-post-draft-v1";
 
 const platforms = ["Instagram", "TikTok", "Facebook", "LinkedIn", "YouTube", "X"];
 const defaultRecommendedTimes = {
@@ -89,8 +88,6 @@ const datePickerForm = document.querySelector("#datePickerForm");
 const jumpDate = document.querySelector("#jumpDate");
 const deletePostButton = document.querySelector("#deletePost");
 const duplicatePostButton = document.querySelector("#duplicatePost");
-const postSaveState = document.querySelector("#postSaveState");
-const copyCounter = document.querySelector("#copyCounter");
 const searchInput = document.querySelector("#searchInput");
 const platformFilter = document.querySelector("#platformFilter");
 const statusFilter = document.querySelector("#statusFilter");
@@ -172,8 +169,6 @@ const fields = {
   id: document.querySelector("#postId"),
   template: document.querySelector("#templateSelect"),
   title: document.querySelector("#postTitle"),
-  series: document.querySelector("#postSeries"),
-  related: document.querySelector("#postRelated"),
   date: document.querySelector("#postDate"),
   time: document.querySelector("#postTime"),
   platform: document.querySelector("#postPlatform"),
@@ -187,16 +182,7 @@ const fields = {
   theme: document.querySelector("#postTheme"),
   tags: document.querySelector("#postTags"),
   assetLink: document.querySelector("#postAssetLink"),
-  assetLinks: document.querySelector("#postAssetLinks"),
   assets: document.querySelector("#postAssets"),
-  assetStatus: document.querySelector("#postAssetStatus"),
-  hook: document.querySelector("#postHook"),
-  cta: document.querySelector("#postCta"),
-  audience: document.querySelector("#postAudience"),
-  tone: document.querySelector("#postTone"),
-  source: document.querySelector("#postSource"),
-  mentions: document.querySelector("#postMentions"),
-  comments: document.querySelector("#postComments"),
   copy: document.querySelector("#postCopy"),
   notes: document.querySelector("#postNotes"),
   recurrence: document.querySelector("#postRecurrence"),
@@ -227,7 +213,6 @@ let undoAction = null;
 let undoTimer = null;
 let resizingSidebar = false;
 const selectedListPosts = new Set();
-let postFormDirty = false;
 
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
@@ -292,12 +277,6 @@ listSortSelect.addEventListener("change", render);
 listGroupSelect.addEventListener("change", render);
 selectAllList.addEventListener("change", toggleSelectAllList);
 document.querySelector("#applyBulkAction").addEventListener("click", applyBulkAction);
-postForm.addEventListener("input", markPostFormDirty);
-fields.copy.addEventListener("input", updateCopyCounter);
-
-document.querySelectorAll("[data-post-tab-button]").forEach((button) => {
-  button.addEventListener("click", () => setPostTab(button.dataset.postTabButton));
-});
 
 document.querySelectorAll("[data-settings-tab-button]").forEach((button) => {
   button.addEventListener("click", () => setSettingsTab(button.dataset.settingsTabButton));
@@ -1269,11 +1248,7 @@ function priorityRank(priority) {
 }
 
 function isIncompletePost(post) {
-  return !hasPostAssets(post) || !post.copy || !post.owner;
-}
-
-function hasPostAssets(post) {
-  return Boolean(post.assets || post.assetLink || post.assetLinks?.length);
+  return !post.assets || !post.copy || !post.owner;
 }
 
 function isOverduePost(post) {
@@ -1366,7 +1341,7 @@ function renderStatsDialog() {
 function renderStatsSummary(posts) {
   const ready = posts.filter((post) => ["Pronto", "Programmato"].includes(post.status)).length;
   const published = posts.filter((post) => post.status === "Pubblicato").length;
-  const missingAssets = posts.filter((post) => !hasPostAssets(post)).length;
+  const missingAssets = posts.filter((post) => !post.assets && !post.assetLink).length;
   const completion = posts.length ? Math.round((posts.reduce((sum, post) => sum + checklistProgress(post), 0) / posts.length)) : 0;
   statsSummaryGrid.innerHTML = "";
   [
@@ -1483,7 +1458,7 @@ function renderThemeDistribution(monthPosts = getMonthPosts(state.posts)) {
 
 function renderStatsInsights(posts) {
   const insights = [];
-  const missingAssets = posts.filter((post) => !hasPostAssets(post));
+  const missingAssets = posts.filter((post) => !post.assets && !post.assetLink);
   const missingOwner = posts.filter((post) => !post.owner);
   const reviewNeeded = posts.filter((post) => post.approval === "Da revisionare");
   const overloadedDays = Object.entries(groupBy(posts, "date"))
@@ -1619,18 +1594,15 @@ function filteredPosts() {
 }
 
 function openPostDialog(post = {}) {
-  const draft = !post.id && Object.keys(post).length === 0 ? loadPostDraft() : null;
-  const normalized = normalizePost(draft || post);
+  const normalized = normalizePost(post);
   const isExisting = Boolean(post.id);
   document.querySelector("#dialogTitle").textContent = isExisting ? "Modifica contenuto" : "Nuovo contenuto";
   deletePostButton.hidden = !isExisting;
   duplicatePostButton.hidden = !isExisting;
 
-  fields.id.value = isExisting ? normalized.id || "" : "";
+  fields.id.value = normalized.id || "";
   fields.template.value = "";
   fields.title.value = normalized.title || "";
-  fields.series.value = normalized.series || "";
-  fields.related.value = normalized.related || "";
   fields.date.value = normalized.date || toDateKey(new Date());
   fields.time.value = normalized.time || defaultRecommendedTimes[normalized.platform || "Instagram"];
   fields.platform.value = normalized.platform || "Instagram";
@@ -1645,16 +1617,7 @@ function openPostDialog(post = {}) {
   fields.theme.value = state.settings.themes.some((theme) => theme.id === normalized.theme) ? normalized.theme : state.settings.themes[0]?.id || "";
   fields.tags.value = normalized.tags || "";
   fields.assetLink.value = normalized.assetLink || "";
-  fields.assetLinks.value = normalized.assetLinks.join("\n");
   fields.assets.value = normalized.assets || "";
-  fields.assetStatus.value = normalized.assetStatus || "Non iniziati";
-  fields.hook.value = normalized.hook || "";
-  fields.cta.value = normalized.cta || "";
-  fields.audience.value = normalized.audience || "";
-  fields.tone.value = normalized.tone || "";
-  fields.source.value = normalized.source || "";
-  fields.mentions.value = normalized.mentions || "";
-  fields.comments.value = normalized.comments || "";
   fields.copy.value = normalized.copy || "";
   fields.notes.value = normalized.notes || "";
   fields.recurrence.value = normalized.recurrence || "none";
@@ -1664,22 +1627,14 @@ function openPostDialog(post = {}) {
   fields.checkReview.checked = Boolean(normalized.checklist.review);
   fields.checkScheduled.checked = Boolean(normalized.checklist.scheduled);
   renderHistory(normalized.history);
-  setPostTab("general");
-  updateCopyCounter();
-  setPostFormDirty(false);
 
   postDialog.showModal();
   fields.title.focus();
 }
 
 function renderHistory(history) {
+  historyBox.hidden = !history.length;
   historyList.innerHTML = "";
-  if (!history.length) {
-    const empty = document.createElement("p");
-    empty.textContent = "Nessuna modifica registrata.";
-    historyList.append(empty);
-    return;
-  }
   history.slice().reverse().forEach((entry) => {
     const item = document.createElement("p");
     const date = new Intl.DateTimeFormat("it-IT", {
@@ -1692,53 +1647,6 @@ function renderHistory(history) {
     item.textContent = `${date} - ${entry.action}`;
     historyList.append(item);
   });
-}
-
-function setPostTab(tab) {
-  document.querySelectorAll("[data-post-tab-button]").forEach((button) => {
-    const active = button.dataset.postTabButton === tab;
-    button.setAttribute("aria-pressed", String(active));
-  });
-  document.querySelectorAll("[data-post-tab]").forEach((panel) => {
-    panel.hidden = panel.dataset.postTab !== tab;
-  });
-}
-
-function markPostFormDirty() {
-  if (!postDialog.open) return;
-  setPostFormDirty(true);
-  savePostDraft();
-  updateCopyCounter();
-}
-
-function setPostFormDirty(dirty) {
-  postFormDirty = dirty;
-  postSaveState.textContent = dirty ? "Modifiche non salvate" : "Nessuna modifica";
-  postSaveState.classList.toggle("is-dirty", dirty);
-}
-
-function updateCopyCounter() {
-  copyCounter.textContent = `${fields.copy.value.length} caratteri`;
-}
-
-function savePostDraft() {
-  if (fields.id.value) return;
-  localStorage.setItem(postDraftKey, JSON.stringify({ ...collectPostFromForm(), id: "" }));
-  postSaveState.textContent = "Bozza autosalvata";
-  postSaveState.classList.add("is-dirty");
-}
-
-function loadPostDraft() {
-  try {
-    const draft = JSON.parse(localStorage.getItem(postDraftKey) || "null");
-    return draft && (draft.title || draft.copy || draft.notes || draft.hook) ? draft : null;
-  } catch {
-    return null;
-  }
-}
-
-function clearPostDraft() {
-  localStorage.removeItem(postDraftKey);
 }
 
 function openSettingsDialog() {
@@ -1934,7 +1842,6 @@ function savePost(event) {
     if (post.recurrence === "none" || existingIndex >= 0) saveCloudPost(post);
     else syncAllCloudPosts();
   }
-  clearPostDraft();
   closePostDialog();
   render();
 }
@@ -1943,8 +1850,6 @@ function collectPostFromForm() {
   return normalizePost({
     id: fields.id.value || createId(),
     title: fields.title.value.trim(),
-    series: fields.series.value.trim(),
-    related: fields.related.value.trim(),
     date: fields.date.value,
     time: fields.time.value,
     platform: fields.platform.value,
@@ -1958,16 +1863,7 @@ function collectPostFromForm() {
     theme: fields.theme.value,
     tags: fields.tags.value.trim(),
     assetLink: fields.assetLink.value.trim(),
-    assetLinks: parseLines(fields.assetLinks.value),
     assets: fields.assets.value.trim(),
-    assetStatus: fields.assetStatus.value,
-    hook: fields.hook.value.trim(),
-    cta: fields.cta.value.trim(),
-    audience: fields.audience.value.trim(),
-    tone: fields.tone.value.trim(),
-    source: fields.source.value.trim(),
-    mentions: fields.mentions.value.trim(),
-    comments: fields.comments.value.trim(),
     copy: fields.copy.value.trim(),
     notes: fields.notes.value.trim(),
     recurrence: fields.recurrence.value,
@@ -2028,9 +1924,7 @@ function addRecurringPosts(post) {
   if (post.recurrence === "none") return;
   for (let index = 1; index <= 5; index += 1) {
     const date = parseDateKey(post.date);
-    if (post.recurrence === "daily") date.setDate(date.getDate() + index);
     if (post.recurrence === "weekly") date.setDate(date.getDate() + index * 7);
-    if (post.recurrence === "biweekly") date.setDate(date.getDate() + index * 14);
     if (post.recurrence === "monthly") date.setMonth(date.getMonth() + index);
     state.posts.push(normalizePost({
       ...post,
@@ -2104,7 +1998,6 @@ function jumpToSelectedDate(event) {
 }
 
 function closePostDialog() {
-  setPostFormDirty(false);
   postDialog.close();
 }
 
@@ -2137,12 +2030,10 @@ function exportFilteredCsv() {
 
 function downloadPostsCsv(posts, filename) {
   const rows = [
-    ["id", "title", "series", "related", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "theme", "tags", "assetLink", "assetLinks", "assets", "assetStatus", "hook", "cta", "audience", "tone", "source", "mentions", "comments", "copy", "notes"],
+    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "theme", "tags", "assetLink", "assets", "copy", "notes"],
     ...posts.map((post) => [
       post.id,
       post.title,
-      post.series,
-      post.related,
       post.date,
       post.time,
       post.platform,
@@ -2156,16 +2047,7 @@ function downloadPostsCsv(posts, filename) {
       post.theme,
       post.tags,
       post.assetLink,
-      post.assetLinks.join("\n"),
       post.assets,
-      post.assetStatus,
-      post.hook,
-      post.cta,
-      post.audience,
-      post.tone,
-      post.source,
-      post.mentions,
-      post.comments,
       post.copy,
       post.notes,
     ]),
@@ -2529,8 +2411,6 @@ function normalizePost(post) {
   return {
     id: post.id || createId(),
     title: post.title || "",
-    series: post.series || "",
-    related: post.related || "",
     date: post.date || toDateKey(new Date()),
     time: post.time || "",
     platform: post.platform || "Instagram",
@@ -2544,16 +2424,7 @@ function normalizePost(post) {
     theme: post.theme || post.category || defaultThemes[0].id,
     tags: post.tags || "",
     assetLink: post.assetLink || "",
-    assetLinks: Array.isArray(post.assetLinks) ? post.assetLinks : parseLines(post.assetLinks || ""),
     assets: post.assets || "",
-    assetStatus: post.assetStatus || "Non iniziati",
-    hook: post.hook || "",
-    cta: post.cta || "",
-    audience: post.audience || "",
-    tone: post.tone || "",
-    source: post.source || "",
-    mentions: post.mentions || "",
-    comments: post.comments || "",
     copy: post.copy || "",
     notes: post.notes || "",
     recurrence: post.recurrence || "none",
@@ -2574,8 +2445,6 @@ function rowToPost(row) {
   return normalizePost({
     id: row.id || createId(),
     title: row.title,
-    series: row.series,
-    related: row.related,
     date: row.date,
     time: row.time,
     platform: row.platform,
@@ -2589,16 +2458,7 @@ function rowToPost(row) {
     theme: row.theme,
     tags: row.tags,
     assetLink: row.assetLink,
-    assetLinks: row.assetLinks,
     assets: row.assets,
-    assetStatus: row.assetStatus,
-    hook: row.hook,
-    cta: row.cta,
-    audience: row.audience,
-    tone: row.tone,
-    source: row.source,
-    mentions: row.mentions,
-    comments: row.comments,
     copy: row.copy,
     notes: row.notes,
     history: [historyEntry("Importato da CSV")],
