@@ -867,7 +867,7 @@ function renderMainView() {
   weekdays.hidden = state.viewMode === "day" || isListView;
   calendarGrid.hidden = isListView;
   listView.hidden = !isListView;
-  listToolbar.hidden = !isListView;
+  listToolbar.hidden = true;
 
   Object.entries(viewButtons).forEach(([viewMode, button]) => {
     button.setAttribute("aria-pressed", String(state.viewMode === viewMode));
