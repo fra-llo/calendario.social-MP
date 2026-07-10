@@ -147,6 +147,49 @@
           <span>Dom</span>
         </div>
         <div class="calendar-grid" id="calendarGrid"></div>
+        <section class="list-toolbar" id="listToolbar" hidden>
+          <div class="list-toolbar-row">
+            <label>
+              Ordina
+              <select id="listSortSelect">
+                <option value="date">Data</option>
+                <option value="platform">Piattaforma</option>
+                <option value="status">Stato</option>
+                <option value="priority">Priorita</option>
+                <option value="owner">Responsabile</option>
+              </select>
+            </label>
+            <label>
+              Raggruppa
+              <select id="listGroupSelect">
+                <option value="none">Nessuno</option>
+                <option value="week">Settimana</option>
+                <option value="platform">Piattaforma</option>
+                <option value="status">Stato</option>
+                <option value="theme">Tema</option>
+              </select>
+            </label>
+            <button class="secondary-action" id="exportFilteredCsvButton" type="button">Esporta filtrati</button>
+          </div>
+          <div class="list-toolbar-row">
+            <label class="check-row">
+              <input id="selectAllList" type="checkbox">
+              Seleziona visibili
+            </label>
+            <select id="bulkStatusSelect">
+              <option value="">Stato</option>
+              <option>Idea</option>
+              <option>Da scrivere</option>
+              <option>Pronto</option>
+              <option>Programmato</option>
+              <option>Pubblicato</option>
+            </select>
+            <input id="bulkOwnerInput" type="text" placeholder="Responsabile">
+            <select id="bulkThemeSelect"></select>
+            <button class="secondary-action" id="applyBulkAction" type="button">Applica</button>
+            <span id="selectedListCount">0 selezionati</span>
+          </div>
+        </section>
         <div class="list-view" id="listView" hidden></div>
       </section>
     </main>

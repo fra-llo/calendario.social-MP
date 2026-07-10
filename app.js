@@ -63,6 +63,14 @@ const state = {
 
 const calendarGrid = document.querySelector("#calendarGrid");
 const listView = document.querySelector("#listView");
+const listToolbar = document.querySelector("#listToolbar");
+const listSortSelect = document.querySelector("#listSortSelect");
+const listGroupSelect = document.querySelector("#listGroupSelect");
+const selectAllList = document.querySelector("#selectAllList");
+const selectedListCount = document.querySelector("#selectedListCount");
+const bulkStatusSelect = document.querySelector("#bulkStatusSelect");
+const bulkOwnerInput = document.querySelector("#bulkOwnerInput");
+const bulkThemeSelect = document.querySelector("#bulkThemeSelect");
 const weekdays = document.querySelector("#weekdays");
 const appShell = document.querySelector(".app-shell");
 const authGate = document.querySelector("#authGate");
@@ -204,6 +212,7 @@ const cloud = {
 let undoAction = null;
 let undoTimer = null;
 let resizingSidebar = false;
+const selectedListPosts = new Set();
 
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
@@ -242,6 +251,7 @@ postForm.addEventListener("submit", savePost);
 fields.template.addEventListener("change", applyTemplate);
 fields.platform.addEventListener("change", applyRecommendedTime);
 document.querySelector("#exportCsvButton").addEventListener("click", exportCsv);
+document.querySelector("#exportFilteredCsvButton").addEventListener("click", exportFilteredCsv);
 document.querySelector("#backupButton").addEventListener("click", exportBackup);
 document.querySelector("#importCsvInput").addEventListener("change", importCsv);
 document.querySelector("#restoreInput").addEventListener("change", restoreBackup);
@@ -263,6 +273,10 @@ document.querySelector("#copyUidButton").addEventListener("click", copyCurrentUi
 document.querySelector("#addMemberButton").addEventListener("click", addMember);
 document.querySelector("#addThemeSetting").addEventListener("click", addThemeSettingRow);
 settingsForm.addEventListener("submit", saveSettings);
+listSortSelect.addEventListener("change", render);
+listGroupSelect.addEventListener("change", render);
+selectAllList.addEventListener("change", toggleSelectAllList);
+document.querySelector("#applyBulkAction").addEventListener("click", applyBulkAction);
 
 document.querySelectorAll("[data-settings-tab-button]").forEach((button) => {
   button.addEventListener("click", () => setSettingsTab(button.dataset.settingsTabButton));
@@ -853,6 +867,7 @@ function renderMainView() {
   weekdays.hidden = state.viewMode === "day" || isListView;
   calendarGrid.hidden = isListView;
   listView.hidden = !isListView;
+  listToolbar.hidden = !isListView;
 
   Object.entries(viewButtons).forEach(([viewMode, button]) => {
     button.setAttribute("aria-pressed", String(state.viewMode === viewMode));
@@ -1120,8 +1135,14 @@ function getPostChipMeta(post) {
 }
 
 function renderListView() {
-  const posts = filteredPosts().sort((a, b) => `${a.date}${a.time || ""}`.localeCompare(`${b.date}${b.time || ""}`));
+  const posts = getSortedListPosts();
+  const visibleIds = new Set(posts.map((post) => post.id));
+  Array.from(selectedListPosts).forEach((id) => {
+    if (!visibleIds.has(id)) selectedListPosts.delete(id);
+  });
   listView.innerHTML = "";
+  populateBulkThemeSelect();
+  updateListSelectionState(posts);
 
   if (posts.length === 0) {
     const empty = document.createElement("p");
@@ -1131,39 +1152,161 @@ function renderListView() {
     return;
   }
 
-  posts.forEach((post) => {
-    const row = document.createElement("article");
-    row.className = "list-item";
-    row.dataset.platform = post.platform;
-    applyPostColor(row, post.color);
-
-    const main = document.createElement("div");
-    const title = document.createElement("h3");
-    title.textContent = post.title;
-    const meta = document.createElement("p");
-    meta.textContent = `${formatShortDate(parseDateKey(post.date))} ${post.time || ""} - ${post.platform} - ${post.status} - ${post.priority || "Media"}`;
-    main.append(title, meta);
-
-    const detail = document.createElement("p");
-    const theme = getTheme(post.theme);
-    detail.textContent = [post.format, post.goal, theme ? `${theme.icon} ${theme.name}` : "", post.owner, post.tags].filter(Boolean).join(" - ");
-
-    const actions = document.createElement("div");
-    const edit = document.createElement("button");
-    edit.className = "secondary-action";
-    edit.type = "button";
-    edit.textContent = "Modifica";
-    edit.addEventListener("click", () => openPostDialog(post));
-    const duplicate = document.createElement("button");
-    duplicate.className = "secondary-action";
-    duplicate.type = "button";
-    duplicate.textContent = "Duplica";
-    duplicate.addEventListener("click", () => duplicatePost(post.id));
-    actions.append(edit, duplicate);
-
-    row.append(main, detail, actions);
-    listView.append(row);
+  const grouped = groupListPosts(posts);
+  Object.entries(grouped).forEach(([group, groupPosts]) => {
+    if (listGroupSelect.value !== "none") {
+      const heading = document.createElement("h3");
+      heading.className = "list-group-heading";
+      heading.textContent = group;
+      listView.append(heading);
+    }
+    groupPosts.forEach((post) => listView.append(createListRow(post)));
   });
+}
+
+function createListRow(post) {
+  const row = document.createElement("article");
+  row.className = "list-item is-table-row";
+  row.dataset.platform = post.platform;
+  row.classList.toggle("is-incomplete", isIncompletePost(post));
+  row.classList.toggle("is-overdue", isOverduePost(post));
+  applyPostColor(row, post.color);
+
+  const select = document.createElement("label");
+  select.className = "list-select";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = selectedListPosts.has(post.id);
+  checkbox.addEventListener("change", () => {
+    if (checkbox.checked) selectedListPosts.add(post.id);
+    else selectedListPosts.delete(post.id);
+    updateListSelectionState(getSortedListPosts());
+  });
+  select.append(checkbox);
+
+  const main = document.createElement("div");
+  const title = document.createElement("h3");
+  title.textContent = post.title;
+  const meta = document.createElement("p");
+  meta.textContent = `${formatShortDate(parseDateKey(post.date))} ${post.time || ""} - ${post.platform} - ${post.status} - ${post.priority || "Media"}`;
+  main.append(title, meta);
+
+  const detail = document.createElement("p");
+  const theme = getTheme(post.theme);
+  detail.textContent = [post.format, post.goal, theme ? `${theme.icon} ${theme.name}` : "", post.owner || "Senza responsabile", post.tags].filter(Boolean).join(" - ");
+
+  const actions = document.createElement("div");
+  const edit = document.createElement("button");
+  edit.className = "secondary-action";
+  edit.type = "button";
+  edit.textContent = "Modifica";
+  edit.addEventListener("click", () => openPostDialog(post));
+  const duplicate = document.createElement("button");
+  duplicate.className = "secondary-action";
+  duplicate.type = "button";
+  duplicate.textContent = "Duplica";
+  duplicate.addEventListener("click", () => duplicatePost(post.id));
+  actions.append(edit, duplicate);
+
+  row.append(select, main, detail, actions);
+  return row;
+}
+
+function getSortedListPosts() {
+  const sortKey = listSortSelect.value;
+  return filteredPosts().sort((a, b) => {
+    if (sortKey === "date") return `${a.date}${a.time || ""}`.localeCompare(`${b.date}${b.time || ""}`);
+    if (sortKey === "platform") return `${a.platform}${a.date}`.localeCompare(`${b.platform}${b.date}`);
+    if (sortKey === "status") return `${a.status}${a.date}`.localeCompare(`${b.status}${b.date}`);
+    if (sortKey === "priority") return `${priorityRank(a.priority)}${a.date}`.localeCompare(`${priorityRank(b.priority)}${b.date}`);
+    if (sortKey === "owner") return `${a.owner || "zzzz"}${a.date}`.localeCompare(`${b.owner || "zzzz"}${b.date}`);
+    return 0;
+  });
+}
+
+function groupListPosts(posts) {
+  const group = listGroupSelect.value;
+  if (group === "none") return { "": posts };
+  return posts.reduce((groups, post) => {
+    const key = getListGroupLabel(post, group);
+    groups[key] = groups[key] || [];
+    groups[key].push(post);
+    return groups;
+  }, {});
+}
+
+function getListGroupLabel(post, group) {
+  if (group === "week") return formatWeekRange(startOfWeek(parseDateKey(post.date)));
+  if (group === "platform") return post.platform;
+  if (group === "status") return post.status;
+  if (group === "theme") return getTheme(post.theme)?.name || "Senza tema";
+  return "";
+}
+
+function priorityRank(priority) {
+  return { Alta: 0, Media: 1, Bassa: 2 }[priority] ?? 3;
+}
+
+function isIncompletePost(post) {
+  return !post.assets || !post.copy || !post.owner;
+}
+
+function isOverduePost(post) {
+  return parseDateKey(post.date) < startOfDay(new Date()) && post.status !== "Pubblicato";
+}
+
+function toggleSelectAllList() {
+  const posts = getSortedListPosts();
+  if (selectAllList.checked) posts.forEach((post) => selectedListPosts.add(post.id));
+  else posts.forEach((post) => selectedListPosts.delete(post.id));
+  renderListView();
+}
+
+function updateListSelectionState(posts) {
+  const selectedVisible = posts.filter((post) => selectedListPosts.has(post.id)).length;
+  selectedListCount.textContent = `${selectedVisible} selezionati`;
+  selectAllList.checked = posts.length > 0 && selectedVisible === posts.length;
+  selectAllList.indeterminate = selectedVisible > 0 && selectedVisible < posts.length;
+}
+
+function populateBulkThemeSelect() {
+  const currentValue = bulkThemeSelect.value;
+  bulkThemeSelect.innerHTML = "";
+  const empty = document.createElement("option");
+  empty.value = "";
+  empty.textContent = "Tema";
+  bulkThemeSelect.append(empty);
+  state.settings.themes.forEach((theme) => {
+    const option = document.createElement("option");
+    option.value = theme.id;
+    option.textContent = `${theme.icon} ${theme.name}`;
+    bulkThemeSelect.append(option);
+  });
+  bulkThemeSelect.value = state.settings.themes.some((theme) => theme.id === currentValue) ? currentValue : "";
+}
+
+function applyBulkAction() {
+  const ids = Array.from(selectedListPosts);
+  if (!ids.length) return;
+  const status = bulkStatusSelect.value;
+  const owner = bulkOwnerInput.value.trim();
+  const theme = bulkThemeSelect.value;
+  state.posts = state.posts.map((post) => {
+    if (!ids.includes(post.id)) return post;
+    return normalizePost({
+      ...post,
+      status: status || post.status,
+      owner: owner || post.owner,
+      theme: theme || post.theme,
+      history: [...(post.history || []), historyEntry("Modifica massiva da vista lista")],
+    });
+  });
+  persistPosts(cloudActive());
+  bulkStatusSelect.value = "";
+  bulkOwnerInput.value = "";
+  bulkThemeSelect.value = "";
+  selectedListPosts.clear();
+  render();
 }
 
 function renderStats() {
@@ -1878,9 +2021,17 @@ function goToToday() {
 }
 
 function exportCsv() {
+  downloadPostsCsv(activePosts(), "contenuti-social.csv");
+}
+
+function exportFilteredCsv() {
+  downloadPostsCsv(getSortedListPosts(), "contenuti-social-filtrati.csv");
+}
+
+function downloadPostsCsv(posts, filename) {
   const rows = [
     ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "theme", "tags", "assetLink", "assets", "copy", "notes"],
-    ...activePosts().map((post) => [
+    ...posts.map((post) => [
       post.id,
       post.title,
       post.date,
@@ -1901,7 +2052,7 @@ function exportCsv() {
       post.notes,
     ]),
   ];
-  downloadFile("contenuti-social.csv", rows.map((row) => row.map(csvEscape).join(",")).join("\n"), "text/csv");
+  downloadFile(filename, rows.map((row) => row.map(csvEscape).join(",")).join("\n"), "text/csv");
 }
 
 function importCsv(event) {
@@ -2413,6 +2564,10 @@ function toDateKey(date) {
 function parseDateKey(dateKey) {
   const [year, month, day] = String(dateKey).split("-").map(Number);
   return new Date(year, month - 1, day);
+}
+
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 function formatDateForLabel(date) {
