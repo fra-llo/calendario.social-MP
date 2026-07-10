@@ -57,6 +57,13 @@ button {
   cursor: pointer;
 }
 
+input:required:invalid,
+select:required:invalid,
+textarea:required:invalid {
+  border-color: rgba(180, 35, 24, 0.65);
+  box-shadow: 0 0 0 2px rgba(180, 35, 24, 0.08);
+}
+
 .auth-gate {
   position: fixed;
   inset: 0;
@@ -1149,6 +1156,56 @@ body.is-dark .period-button:focus-visible {
   padding: 12px 0;
 }
 
+.post-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+.post-tabs button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  border: 0;
+  border-radius: 7px;
+  padding: 0 11px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 900;
+}
+
+.post-tabs button[aria-pressed="true"] {
+  color: #fff;
+  background: var(--accent);
+}
+
+.post-tab-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.save-state {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.save-state.is-dirty {
+  color: var(--warning);
+}
+
+.char-counter {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-align: right;
+}
+
 .history-box {
   display: grid;
   gap: 8px;
@@ -1159,12 +1216,15 @@ body.is-dark .period-button:focus-visible {
 }
 
 .history-box h3,
+.history-box summary,
 .history-box p {
   margin: 0;
 }
 
-.history-box h3 {
+.history-box h3,
+.history-box summary {
   font-size: 0.95rem;
+  font-weight: 900;
 }
 
 .history-box p {

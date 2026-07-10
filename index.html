@@ -288,12 +288,24 @@
     <dialog id="postDialog">
       <form id="postForm" method="dialog">
         <header>
-          <h2 id="dialogTitle">Nuovo contenuto</h2>
+          <div>
+            <h2 id="dialogTitle">Nuovo contenuto</h2>
+            <span class="save-state" id="postSaveState">Nessuna modifica</span>
+          </div>
           <button class="ghost-button" id="closeDialog" type="button" aria-label="Chiudi">x</button>
         </header>
 
         <input id="postId" type="hidden">
 
+        <nav class="post-tabs" aria-label="Sezioni contenuto">
+          <button type="button" data-post-tab-button="general" aria-pressed="true">Generale</button>
+          <button type="button" data-post-tab-button="copy" aria-pressed="false">Copy</button>
+          <button type="button" data-post-tab-button="assets" aria-pressed="false">Asset</button>
+          <button type="button" data-post-tab-button="workflow" aria-pressed="false">Workflow</button>
+          <button type="button" data-post-tab-button="history" aria-pressed="false">Storico</button>
+        </nav>
+
+        <section class="post-tab-panel" data-post-tab="general">
         <div class="form-row">
           <label>
             Template
@@ -311,7 +323,9 @@
             Rubrica ricorrente
             <select id="postRecurrence">
               <option value="none">Non ricorrente</option>
+              <option value="daily">Ogni giorno</option>
               <option value="weekly">Ogni settimana</option>
+              <option value="biweekly">Ogni 2 settimane</option>
               <option value="monthly">Ogni mese</option>
             </select>
           </label>
@@ -321,6 +335,17 @@
           Titolo
           <input id="postTitle" type="text" maxlength="100" required placeholder="Es. Reel dietro le quinte">
         </label>
+
+        <div class="form-row">
+          <label>
+            Serie/Rubrica
+            <input id="postSeries" type="text" maxlength="80" placeholder="Es. Rubrica salute">
+          </label>
+          <label>
+            Contenuti collegati
+            <input id="postRelated" type="text" maxlength="160" placeholder="Titoli, ID o link interni">
+          </label>
+        </div>
 
         <div class="form-row">
           <label>
@@ -419,10 +444,17 @@
             <input id="postTags" type="text" maxlength="120" placeholder="Es. promo, tutorial, lancio">
           </label>
         </div>
+        </section>
 
+        <section class="post-tab-panel" data-post-tab="assets" hidden>
         <label>
           Link asset
           <input id="postAssetLink" type="url" placeholder="Canva, Drive, Dropbox, CapCut...">
+        </label>
+
+        <label>
+          Link multipli
+          <textarea id="postAssetLinks" rows="3" placeholder="Un link per riga"></textarea>
         </label>
 
         <label>
@@ -430,6 +462,18 @@
           <input id="postAssets" type="text" maxlength="160" placeholder="Foto prodotto, video, grafiche, hashtag...">
         </label>
 
+        <label>
+          Stato asset
+          <select id="postAssetStatus">
+            <option>Non iniziati</option>
+            <option>Da raccogliere</option>
+            <option>In lavorazione</option>
+            <option>Pronti</option>
+          </select>
+        </label>
+        </section>
+
+        <section class="post-tab-panel" data-post-tab="workflow" hidden>
         <fieldset>
           <legend>Checklist</legend>
           <label class="check-row"><input id="checkIdea" type="checkbox"> Idea definita</label>
@@ -438,20 +482,62 @@
           <label class="check-row"><input id="checkReview" type="checkbox"> Revisione fatta</label>
           <label class="check-row"><input id="checkScheduled" type="checkbox"> Programmato</label>
         </fieldset>
+        </section>
 
+        <section class="post-tab-panel" data-post-tab="copy" hidden>
+        <div class="form-row">
+          <label>
+            Hook
+            <input id="postHook" type="text" maxlength="160" placeholder="Apertura del contenuto">
+          </label>
+          <label>
+            CTA
+            <input id="postCta" type="text" maxlength="120" placeholder="Azione richiesta al pubblico">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Pubblico target
+            <input id="postAudience" type="text" maxlength="120" placeholder="Es. genitori, medici, studenti">
+          </label>
+          <label>
+            Tone of voice
+            <input id="postTone" type="text" maxlength="80" placeholder="Es. autorevole, semplice, empatico">
+          </label>
+        </div>
         <label>
           Copy pubblico
           <textarea id="postCopy" rows="4" placeholder="Testo del post, caption, hook..."></textarea>
+          <span class="char-counter" id="copyCounter">0 caratteri</span>
         </label>
+
+        <label>
+          Fonte/Ispirazione
+          <textarea id="postSource" rows="3" placeholder="Fonti, riferimenti, spunti, link utili"></textarea>
+        </label>
+
+        <div class="form-row">
+          <label>
+            Menzioni utenti
+            <input id="postMentions" type="text" maxlength="160" placeholder="@nome, @team">
+          </label>
+          <label>
+            Commenti
+            <textarea id="postComments" rows="3" placeholder="Commenti operativi, feedback, richieste"></textarea>
+          </label>
+        </div>
 
         <label>
           Note interne
           <textarea id="postNotes" rows="4" placeholder="Indicazioni, approvazioni, dubbi, cose da controllare..."></textarea>
         </label>
+        </section>
 
-        <section class="history-box" id="historyBox" hidden>
-          <h3>Storico modifiche</h3>
-          <div id="historyList"></div>
+        <section class="post-tab-panel history-box" id="historyBox" data-post-tab="history" hidden>
+          <details>
+            <summary>Storico modifiche</summary>
+            <div id="historyList"></div>
+          </details>
         </section>
 
         <footer>
