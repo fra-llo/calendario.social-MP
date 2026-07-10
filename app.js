@@ -124,6 +124,7 @@ const trashDialog = document.querySelector("#trashDialog");
 const trashList = document.querySelector("#trashList");
 const statsDialog = document.querySelector("#statsDialog");
 const statsPeriodTitle = document.querySelector("#statsPeriodTitle");
+const statsPeriodInput = document.querySelector("#statsPeriodInput");
 const statsSummaryGrid = document.querySelector("#statsSummaryGrid");
 const statsPlatformBars = document.querySelector("#statsPlatformBars");
 const statsStatusBars = document.querySelector("#statsStatusBars");
@@ -131,6 +132,7 @@ const statsThemeFilter = document.querySelector("#statsThemeFilter");
 const themeStack = document.querySelector("#themeStack");
 const themeBars = document.querySelector("#themeBars");
 const statsInsights = document.querySelector("#statsInsights");
+const copyCounter = document.querySelector("#copyCounter");
 const dayDialog = document.querySelector("#dayDialog");
 const dayDialogTitle = document.querySelector("#dayDialogTitle");
 const dayDialogSummary = document.querySelector("#dayDialogSummary");
@@ -227,7 +229,9 @@ const cloud = {
 let undoAction = null;
 let undoTimer = null;
 let resizingSidebar = false;
+let statsVisibleDate = new Date(state.visibleDate);
 const selectedListPosts = new Set();
+const dismissedStatsInsights = new Set();
 
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
@@ -251,6 +255,9 @@ document.querySelector("#closeDatePicker").addEventListener("click", closeDatePi
 document.querySelector("#cancelDatePicker").addEventListener("click", closeDatePicker);
 document.querySelector("#closeTrash").addEventListener("click", closeTrashDialog);
 document.querySelector("#closeStats").addEventListener("click", closeStatsDialog);
+document.querySelector("#previousStatsPeriod").addEventListener("click", () => changeStatsPeriod(-1));
+document.querySelector("#nextStatsPeriod").addEventListener("click", () => changeStatsPeriod(1));
+statsPeriodInput.addEventListener("change", setStatsPeriodFromInput);
 document.querySelector("#closeDayDialog").addEventListener("click", closeDayDialog);
 addDayDialogPost.addEventListener("click", () => {
   const date = addDayDialogPost.dataset.date;
@@ -265,6 +272,7 @@ datePickerForm.addEventListener("submit", jumpToSelectedDate);
 postForm.addEventListener("submit", savePost);
 fields.template.addEventListener("change", applyTemplate);
 fields.platform.addEventListener("change", applyRecommendedTime);
+fields.copy.addEventListener("input", updateCopyCounter);
 document.querySelector("#exportCsvButton").addEventListener("click", exportCsv);
 document.querySelector("#exportFilteredCsvButton").addEventListener("click", exportFilteredCsv);
 document.querySelector("#backupButton").addEventListener("click", exportBackup);
@@ -730,6 +738,7 @@ function closeTrashDialog() {
 
 function openStatsDialog() {
   closeHamburgerMenu();
+  statsVisibleDate = new Date(state.visibleDate);
   populateStatsThemeFilter();
   renderStatsDialog();
   if (!statsDialog.open) statsDialog.showModal();
@@ -737,6 +746,19 @@ function openStatsDialog() {
 
 function closeStatsDialog() {
   statsDialog.close();
+}
+
+function changeStatsPeriod(delta) {
+  statsVisibleDate.setMonth(statsVisibleDate.getMonth() + delta);
+  renderStatsDialog();
+}
+
+function setStatsPeriodFromInput() {
+  if (!statsPeriodInput.value) return;
+  const [year, month] = statsPeriodInput.value.split("-").map(Number);
+  if (!year || !month) return;
+  statsVisibleDate = new Date(year, month - 1, 1);
+  renderStatsDialog();
 }
 
 function renderTrash() {
@@ -1352,8 +1374,9 @@ function renderPlatformStats() {
 }
 
 function renderStatsDialog() {
-  const monthPosts = getMonthPosts(state.posts);
-  statsPeriodTitle.textContent = formatMonthLabel(state.visibleDate);
+  const monthPosts = getMonthPosts(state.posts, statsVisibleDate);
+  statsPeriodTitle.textContent = formatMonthLabel(statsVisibleDate);
+  statsPeriodInput.value = toMonthInput(statsVisibleDate);
   renderStatsSummary(monthPosts);
   renderStatsDistributionBars(statsPlatformBars, getPlatformStats(monthPosts), "target");
   renderStatsDistributionBars(statsStatusBars, getStatusStats(monthPosts), "count");
@@ -1431,7 +1454,7 @@ function renderStatsDistributionBars(container, items, mode) {
   });
 }
 
-function renderThemeDistribution(monthPosts = getMonthPosts(state.posts)) {
+function renderThemeDistribution(monthPosts = getMonthPosts(state.posts, statsDialog.open ? statsVisibleDate : state.visibleDate)) {
   const themes = state.settings.themes;
   const selectedTheme = statsThemeFilter.value || "all";
   const total = monthPosts.length || 0;
@@ -1497,16 +1520,29 @@ function renderStatsInsights(posts) {
     if (item.target && item.count < item.target) insights.push(`${item.label}: mancano ${item.target - item.count} contenuti per il target mensile.`);
   });
 
+  const visibleInsights = insights.filter((insight) => !dismissedStatsInsights.has(insight));
+
   statsInsights.innerHTML = "";
-  if (!insights.length) {
+  if (!visibleInsights.length) {
     const ok = document.createElement("p");
-    ok.textContent = "Nessuna criticita rilevante per il mese selezionato.";
+    ok.textContent = "Nessuna criticità rilevante per il mese selezionato.";
     statsInsights.append(ok);
     return;
   }
-  insights.slice(0, 10).forEach((insight) => {
+  visibleInsights.slice(0, 10).forEach((insight) => {
     const item = document.createElement("p");
-    item.textContent = insight;
+    const text = document.createElement("span");
+    text.textContent = insight;
+    const dismiss = document.createElement("button");
+    dismiss.className = "insight-dismiss";
+    dismiss.type = "button";
+    dismiss.setAttribute("aria-label", "Elimina avviso");
+    dismiss.textContent = "x";
+    dismiss.addEventListener("click", () => {
+      dismissedStatsInsights.add(insight);
+      renderStatsInsights(posts);
+    });
+    item.append(text, dismiss);
     statsInsights.append(item);
   });
 }
@@ -1650,9 +1686,15 @@ function openPostDialog(post = {}) {
   fields.checkReview.checked = Boolean(normalized.checklist.review);
   fields.checkScheduled.checked = Boolean(normalized.checklist.scheduled);
   renderHistory(normalized.history);
+  updateCopyCounter();
 
   postDialog.showModal();
   fields.title.focus();
+}
+
+function updateCopyCounter() {
+  const count = fields.copy.value.length;
+  copyCounter.textContent = `${count} ${count === 1 ? "carattere" : "caratteri"}`;
 }
 
 function renderHistory(history) {
@@ -2536,9 +2578,9 @@ function getMondayBasedDay(date) {
   return (date.getDay() + 6) % 7;
 }
 
-function getMonthPosts(posts) {
-  const year = state.visibleDate.getFullYear();
-  const month = state.visibleDate.getMonth();
+function getMonthPosts(posts, referenceDate = state.visibleDate) {
+  const year = referenceDate.getFullYear();
+  const month = referenceDate.getMonth();
   return posts.filter((post) => !post.deletedAt).filter((post) => {
     const postDate = parseDateKey(post.date);
     return postDate.getFullYear() === year && postDate.getMonth() === month;
@@ -2583,6 +2625,12 @@ function toDateKey(date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function toMonthInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
 }
 
 function parseDateKey(dateKey) {

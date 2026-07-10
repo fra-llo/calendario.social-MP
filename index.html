@@ -41,7 +41,7 @@
           <h1>Calendario contenuti MP</h1>
         </div>
 
-        <button class="primary-action" id="newPostButton" type="button">+ Nuovo contenuto</button>
+        <button class="primary-action" id="newPostButton" type="button" hidden>+ Nuovo contenuto</button>
 
         <details class="panel collapsible-panel">
           <summary>Ricerca e filtri</summary>
@@ -237,6 +237,11 @@
             <p class="eyebrow">Statistiche</p>
             <h2 id="statsPeriodTitle">Statistiche</h2>
           </div>
+          <div class="stats-period-controls" aria-label="Periodo statistiche">
+            <button class="icon-button" id="previousStatsPeriod" type="button" aria-label="Periodo precedente">‹</button>
+            <input id="statsPeriodInput" type="month" aria-label="Mese statistiche">
+            <button class="icon-button" id="nextStatsPeriod" type="button" aria-label="Periodo successivo">›</button>
+          </div>
           <button class="ghost-button" id="closeStats" type="button" aria-label="Chiudi">x</button>
         </header>
         <div class="stats-summary-grid" id="statsSummaryGrid"></div>
@@ -260,10 +265,10 @@
             <div class="theme-stack" id="themeStack"></div>
             <div class="theme-bars" id="themeBars"></div>
           </section>
-          <section class="stats-card">
-            <h3>Criticita</h3>
+          <details class="stats-card stats-insights-card">
+            <summary>Criticità</summary>
             <div class="stats-insights" id="statsInsights"></div>
-          </section>
+          </details>
         </div>
       </section>
     </dialog>
@@ -432,15 +437,18 @@
 
         <fieldset>
           <legend>Checklist</legend>
-          <label class="check-row"><input id="checkIdea" type="checkbox"> Idea definita</label>
-          <label class="check-row"><input id="checkCopy" type="checkbox"> Copy scritto</label>
-          <label class="check-row"><input id="checkCreative" type="checkbox"> Creativita pronta</label>
-          <label class="check-row"><input id="checkReview" type="checkbox"> Revisione fatta</label>
+          <label class="check-row"><input id="checkIdea" type="checkbox"> Idea</label>
+          <label class="check-row"><input id="checkCopy" type="checkbox"> Script</label>
+          <label class="check-row"><input id="checkCreative" type="checkbox"> Grafica</label>
+          <label class="check-row"><input id="checkReview" type="checkbox"> Revisione</label>
           <label class="check-row"><input id="checkScheduled" type="checkbox"> Programmato</label>
         </fieldset>
 
-        <label>
-          Copy pubblico
+        <label class="script-field">
+          <span class="field-heading">
+            Script
+            <small id="copyCounter">0 caratteri</small>
+          </span>
           <textarea id="postCopy" rows="4" placeholder="Testo del post, caption, hook..."></textarea>
         </label>
 

@@ -504,6 +504,23 @@ body.is-dark .period-button:focus-visible {
   gap: 14px;
 }
 
+.stats-period-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.stats-period-controls input {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0 10px;
+  color: var(--ink);
+  background: var(--surface);
+  font-weight: 850;
+}
+
 .stats-panel h2,
 .stats-panel h3,
 .stats-panel p {
@@ -581,6 +598,29 @@ body.is-dark .period-button:focus-visible {
   min-width: 150px;
 }
 
+.stats-insights-card summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 900;
+  list-style: none;
+}
+
+.stats-insights-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.stats-insights-card summary::after {
+  content: "Apri";
+  float: right;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.stats-insights-card[open] summary::after {
+  content: "Chiudi";
+}
+
 .theme-distribution {
   display: grid;
   gap: 14px;
@@ -645,6 +685,12 @@ body.is-dark .period-button:focus-visible {
   gap: 10px;
 }
 
+.stats-insights {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 .stats-bar-row {
   display: grid;
   grid-template-columns: 132px minmax(0, 1fr) 72px;
@@ -682,12 +728,35 @@ body.is-dark .period-button:focus-visible {
 }
 
 .stats-insights p {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
   margin: 0;
   border-left: 3px solid var(--warning);
   padding-left: 9px;
   color: var(--muted);
   font-size: 0.86rem;
   line-height: 1.35;
+}
+
+.insight-dismiss {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  color: var(--muted);
+  background: var(--control);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.insight-dismiss:hover {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, var(--control) 88%);
 }
 
 .workspace {
@@ -711,14 +780,19 @@ body.is-dark .period-button:focus-visible {
 
 .toolbar-actions,
 .period-controls {
-  display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
 }
 
 .period-controls {
+  display: grid;
+  grid-template-columns: 44px clamp(230px, 32vw, 430px) 44px auto;
   flex: 0 1 auto;
+}
+
+.toolbar-actions {
+  display: flex;
 }
 
 .toolbar-actions {
@@ -892,7 +966,7 @@ body.is-dark .period-button:focus-visible {
 }
 
 .period-button {
-  flex: 0 1 auto;
+  width: 100%;
   min-width: 0;
   min-height: 42px;
   border: 0;
@@ -900,7 +974,7 @@ body.is-dark .period-button:focus-visible {
   padding: 0 10px;
   color: var(--ink);
   background: transparent;
-  text-align: left;
+  text-align: center;
 }
 
 .period-button:hover,
@@ -1547,6 +1621,19 @@ form footer {
   line-height: 1.45;
 }
 
+.field-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field-heading small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 form footer > div {
   display: flex;
   gap: 10px;
@@ -1671,16 +1758,19 @@ form footer > div {
   .period-controls {
     width: 100%;
     align-items: center;
-    flex-direction: row;
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
   }
 
   .period-controls .period-button {
-    flex: 1;
     text-align: center;
   }
 
   .period-controls .icon-button {
-    flex: 0 0 40px;
+    width: 40px;
+  }
+
+  #todayButton {
+    grid-column: 1 / -1;
   }
 
   .view-switch {
