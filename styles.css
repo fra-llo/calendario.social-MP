@@ -1210,6 +1210,10 @@ body.is-dark .period-button:focus-visible {
   background: color-mix(in srgb, var(--surface) 94%, var(--accent-soft) 6%);
 }
 
+.events-calendar-grid .day-cell.is-muted {
+  background: color-mix(in srgb, var(--surface-soft) 82%, var(--line) 18%);
+}
+
 .event-day-cell .day-top {
   align-items: flex-start;
 }
@@ -1327,6 +1331,22 @@ body.is-dark .period-button:focus-visible {
   font-size: 0.9rem;
 }
 
+.list-table-header {
+  display: grid;
+  grid-template-columns: 34px 92px minmax(220px, 1.4fr) 150px 130px 150px 86px 178px;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 10px 14px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .list-item {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
@@ -1349,7 +1369,67 @@ body.is-dark .period-button:focus-visible {
 }
 
 .list-item.is-table-row {
-  grid-template-columns: 34px minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  grid-template-columns: 34px 92px minmax(220px, 1.4fr) 150px 130px 150px 86px 178px;
+  gap: 14px;
+  border-left-width: 4px;
+  border-radius: 0;
+}
+
+.list-table-header + .list-item.is-table-row {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.list-date-cell,
+.list-muted-cell {
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.list-date-cell {
+  color: var(--ink);
+}
+
+.list-title-cell {
+  min-width: 0;
+}
+
+.list-title-cell h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-pill-cell {
+  min-width: 0;
+}
+
+.list-theme-pill,
+.list-status-pill {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  border-radius: 7px;
+  padding: 5px 9px;
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.list-status-pill {
+  color: var(--muted);
+  background: var(--surface-soft);
+}
+
+.list-status-pill[data-status="Pubblicato"] {
+  color: #146c43;
+  background: #d1fae5;
+}
+
+.list-status-pill[data-status="Programmato"],
+.list-status-pill[data-status="Pronto"] {
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .list-select {
@@ -1971,11 +2051,16 @@ form footer > div {
     grid-template-columns: 1fr;
   }
 
-  .list-item.is-table-row {
-    grid-template-columns: 28px minmax(0, 1fr);
+  .list-table-header {
+    display: none;
   }
 
-  .list-item.is-table-row > p,
+  .list-item.is-table-row {
+    grid-template-columns: 28px minmax(0, 1fr);
+    border-radius: var(--radius);
+  }
+
+  .list-item.is-table-row > div:not(.list-select),
   .list-item.is-table-row > div:last-child {
     grid-column: 2;
   }

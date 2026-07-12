@@ -1,6 +1,7 @@
 const storageKey = "social-content-calendar-posts-v2";
 const legacyStorageKey = "social-content-calendar-posts";
 const settingsKey = "social-content-calendar-settings-v2";
+const manualEventsKey = "social-content-calendar-manual-events-v1";
 
 const platforms = ["Instagram", "TikTok", "Facebook", "LinkedIn", "YouTube", "X"];
 const platformIcons = {
@@ -93,8 +94,11 @@ const eventDefinitions = [
   { id: "repubblica", title: "Festa della Repubblica", month: 6, day: 2, category: "istituzioni", scope: "italia", importance: "alta", description: "Festa nazionale italiana, centrale per contenuti istituzionali e civici.", ideas: ["Post istituzionale", "Carosello storico sintetico", "Contenuto sui valori costituzionali"], hashtags: ["#2Giugno", "#FestaDellaRepubblica"] },
   { id: "ambiente", title: "Giornata mondiale dell'ambiente", month: 6, day: 5, category: "ambiente", scope: "internazionale", importance: "alta", description: "Evento globale per educazione ambientale, sostenibilità e responsabilità sociale.", ideas: ["Carosello con consigli pratici", "Reel con dato chiave", "Post di impegno concreto"], hashtags: ["#WorldEnvironmentDay", "#Ambiente"] },
   { id: "musica", title: "Festa della musica", month: 6, day: 21, category: "cultura", scope: "internazionale", importance: "media", description: "Ricorrenza culturale adatta a contenuti creativi, eventi e community.", ideas: ["Playlist del brand", "Reel con trend audio", "Post su musica e cultura"], hashtags: ["#FestaDellaMusica", "#MusicDay"] },
+  { id: "palio-siena-luglio", title: "Palio di Siena - Provenzano", month: 7, day: 2, category: "cultura", scope: "italia", importance: "alta", description: "Storica corsa delle contrade di Siena, evento identitario italiano ad alto valore culturale e visivo.", ideas: ["Carosello sulla tradizione delle contrade", "Reel sulle storie positive legate al territorio", "Post culturale su Siena e patrimonio immateriale"], hashtags: ["#PalioDiSiena", "#Siena", "#CulturaItaliana"] },
+  { id: "wimbledon-finale", title: "Finale di Wimbledon", rule: "second-sunday-july", category: "sport", scope: "internazionale", importance: "alta", description: "Finale del torneo di Wimbledon, appuntamento sportivo internazionale utile per contenuti su sport, fair play e performance.", ideas: ["Post su disciplina e resilienza", "Story con sondaggio sul vincitore", "Carosello su sport e valori positivi"], hashtags: ["#Wimbledon", "#Tennis"] },
   { id: "amicizia", title: "Giornata internazionale dell'amicizia", month: 7, day: 30, category: "diritti", scope: "internazionale", importance: "bassa", description: "Occasione leggera per community, relazioni e contenuti partecipativi.", ideas: ["Story con mention", "Post community", "Domanda aperta ai follower"], hashtags: ["#FriendshipDay", "#Amicizia"] },
   { id: "ferragosto", title: "Ferragosto", month: 8, day: 15, category: "festivita", scope: "italia", importance: "alta", description: "Ricorrenza estiva italiana molto riconoscibile, utile per contenuti leggeri o stagionali.", ideas: ["Post di auguri estivi", "Story con sondaggio", "Contenuto dietro le quinte"], hashtags: ["#Ferragosto", "#Estate"] },
+  { id: "palio-siena-agosto", title: "Palio di Siena - Assunta", month: 8, day: 16, category: "cultura", scope: "italia", importance: "alta", description: "Seconda corsa annuale del Palio di Siena, ricorrenza culturale italiana fortemente legata a tradizione, identità e territorio.", ideas: ["Post fotografico su tradizione e comunità", "Carosello sulle contrade", "Reel sul valore della memoria locale"], hashtags: ["#PalioDiSiena", "#Siena", "#Tradizione"] },
   { id: "alfabetizzazione", title: "Giornata internazionale dell'alfabetizzazione", month: 9, day: 8, category: "cultura", scope: "internazionale", importance: "media", description: "Ricorrenza UNESCO su educazione, accesso alla conoscenza e inclusione.", ideas: ["Carosello educativo", "Post su formazione e conoscenza", "Dato spiegato in modo semplice"], hashtags: ["#LiteracyDay", "#Educazione"] },
   { id: "pace", title: "Giornata internazionale della pace", month: 9, day: 21, category: "diritti", scope: "internazionale", importance: "media", description: "Giornata globale dedicata a pace, dialogo e cooperazione.", ideas: ["Post riflessivo", "Carosello con parole chiave", "Contenuto valoriale"], hashtags: ["#PeaceDay", "#Pace"] },
   { id: "nonni", title: "Festa dei nonni", month: 10, day: 2, category: "festivita", scope: "italia", importance: "media", description: "Ricorrenza familiare italiana utile per contenuti emozionali e intergenerazionali.", ideas: ["Post storytelling", "Story con ricordi della community", "Foto o frase dedicata"], hashtags: ["#FestaDeiNonni"] },
@@ -109,6 +113,7 @@ const eventDefinitions = [
   { id: "natale", title: "Natale", month: 12, day: 25, category: "festivita", scope: "italia", importance: "alta", description: "Ricorrenza centrale per auguri, comunicazioni istituzionali e contenuti emozionali.", ideas: ["Post di auguri", "Video del team", "Carosello recap valori dell'anno"], hashtags: ["#Natale", "#Christmas"] },
   { id: "santo-stefano", title: "Santo Stefano", month: 12, day: 26, category: "festivita", scope: "italia", importance: "media", description: "Festività italiana utile per pianificare pause, contenuti leggeri o reminder.", ideas: ["Story leggera", "Post di continuità natalizia"], hashtags: ["#SantoStefano"] },
   { id: "capodanno-eve", title: "San Silvestro", month: 12, day: 31, category: "festivita", scope: "italia", importance: "alta", description: "Chiusura dell'anno, ideale per recap, ringraziamenti e anticipazioni.", ideas: ["Recap anno", "Post ringraziamento", "Teaser obiettivi nuovo anno"], hashtags: ["#SanSilvestro", "#FineAnno"] },
+  { id: "mondiali-finale-2026", title: "Finale dei Mondiali di calcio", year: 2026, month: 7, day: 19, category: "sport", scope: "internazionale", importance: "alta", description: "Finale della Coppa del Mondo FIFA 2026, evento sportivo globale ad altissima attenzione mediatica.", ideas: ["Post su sport e unione tra culture", "Story live reaction", "Carosello sui momenti positivi del torneo"], hashtags: ["#Mondiali", "#WorldCup", "#Calcio"] },
 ];
 
 const initialSettings = loadSettings();
@@ -117,6 +122,7 @@ const state = {
   viewMode: initialSettings.defaultView,
   appMode: "editorial",
   posts: loadPosts(),
+  manualEvents: loadManualEvents(),
   settings: initialSettings,
 };
 
@@ -227,6 +233,7 @@ const eventCategoryFilter = document.querySelector("#eventCategoryFilter");
 const eventScopeFilter = document.querySelector("#eventScopeFilter");
 const eventImportanceFilter = document.querySelector("#eventImportanceFilter");
 const eventModeLabel = document.querySelector("#eventModeLabel");
+const toolbarNewEventButton = document.querySelector("#toolbarNewEventButton");
 const eventDialog = document.querySelector("#eventDialog");
 const eventDialogCategory = document.querySelector("#eventDialogCategory");
 const eventDialogTitle = document.querySelector("#eventDialogTitle");
@@ -235,6 +242,21 @@ const eventDialogDescription = document.querySelector("#eventDialogDescription")
 const eventIdeasList = document.querySelector("#eventIdeasList");
 const eventHashtags = document.querySelector("#eventHashtags");
 const createPostFromEventButton = document.querySelector("#createPostFromEvent");
+const deleteManualEventButton = document.querySelector("#deleteManualEvent");
+const editManualEventButton = document.querySelector("#editManualEvent");
+const manualEventDialog = document.querySelector("#manualEventDialog");
+const manualEventForm = document.querySelector("#manualEventForm");
+const manualEventFields = {
+  id: document.querySelector("#manualEventId"),
+  title: document.querySelector("#manualEventTitle"),
+  date: document.querySelector("#manualEventDate"),
+  category: document.querySelector("#manualEventCategory"),
+  scope: document.querySelector("#manualEventScope"),
+  importance: document.querySelector("#manualEventImportance"),
+  description: document.querySelector("#manualEventDescription"),
+  ideas: document.querySelector("#manualEventIdeas"),
+  hashtags: document.querySelector("#manualEventHashtags"),
+};
 
 const viewButtons = {
   month: document.querySelector("#monthViewButton"),
@@ -304,6 +326,7 @@ document.querySelector("#printButton").addEventListener("click", () => {
 });
 document.querySelector("#newPostButton").addEventListener("click", () => openPostDialog());
 document.querySelector("#toolbarNewPostButton").addEventListener("click", () => openPostDialog());
+toolbarNewEventButton.addEventListener("click", () => openManualEventDialog());
 editorialModeButton.addEventListener("click", () => setAppMode("editorial"));
 eventsModeButton.addEventListener("click", () => setAppMode("events"));
 filterToolbarButton.addEventListener("click", openFiltersPanel);
@@ -325,6 +348,11 @@ statsPeriodInput.addEventListener("change", setStatsPeriodFromInput);
 document.querySelector("#closeDayDialog").addEventListener("click", closeDayDialog);
 document.querySelector("#closeEventDialog").addEventListener("click", closeEventDialog);
 createPostFromEventButton.addEventListener("click", createPostFromSelectedEvent);
+deleteManualEventButton.addEventListener("click", deleteSelectedManualEvent);
+editManualEventButton.addEventListener("click", editSelectedManualEvent);
+document.querySelector("#closeManualEventDialog").addEventListener("click", closeManualEventDialog);
+document.querySelector("#cancelManualEventDialog").addEventListener("click", closeManualEventDialog);
+manualEventForm.addEventListener("submit", saveManualEvent);
 addDayDialogPost.addEventListener("click", () => {
   const date = addDayDialogPost.dataset.date;
   closeDayDialog();
@@ -450,6 +478,7 @@ function applyAppMode() {
     element.hidden = !isEventsMode;
   });
   eventModeLabel.hidden = !isEventsMode;
+  toolbarNewEventButton.hidden = !isEventsMode;
   filterBadge.hidden = isEventsMode || !getActiveFilterCount();
   if (isEventsMode) resetFiltersButton.hidden = true;
 }
@@ -1306,6 +1335,8 @@ function openEventDialog(event) {
     eventIdeasList.append(item);
   });
   eventHashtags.textContent = (event.hashtags || []).join(" ");
+  deleteManualEventButton.hidden = !event.manual;
+  editManualEventButton.hidden = !event.manual;
   if (!eventDialog.open) eventDialog.showModal();
 }
 
@@ -1336,6 +1367,74 @@ function createPostFromSelectedEvent() {
     ].join("\n"),
     notes: `Creato dal calendario eventi. Categoria: ${category?.label || selectedEvent.category}. Importanza: ${selectedEvent.importance}.`,
   });
+}
+
+function openManualEventDialog(event = {}) {
+  const normalized = normalizeManualEvent({
+    title: "",
+    date: toDateKey(state.visibleDate),
+    category: "cultura",
+    scope: "italia",
+    importance: "media",
+    description: "",
+    ideas: [],
+    hashtags: [],
+    ...event,
+  });
+  manualEventFields.id.value = normalized.id || "";
+  manualEventFields.title.value = normalized.title || "";
+  manualEventFields.date.value = normalized.date || toDateKey(state.visibleDate);
+  manualEventFields.category.value = eventCategories[normalized.category] ? normalized.category : "cultura";
+  manualEventFields.scope.value = normalized.scope || "italia";
+  manualEventFields.importance.value = normalized.importance || "media";
+  manualEventFields.description.value = normalized.description === "Evento inserito manualmente." ? "" : normalized.description;
+  manualEventFields.ideas.value = (normalized.ideas || []).join("\n");
+  manualEventFields.hashtags.value = (normalized.hashtags || []).join(" ");
+  if (!manualEventDialog.open) manualEventDialog.showModal();
+  manualEventFields.title.focus();
+}
+
+function closeManualEventDialog() {
+  manualEventDialog.close();
+}
+
+function saveManualEvent(event) {
+  event.preventDefault();
+  const manualEvent = normalizeManualEvent({
+    id: manualEventFields.id.value || createId(),
+    title: manualEventFields.title.value.trim(),
+    date: manualEventFields.date.value,
+    category: manualEventFields.category.value,
+    scope: manualEventFields.scope.value,
+    importance: manualEventFields.importance.value,
+    description: manualEventFields.description.value.trim() || "Evento inserito manualmente.",
+    ideas: manualEventFields.ideas.value.split("\n").map((idea) => idea.trim()).filter(Boolean),
+    hashtags: manualEventFields.hashtags.value.split(/\s+/).map((tag) => tag.trim()).filter(Boolean),
+  });
+  if (!manualEvent) return;
+  const existingIndex = state.manualEvents.findIndex((item) => item.id === manualEvent.id);
+  if (existingIndex >= 0) state.manualEvents[existingIndex] = manualEvent;
+  else state.manualEvents.push(manualEvent);
+  persistManualEvents();
+  state.visibleDate = parseDateKey(manualEvent.date);
+  closeManualEventDialog();
+  render();
+}
+
+function deleteSelectedManualEvent() {
+  if (!selectedEvent?.manual) return;
+  state.manualEvents = state.manualEvents.filter((event) => event.id !== selectedEvent.id);
+  persistManualEvents();
+  closeEventDialog();
+  selectedEvent = null;
+  render();
+}
+
+function editSelectedManualEvent() {
+  if (!selectedEvent?.manual) return;
+  const eventToEdit = selectedEvent;
+  closeEventDialog();
+  openManualEventDialog(eventToEdit);
 }
 
 function themeForEventCategory(category) {
@@ -1507,6 +1606,7 @@ function renderListView() {
     return;
   }
 
+  listView.append(createListHeader());
   const grouped = groupListPosts(posts);
   Object.entries(grouped).forEach(([group, groupPosts]) => {
     if (listGroupSelect.value !== "none") {
@@ -1517,6 +1617,17 @@ function renderListView() {
     }
     groupPosts.forEach((post) => listView.append(createListRow(post)));
   });
+}
+
+function createListHeader() {
+  const header = document.createElement("div");
+  header.className = "list-table-header";
+  ["", "Data", "Titolo", "Tema", "Formato", "Stato", "Orario", "Azioni"].forEach((label) => {
+    const cell = document.createElement("span");
+    cell.textContent = label;
+    header.append(cell);
+  });
+  return header;
 }
 
 function createListRow(post) {
@@ -1539,16 +1650,43 @@ function createListRow(post) {
   });
   select.append(checkbox);
 
+  const dateCell = document.createElement("div");
+  dateCell.className = "list-date-cell";
+  dateCell.textContent = formatShortDate(parseDateKey(post.date));
+
   const main = document.createElement("div");
+  main.className = "list-title-cell";
   const title = document.createElement("h3");
   title.textContent = post.title;
   const meta = document.createElement("p");
-  meta.textContent = `${formatShortDate(parseDateKey(post.date))} ${post.time || ""} - ${formatPlatformLabel(post.platform)} - ${formatStatusLabel(post.status)} - ${post.priority || "Media"}`;
+  meta.textContent = [post.owner || "Senza responsabile", formatPlatformLabel(post.platform), post.priority || "Media"].filter(Boolean).join(" - ");
   main.append(title, meta);
 
-  const detail = document.createElement("p");
   const theme = getTheme(post.theme);
-  detail.textContent = [post.format, post.goal, theme ? `${theme.icon} ${theme.name}` : "", post.owner || "Senza responsabile", post.tags].filter(Boolean).join(" - ");
+  const themeCell = document.createElement("div");
+  themeCell.className = "list-pill-cell";
+  const themePill = document.createElement("span");
+  themePill.className = "list-theme-pill";
+  themePill.style.backgroundColor = theme?.color ? `${theme.color}16` : "var(--surface-soft)";
+  themePill.style.color = theme?.color || "var(--ink)";
+  themePill.textContent = theme ? `${theme.icon} ${theme.name}` : "Tema";
+  themeCell.append(themePill);
+
+  const formatCell = document.createElement("div");
+  formatCell.className = "list-muted-cell";
+  formatCell.textContent = post.format || "-";
+
+  const statusCell = document.createElement("div");
+  statusCell.className = "list-pill-cell";
+  const statusPill = document.createElement("span");
+  statusPill.className = "list-status-pill";
+  statusPill.dataset.status = post.status;
+  statusPill.textContent = formatStatusLabel(post.status);
+  statusCell.append(statusPill);
+
+  const timeCell = document.createElement("div");
+  timeCell.className = "list-muted-cell";
+  timeCell.textContent = post.time || "-";
 
   const actions = document.createElement("div");
   const edit = document.createElement("button");
@@ -1563,7 +1701,7 @@ function createListRow(post) {
   duplicate.addEventListener("click", () => duplicatePost(post.id));
   actions.append(edit, duplicate);
 
-  row.append(select, main, detail, actions);
+  row.append(select, dateCell, main, themeCell, formatCell, statusCell, timeCell, actions);
   return row;
 }
 
@@ -1941,7 +2079,7 @@ function filteredEvents() {
   const scope = eventScopeFilter.value;
   const importance = eventImportanceFilter.value;
   const range = getEventVisibleRange();
-  return getEventsForVisibleYears()
+  return getVisibleEvents()
     .filter((event) => {
       const eventDate = parseDateKey(event.date);
       const categoryLabel = eventCategories[event.category]?.label || "";
@@ -1960,6 +2098,11 @@ function filteredEvents() {
         && (scope === "all" || event.scope === scope)
         && (importance === "all" || event.importance === importance);
     });
+}
+
+function getVisibleEvents() {
+  return [...getEventsForVisibleYears(), ...state.manualEvents]
+    .sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
 }
 
 function getEventVisibleRange() {
@@ -2006,7 +2149,7 @@ function getEventsForVisibleYears() {
 }
 
 function buildEventsForYear(year) {
-  return eventDefinitions.map((definition) => {
+  return eventDefinitions.filter((definition) => !definition.year || definition.year === year).map((definition) => {
     const date = getEventDate(definition, year);
     return {
       ...definition,
@@ -2018,6 +2161,7 @@ function buildEventsForYear(year) {
 
 function getEventDate(definition, year) {
   if (definition.rule === "second-sunday-may") return nthWeekdayOfMonth(year, 4, 0, 2);
+  if (definition.rule === "second-sunday-july") return nthWeekdayOfMonth(year, 6, 0, 2);
   if (definition.rule === "black-friday") return nthWeekdayOfMonth(year, 10, 5, 4);
   return new Date(year, definition.month - 1, definition.day);
 }
@@ -2595,6 +2739,19 @@ function persistPosts(syncCloud = false) {
   if (syncCloud) syncAllCloudPosts();
 }
 
+function loadManualEvents() {
+  try {
+    const rawEvents = localStorage.getItem(manualEventsKey);
+    return rawEvents ? JSON.parse(rawEvents).map(normalizeManualEvent).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistManualEvents() {
+  localStorage.setItem(manualEventsKey, JSON.stringify(state.manualEvents));
+}
+
 function loadSettings() {
   try {
     return normalizeSettings(JSON.parse(localStorage.getItem(settingsKey)) || {});
@@ -2722,11 +2879,13 @@ function populateThemeSelects() {
 function populateEventCategoryFilter() {
   const currentValue = eventCategoryFilter.value || "all";
   eventCategoryFilter.querySelectorAll("option:not([value='all'])").forEach((option) => option.remove());
+  manualEventFields.category.innerHTML = "";
   Object.entries(eventCategories).forEach(([id, category]) => {
     const option = document.createElement("option");
     option.value = id;
     option.textContent = `${category.icon} ${category.label}`;
     eventCategoryFilter.append(option);
+    manualEventFields.category.append(option.cloneNode(true));
   });
   eventCategoryFilter.value = currentValue === "all" || eventCategories[currentValue] ? currentValue : "all";
 }
@@ -2923,6 +3082,23 @@ function normalizePost(post) {
   };
 }
 
+function normalizeManualEvent(event) {
+  if (!event?.title || !event?.date) return null;
+  const category = eventCategories[event.category] ? event.category : "cultura";
+  return {
+    id: event.id || createId(),
+    manual: true,
+    title: event.title || "",
+    date: event.date || toDateKey(new Date()),
+    category,
+    scope: ["italia", "internazionale"].includes(event.scope) ? event.scope : "italia",
+    importance: ["alta", "media", "bassa"].includes(event.importance) ? event.importance : "media",
+    description: event.description || "Evento inserito manualmente.",
+    ideas: Array.isArray(event.ideas) ? event.ideas.filter(Boolean) : [],
+    hashtags: Array.isArray(event.hashtags) ? event.hashtags.filter(Boolean) : [],
+  };
+}
+
 function rowToPost(row) {
   return normalizePost({
     id: row.id || createId(),
@@ -2971,11 +3147,10 @@ function getMonthDaysToRender() {
 }
 
 function getPeriodLabel(start) {
-  const prefix = state.appMode === "events" ? "Eventi - " : "";
-  if (state.viewMode === "day") return `${prefix}${formatFullDate(state.visibleDate)}`;
-  if (state.viewMode === "week") return `${prefix}${formatWeekRange(start)}`;
-  if (state.viewMode === "list") return `${state.appMode === "events" ? "Eventi" : "Lista"} - ${formatMonthLabel(state.visibleDate)}`;
-  return `${prefix}${formatMonthLabel(state.visibleDate)}`;
+  if (state.viewMode === "day") return formatFullDate(state.visibleDate);
+  if (state.viewMode === "week") return formatWeekRange(start);
+  if (state.viewMode === "list") return `Lista - ${formatMonthLabel(state.visibleDate)}`;
+  return formatMonthLabel(state.visibleDate);
 }
 
 function startOfCalendar(year, month) {

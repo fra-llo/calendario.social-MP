@@ -25,9 +25,9 @@
           <button class="icon-button hamburger-button" id="hamburgerButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
           <div class="hamburger-panel" id="hamburgerPanel" hidden>
             <button class="menu-item" id="settingsButton" type="button">Impostazioni</button>
-            <button class="menu-item" id="statsButton" type="button" data-editorial-action>Statistiche</button>
+            <button class="menu-item" id="statsButton" type="button">Statistiche</button>
             <button class="menu-item" id="printButton" type="button">Stampa</button>
-            <button class="menu-item" id="trashButton" type="button" data-editorial-action>Cestino</button>
+            <button class="menu-item" id="trashButton" type="button">Cestino</button>
             <button class="menu-item" id="logoutButton" type="button" hidden>Logout</button>
           </div>
         </div>
@@ -170,6 +170,7 @@
             </button>
             <button class="secondary-action compact-action" id="resetFiltersButton" type="button" hidden data-editorial-action>Reset filtri</button>
             <span class="event-mode-label" id="eventModeLabel" hidden>Ricorrenze automatiche</span>
+            <button class="primary-action compact-action" id="toolbarNewEventButton" type="button" hidden>+ Evento</button>
             <div class="view-switch" aria-label="Tipo vista">
               <button id="monthViewButton" type="button" aria-pressed="true" title="Vista mese">Mese</button>
               <button id="weekViewButton" type="button" aria-pressed="false" title="Vista settimana">Settimana</button>
@@ -352,9 +353,68 @@
           <p id="eventHashtags"></p>
         </section>
         <footer>
+          <button class="danger-action" id="deleteManualEvent" type="button" hidden>Elimina evento</button>
+          <button class="secondary-action" id="editManualEvent" type="button" hidden>Modifica evento</button>
           <button class="primary-action" id="createPostFromEvent" type="button">Crea contenuto da evento</button>
         </footer>
       </section>
+    </dialog>
+
+    <dialog id="manualEventDialog">
+      <form id="manualEventForm" method="dialog">
+        <header>
+          <h2>Nuovo evento</h2>
+          <button class="ghost-button" id="closeManualEventDialog" type="button" aria-label="Chiudi">x</button>
+        </header>
+        <input id="manualEventId" type="hidden">
+        <label>
+          Titolo
+          <input id="manualEventTitle" type="text" maxlength="120" required placeholder="Es. Evento locale, conferenza, finale...">
+        </label>
+        <div class="form-row">
+          <label>
+            Data
+            <input id="manualEventDate" type="date" required>
+          </label>
+          <label>
+            Categoria
+            <select id="manualEventCategory"></select>
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Area
+            <select id="manualEventScope">
+              <option value="italia">Italia</option>
+              <option value="internazionale">Internazionale</option>
+            </select>
+          </label>
+          <label>
+            Importanza
+            <select id="manualEventImportance">
+              <option value="alta">Alta</option>
+              <option value="media" selected>Media</option>
+              <option value="bassa">Bassa</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          Descrizione
+          <textarea id="manualEventDescription" rows="3" placeholder="Perche e rilevante editorialmente..."></textarea>
+        </label>
+        <label>
+          Spunti contenuto
+          <textarea id="manualEventIdeas" rows="3" placeholder="Uno spunto per riga"></textarea>
+        </label>
+        <label>
+          Hashtag
+          <input id="manualEventHashtags" type="text" placeholder="#evento #ricorrenza">
+        </label>
+        <footer>
+          <button class="secondary-action" id="cancelManualEventDialog" type="button">Annulla</button>
+          <button class="primary-action" type="submit">Salva evento</button>
+        </footer>
+      </form>
     </dialog>
 
     <dialog id="postDialog">
