@@ -67,11 +67,55 @@ const defaultTemplates = {
   "Post LinkedIn": { platform: "LinkedIn", format: "Post", goal: "Awareness", theme: "lavoro", assets: "Hook, insight, CTA", checklist: { idea: true, copy: true } },
   "Short YouTube": { platform: "YouTube", format: "Short", goal: "Engagement", theme: "persone", assets: "Video verticale, titolo, thumbnail", checklist: { idea: true } },
 };
+const eventCategories = {
+  festivita: { label: "Festività", icon: "◆", color: "#0b7a75" },
+  istituzioni: { label: "Istituzioni", icon: "▣", color: "#2563eb" },
+  cultura: { label: "Cultura", icon: "◈", color: "#7c3aed" },
+  ambiente: { label: "Ambiente", icon: "●", color: "#16a34a" },
+  salute: { label: "Salute", icon: "✚", color: "#dc2626" },
+  diritti: { label: "Diritti", icon: "◐", color: "#c2185b" },
+  sport: { label: "Sport", icon: "◉", color: "#ea580c" },
+  commerciale: { label: "Commerciale", icon: "◇", color: "#a15c00" },
+  media: { label: "Media e digitale", icon: "▦", color: "#0891b2" },
+};
+const eventDefinitions = [
+  { id: "capodanno", title: "Capodanno", month: 1, day: 1, category: "festivita", scope: "italia", importance: "alta", description: "Inizio dell'anno civile, utile per bilanci, obiettivi e messaggi di ripartenza.", ideas: ["Post di auguri con tono istituzionale", "Carosello sui buoni propositi editoriali", "Reel recap dell'anno precedente"], hashtags: ["#Capodanno", "#NuovoAnno"] },
+  { id: "epifania", title: "Epifania", month: 1, day: 6, category: "festivita", scope: "italia", importance: "media", description: "Festività italiana molto riconoscibile, spesso collegata alla chiusura del periodo natalizio.", ideas: ["Post leggero di chiusura festività", "Story con domanda alla community"], hashtags: ["#Epifania", "#Befana"] },
+  { id: "san-valentino", title: "San Valentino", month: 2, day: 14, category: "commerciale", scope: "internazionale", importance: "media", description: "Ricorrenza commerciale e relazionale adatta a campagne community e contenuti emozionali.", ideas: ["Post su relazioni e fiducia", "Carosello ironico a tema coppie", "Promo o contenuto storytelling"], hashtags: ["#SanValentino", "#ValentinesDay"] },
+  { id: "donna", title: "Giornata internazionale della donna", month: 3, day: 8, category: "diritti", scope: "internazionale", importance: "alta", description: "Giornata globale dedicata a diritti, pari opportunità e ruolo delle donne nella società.", ideas: ["Carosello con dati e contesto", "Intervista o testimonianza", "Post istituzionale con attenzione al tono"], hashtags: ["#8Marzo", "#GiornataDellaDonna"] },
+  { id: "papa", title: "Festa del papà", month: 3, day: 19, category: "festivita", scope: "italia", importance: "media", description: "Ricorrenza familiare molto usata per contenuti emozionali e community.", ideas: ["Story con domanda alla community", "Post fotografico con messaggio semplice"], hashtags: ["#FestaDelPapa"] },
+  { id: "poesia", title: "Giornata mondiale della poesia", month: 3, day: 21, category: "cultura", scope: "internazionale", importance: "bassa", description: "Occasione culturale per linguaggio, scrittura, creatività e sensibilità editoriale.", ideas: ["Caption poetica a tema brand", "Citazione commentata", "Mini rubrica testuale"], hashtags: ["#Poesia", "#WorldPoetryDay"] },
+  { id: "terra", title: "Giornata mondiale della Terra", month: 4, day: 22, category: "ambiente", scope: "internazionale", importance: "alta", description: "Ricorrenza ambientale globale, adatta a contenuti educativi e di sensibilizzazione.", ideas: ["Carosello con azioni concrete", "Reel educativo sull'impatto ambientale", "Post con dati verificabili"], hashtags: ["#EarthDay", "#GiornataDellaTerra"] },
+  { id: "liberazione", title: "Festa della Liberazione", month: 4, day: 25, category: "istituzioni", scope: "italia", importance: "alta", description: "Ricorrenza civile italiana legata a memoria, democrazia e libertà.", ideas: ["Post istituzionale sobrio", "Carosello storico divulgativo", "Contenuto sulla memoria civile"], hashtags: ["#25Aprile", "#Liberazione"] },
+  { id: "lavoro", title: "Festa dei lavoratori", month: 5, day: 1, category: "istituzioni", scope: "italia", importance: "alta", description: "Ricorrenza dedicata al lavoro, ai diritti e al valore professionale.", ideas: ["Post sul team", "Carosello su lavoro e competenze", "Riflessione editoriale"], hashtags: ["#PrimoMaggio", "#FestaDeiLavoratori"] },
+  { id: "europa", title: "Festa dell'Europa", month: 5, day: 9, category: "istituzioni", scope: "internazionale", importance: "media", description: "Ricorrenza europea utile per contenuti su cittadinanza, cooperazione e istituzioni.", ideas: ["Post divulgativo sull'Europa", "Quiz in story", "Carosello sui valori europei"], hashtags: ["#EuropeDay", "#Europa"] },
+  { id: "mamma", title: "Festa della mamma", rule: "second-sunday-may", category: "festivita", scope: "italia", importance: "media", description: "Ricorrenza familiare a data variabile, molto usata per contenuti emozionali.", ideas: ["Post community", "Story con domanda", "Contenuto fotografico semplice"], hashtags: ["#FestaDellaMamma"] },
+  { id: "repubblica", title: "Festa della Repubblica", month: 6, day: 2, category: "istituzioni", scope: "italia", importance: "alta", description: "Festa nazionale italiana, centrale per contenuti istituzionali e civici.", ideas: ["Post istituzionale", "Carosello storico sintetico", "Contenuto sui valori costituzionali"], hashtags: ["#2Giugno", "#FestaDellaRepubblica"] },
+  { id: "ambiente", title: "Giornata mondiale dell'ambiente", month: 6, day: 5, category: "ambiente", scope: "internazionale", importance: "alta", description: "Evento globale per educazione ambientale, sostenibilità e responsabilità sociale.", ideas: ["Carosello con consigli pratici", "Reel con dato chiave", "Post di impegno concreto"], hashtags: ["#WorldEnvironmentDay", "#Ambiente"] },
+  { id: "musica", title: "Festa della musica", month: 6, day: 21, category: "cultura", scope: "internazionale", importance: "media", description: "Ricorrenza culturale adatta a contenuti creativi, eventi e community.", ideas: ["Playlist del brand", "Reel con trend audio", "Post su musica e cultura"], hashtags: ["#FestaDellaMusica", "#MusicDay"] },
+  { id: "amicizia", title: "Giornata internazionale dell'amicizia", month: 7, day: 30, category: "diritti", scope: "internazionale", importance: "bassa", description: "Occasione leggera per community, relazioni e contenuti partecipativi.", ideas: ["Story con mention", "Post community", "Domanda aperta ai follower"], hashtags: ["#FriendshipDay", "#Amicizia"] },
+  { id: "ferragosto", title: "Ferragosto", month: 8, day: 15, category: "festivita", scope: "italia", importance: "alta", description: "Ricorrenza estiva italiana molto riconoscibile, utile per contenuti leggeri o stagionali.", ideas: ["Post di auguri estivi", "Story con sondaggio", "Contenuto dietro le quinte"], hashtags: ["#Ferragosto", "#Estate"] },
+  { id: "alfabetizzazione", title: "Giornata internazionale dell'alfabetizzazione", month: 9, day: 8, category: "cultura", scope: "internazionale", importance: "media", description: "Ricorrenza UNESCO su educazione, accesso alla conoscenza e inclusione.", ideas: ["Carosello educativo", "Post su formazione e conoscenza", "Dato spiegato in modo semplice"], hashtags: ["#LiteracyDay", "#Educazione"] },
+  { id: "pace", title: "Giornata internazionale della pace", month: 9, day: 21, category: "diritti", scope: "internazionale", importance: "media", description: "Giornata globale dedicata a pace, dialogo e cooperazione.", ideas: ["Post riflessivo", "Carosello con parole chiave", "Contenuto valoriale"], hashtags: ["#PeaceDay", "#Pace"] },
+  { id: "nonni", title: "Festa dei nonni", month: 10, day: 2, category: "festivita", scope: "italia", importance: "media", description: "Ricorrenza familiare italiana utile per contenuti emozionali e intergenerazionali.", ideas: ["Post storytelling", "Story con ricordi della community", "Foto o frase dedicata"], hashtags: ["#FestaDeiNonni"] },
+  { id: "salute-mentale", title: "Giornata mondiale della salute mentale", month: 10, day: 10, category: "salute", scope: "internazionale", importance: "alta", description: "Ricorrenza sensibile, adatta a contenuti informativi con tono responsabile.", ideas: ["Carosello con risorse utili", "Post di sensibilizzazione", "Reel con messaggio chiaro e non sensazionalistico"], hashtags: ["#MentalHealthDay", "#SaluteMentale"] },
+  { id: "halloween", title: "Halloween", month: 10, day: 31, category: "commerciale", scope: "internazionale", importance: "media", description: "Ricorrenza pop e commerciale adatta a creatività, ironia e contenuti stagionali.", ideas: ["Reel creativo", "Post ironico", "Visual a tema stagionale"], hashtags: ["#Halloween"] },
+  { id: "tutti-santi", title: "Ognissanti", month: 11, day: 1, category: "festivita", scope: "italia", importance: "media", description: "Festività italiana e religiosa, utile per comunicazioni sobrie e calendario operativo.", ideas: ["Post sobrio", "Story informativa su chiusure o servizi"], hashtags: ["#Ognissanti"] },
+  { id: "gentilezza", title: "Giornata mondiale della gentilezza", month: 11, day: 13, category: "diritti", scope: "internazionale", importance: "bassa", description: "Ricorrenza positiva per community, tone of voice e contenuti valoriali.", ideas: ["Post community", "Challenge gentilezza", "Story con domanda"], hashtags: ["#WorldKindnessDay", "#Gentilezza"] },
+  { id: "black-friday", title: "Black Friday", rule: "black-friday", category: "commerciale", scope: "internazionale", importance: "alta", description: "Evento commerciale a data variabile, utile per campagne promozionali e contenuti vendita.", ideas: ["Campagna promo", "Carosello offerta", "Reminder in story"], hashtags: ["#BlackFriday"] },
+  { id: "violenza-donne", title: "Giornata contro la violenza sulle donne", month: 11, day: 25, category: "diritti", scope: "internazionale", importance: "alta", description: "Ricorrenza sociale importante, richiede tono accurato e contenuti responsabili.", ideas: ["Post informativo con risorse", "Carosello su dati e consapevolezza", "Messaggio istituzionale sobrio"], hashtags: ["#25Novembre", "#NoViolenzaSulleDonne"] },
+  { id: "disabilita", title: "Giornata internazionale delle persone con disabilità", month: 12, day: 3, category: "diritti", scope: "internazionale", importance: "media", description: "Giornata per inclusione, accessibilità e diritti.", ideas: ["Carosello su accessibilità", "Post su linguaggio inclusivo", "Audit dei contenuti accessibili"], hashtags: ["#DisabilityDay", "#Accessibilità"] },
+  { id: "immacolata", title: "Immacolata Concezione", month: 12, day: 8, category: "festivita", scope: "italia", importance: "media", description: "Festività italiana collegata all'avvio del periodo natalizio.", ideas: ["Post stagionale", "Story su calendario natalizio", "Contenuto leggero di apertura festività"], hashtags: ["#Immacolata"] },
+  { id: "natale", title: "Natale", month: 12, day: 25, category: "festivita", scope: "italia", importance: "alta", description: "Ricorrenza centrale per auguri, comunicazioni istituzionali e contenuti emozionali.", ideas: ["Post di auguri", "Video del team", "Carosello recap valori dell'anno"], hashtags: ["#Natale", "#Christmas"] },
+  { id: "santo-stefano", title: "Santo Stefano", month: 12, day: 26, category: "festivita", scope: "italia", importance: "media", description: "Festività italiana utile per pianificare pause, contenuti leggeri o reminder.", ideas: ["Story leggera", "Post di continuità natalizia"], hashtags: ["#SantoStefano"] },
+  { id: "capodanno-eve", title: "San Silvestro", month: 12, day: 31, category: "festivita", scope: "italia", importance: "alta", description: "Chiusura dell'anno, ideale per recap, ringraziamenti e anticipazioni.", ideas: ["Recap anno", "Post ringraziamento", "Teaser obiettivi nuovo anno"], hashtags: ["#SanSilvestro", "#FineAnno"] },
+];
 
 const initialSettings = loadSettings();
 const state = {
   visibleDate: new Date(),
   viewMode: initialSettings.defaultView,
+  appMode: "editorial",
   posts: loadPosts(),
   settings: initialSettings,
 };
@@ -91,6 +135,8 @@ const appShell = document.querySelector(".app-shell");
 const authGate = document.querySelector("#authGate");
 const sidebarResizer = document.querySelector("#sidebarResizer");
 const sidebarReopen = document.querySelector("#sidebarReopen");
+const sidebarEyebrow = document.querySelector("#sidebarEyebrow");
+const sidebarTitle = document.querySelector("#sidebarTitle");
 const periodLabel = document.querySelector("#periodLabel");
 const periodButton = document.querySelector("#periodButton");
 const filterBadge = document.querySelector("#filterBadge");
@@ -174,6 +220,21 @@ const colorPalette = document.querySelector("#colorPalette");
 const colorMenuButton = document.querySelector("#colorMenuButton");
 const selectedColorSwatch = document.querySelector("#selectedColorSwatch");
 const selectedColorLabel = document.querySelector("#selectedColorLabel");
+const editorialModeButton = document.querySelector("#editorialModeButton");
+const eventsModeButton = document.querySelector("#eventsModeButton");
+const eventSearchInput = document.querySelector("#eventSearchInput");
+const eventCategoryFilter = document.querySelector("#eventCategoryFilter");
+const eventScopeFilter = document.querySelector("#eventScopeFilter");
+const eventImportanceFilter = document.querySelector("#eventImportanceFilter");
+const eventModeLabel = document.querySelector("#eventModeLabel");
+const eventDialog = document.querySelector("#eventDialog");
+const eventDialogCategory = document.querySelector("#eventDialogCategory");
+const eventDialogTitle = document.querySelector("#eventDialogTitle");
+const eventDialogMeta = document.querySelector("#eventDialogMeta");
+const eventDialogDescription = document.querySelector("#eventDialogDescription");
+const eventIdeasList = document.querySelector("#eventIdeasList");
+const eventHashtags = document.querySelector("#eventHashtags");
+const createPostFromEventButton = document.querySelector("#createPostFromEvent");
 
 const viewButtons = {
   month: document.querySelector("#monthViewButton"),
@@ -232,6 +293,7 @@ let resizingSidebar = false;
 let statsVisibleDate = new Date(state.visibleDate);
 const selectedListPosts = new Set();
 const dismissedStatsInsights = new Set();
+let selectedEvent = null;
 
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
@@ -242,6 +304,8 @@ document.querySelector("#printButton").addEventListener("click", () => {
 });
 document.querySelector("#newPostButton").addEventListener("click", () => openPostDialog());
 document.querySelector("#toolbarNewPostButton").addEventListener("click", () => openPostDialog());
+editorialModeButton.addEventListener("click", () => setAppMode("editorial"));
+eventsModeButton.addEventListener("click", () => setAppMode("events"));
 filterToolbarButton.addEventListener("click", openFiltersPanel);
 resetFiltersButton.addEventListener("click", resetFilters);
 document.querySelector("#settingsButton").addEventListener("click", openSettingsDialog);
@@ -259,6 +323,8 @@ document.querySelector("#previousStatsPeriod").addEventListener("click", () => c
 document.querySelector("#nextStatsPeriod").addEventListener("click", () => changeStatsPeriod(1));
 statsPeriodInput.addEventListener("change", setStatsPeriodFromInput);
 document.querySelector("#closeDayDialog").addEventListener("click", closeDayDialog);
+document.querySelector("#closeEventDialog").addEventListener("click", closeEventDialog);
+createPostFromEventButton.addEventListener("click", createPostFromSelectedEvent);
 addDayDialogPost.addEventListener("click", () => {
   const date = addDayDialogPost.dataset.date;
   closeDayDialog();
@@ -314,6 +380,11 @@ Object.entries(viewButtons).forEach(([viewMode, button]) => {
   control.addEventListener("change", render);
 });
 
+[eventSearchInput, eventCategoryFilter, eventScopeFilter, eventImportanceFilter].forEach((control) => {
+  control.addEventListener("input", render);
+  control.addEventListener("change", render);
+});
+
 statsThemeFilter.addEventListener("change", renderThemeDistribution);
 
 darkModeToggle.addEventListener("change", () => {
@@ -340,18 +411,47 @@ document.addEventListener("click", (event) => {
 applySettings();
 applySidebarWidth();
 renderColorPalette();
+populateEventCategoryFilter();
 purgeExpiredTrash();
 closeHamburgerMenu();
 render();
 initCloud();
 
 function render() {
+  applyAppMode();
   renderMainView();
-  renderStats();
-  renderPlatformStats();
-  renderWarnings();
-  updateFilterToolbar();
+  if (state.appMode === "editorial") {
+    renderStats();
+    renderPlatformStats();
+    renderWarnings();
+    updateFilterToolbar();
+  }
   if (statsDialog.open) renderStatsDialog();
+}
+
+function setAppMode(mode) {
+  state.appMode = mode;
+  selectedListPosts.clear();
+  closeHamburgerMenu();
+  render();
+}
+
+function applyAppMode() {
+  const isEventsMode = state.appMode === "events";
+  document.body.classList.toggle("is-events-mode", isEventsMode);
+  editorialModeButton.setAttribute("aria-pressed", String(!isEventsMode));
+  eventsModeButton.setAttribute("aria-pressed", String(isEventsMode));
+  sidebarEyebrow.textContent = isEventsMode ? "Ricorrenze e opportunità" : "Planner editoriale";
+  sidebarTitle.textContent = isEventsMode ? "Calendario eventi" : "Calendario contenuti MP";
+  document.querySelectorAll("[data-editorial-panel], [data-editorial-action]").forEach((element) => {
+    element.hidden = isEventsMode;
+  });
+  document.querySelectorAll("[data-events-panel]").forEach((element) => {
+    element.hidden = !isEventsMode;
+  });
+  eventModeLabel.hidden = !isEventsMode;
+  filterBadge.hidden = isEventsMode || !getActiveFilterCount();
+  if (isEventsMode) resetFiltersButton.hidden = true;
 }
 
 function initCloud() {
@@ -910,6 +1010,11 @@ function renderMainView() {
     button.setAttribute("aria-pressed", String(state.viewMode === viewMode));
   });
 
+  if (state.appMode === "events") {
+    renderEventsView(start, todayKey, isListView);
+    return;
+  }
+
   if (isListView) {
     renderListView();
     return;
@@ -924,6 +1029,26 @@ function renderMainView() {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     calendarGrid.append(createDayCell(date, todayKey));
+  }
+}
+
+function renderEventsView(start, todayKey, isListView) {
+  if (isListView) {
+    calendarGrid.hidden = true;
+    listView.hidden = false;
+    renderEventListView();
+    return;
+  }
+
+  calendarGrid.innerHTML = "";
+  calendarGrid.className = "calendar-grid events-calendar-grid";
+  calendarGrid.classList.toggle("is-week-view", state.viewMode === "week");
+  calendarGrid.classList.toggle("is-day-view", state.viewMode === "day");
+
+  for (let index = 0; index < getDaysToRender(); index += 1) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    calendarGrid.append(createEventDayCell(date, todayKey));
   }
 }
 
@@ -997,6 +1122,122 @@ function createDayCell(date, todayKey) {
   return cell;
 }
 
+function createEventDayCell(date, todayKey) {
+  const visibleMonth = state.visibleDate.getMonth();
+  const dateKey = toDateKey(date);
+  const dayEvents = filteredEvents().filter((event) => event.date === dateKey);
+  const isMonthView = state.viewMode === "month";
+
+  const cell = document.createElement("section");
+  cell.className = "day-cell event-day-cell";
+  cell.dataset.date = dateKey;
+  if (date.getMonth() !== visibleMonth && state.viewMode === "month") cell.classList.add("is-muted");
+  if (dateKey === todayKey) cell.classList.add("is-today");
+  if (dayEvents.length === 0) cell.classList.add("is-empty");
+
+  const top = document.createElement("div");
+  top.className = "day-top";
+
+  const dayButton = document.createElement("button");
+  dayButton.className = "day-number";
+  dayButton.type = "button";
+  dayButton.textContent = isMonthView ? date.getDate() : formatWeekDayHeading(date);
+  dayButton.setAttribute("aria-label", `Giorno ${formatDateForLabel(date)}`);
+  dayButton.addEventListener("click", () => openFirstEventForDay(dateKey));
+
+  const count = document.createElement("span");
+  count.className = "day-count event-count";
+  count.textContent = `${dayEvents.length}`;
+  count.title = `${dayEvents.length} eventi`;
+
+  top.append(dayButton, count);
+
+  const list = document.createElement("div");
+  list.className = "post-list event-list";
+  const visibleEvents = isMonthView ? dayEvents.slice(0, 4) : dayEvents;
+  visibleEvents.forEach((event) => list.append(createEventChip(event)));
+
+  if (isMonthView && dayEvents.length > visibleEvents.length) {
+    const more = document.createElement("button");
+    more.className = "more-posts";
+    more.type = "button";
+    more.textContent = `+ ${dayEvents.length - visibleEvents.length} eventi`;
+    more.addEventListener("click", () => openFirstEventForDay(dateKey));
+    list.append(more);
+  }
+
+  if (state.viewMode === "day" && dayEvents.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "empty-day";
+    empty.textContent = "Nessuna ricorrenza rilevante in questa giornata.";
+    list.append(empty);
+  }
+
+  cell.append(top, list);
+  return cell;
+}
+
+function createEventChip(event) {
+  const category = eventCategories[event.category];
+  const chip = document.createElement("button");
+  chip.className = "event-chip";
+  chip.type = "button";
+  chip.style.borderLeftColor = category?.color || "var(--accent)";
+  chip.addEventListener("click", () => openEventDialog(event));
+
+  const title = document.createElement("strong");
+  title.textContent = `${category?.icon || "•"} ${event.title}`;
+  const meta = document.createElement("span");
+  meta.textContent = `${category?.label || "Evento"} - ${event.scope === "italia" ? "Italia" : "Internazionale"} - ${event.importance}`;
+  chip.append(title, meta);
+  return chip;
+}
+
+function renderEventListView() {
+  const events = filteredEvents().sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
+  listView.innerHTML = "";
+  if (!events.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-day";
+    empty.textContent = "Nessun evento trovato con i filtri attuali.";
+    listView.append(empty);
+    return;
+  }
+
+  events.forEach((event) => {
+    const category = eventCategories[event.category];
+    const row = document.createElement("article");
+    row.className = "list-item event-list-item";
+    row.style.borderLeftColor = category?.color || "var(--accent)";
+
+    const main = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = event.title;
+    const meta = document.createElement("p");
+    meta.textContent = `${formatShortDate(parseDateKey(event.date))} - ${category?.label || "Evento"} - ${event.scope === "italia" ? "Italia" : "Internazionale"} - ${event.importance}`;
+    main.append(title, meta);
+
+    const detail = document.createElement("p");
+    detail.textContent = event.description;
+
+    const actions = document.createElement("div");
+    const open = document.createElement("button");
+    open.className = "secondary-action";
+    open.type = "button";
+    open.textContent = "Apri";
+    open.addEventListener("click", () => openEventDialog(event));
+    actions.append(open);
+
+    row.append(main, detail, actions);
+    listView.append(row);
+  });
+}
+
+function openFirstEventForDay(dateKey) {
+  const event = filteredEvents().find((item) => item.date === dateKey);
+  if (event) openEventDialog(event);
+}
+
 function createPostChip(post) {
   const chip = document.createElement("button");
   chip.className = "post-chip";
@@ -1040,6 +1281,75 @@ function openDayDialog(dateKey) {
 
 function closeDayDialog() {
   dayDialog.close();
+}
+
+function openEventDialog(event) {
+  selectedEvent = event;
+  const category = eventCategories[event.category];
+  eventDialogCategory.textContent = `${category?.icon || "•"} ${category?.label || "Evento"}`;
+  eventDialogTitle.textContent = event.title;
+  eventDialogMeta.innerHTML = "";
+  [
+    formatFullDate(parseDateKey(event.date)),
+    event.scope === "italia" ? "Italia" : "Internazionale",
+    `Importanza ${event.importance}`,
+  ].forEach((value) => {
+    const item = document.createElement("span");
+    item.textContent = value;
+    eventDialogMeta.append(item);
+  });
+  eventDialogDescription.textContent = event.description;
+  eventIdeasList.innerHTML = "";
+  (event.ideas || []).forEach((idea) => {
+    const item = document.createElement("li");
+    item.textContent = idea;
+    eventIdeasList.append(item);
+  });
+  eventHashtags.textContent = (event.hashtags || []).join(" ");
+  if (!eventDialog.open) eventDialog.showModal();
+}
+
+function closeEventDialog() {
+  eventDialog.close();
+}
+
+function createPostFromSelectedEvent() {
+  if (!selectedEvent) return;
+  const category = eventCategories[selectedEvent.category];
+  closeEventDialog();
+  setAppMode("editorial");
+  openPostDialog({
+    title: selectedEvent.title,
+    date: selectedEvent.date,
+    platform: "Instagram",
+    format: "Post",
+    status: "Idea",
+    goal: selectedEvent.category === "commerciale" ? "Vendita" : "Educazione",
+    theme: themeForEventCategory(selectedEvent.category),
+    tags: (selectedEvent.hashtags || []).join(" "),
+    copy: [
+      `Spunto da ${selectedEvent.title}.`,
+      selectedEvent.description,
+      "",
+      "Idea contenuto:",
+      selectedEvent.ideas?.[0] || "Sviluppare un contenuto collegato alla ricorrenza.",
+    ].join("\n"),
+    notes: `Creato dal calendario eventi. Categoria: ${category?.label || selectedEvent.category}. Importanza: ${selectedEvent.importance}.`,
+  });
+}
+
+function themeForEventCategory(category) {
+  const map = {
+    ambiente: "ambiente",
+    salute: "salute",
+    cultura: "cultura",
+    sport: "sport",
+    diritti: "persone",
+    istituzioni: "cultura",
+    commerciale: "lavoro",
+    media: "innovazione",
+  };
+  return resolveThemeId(map[category]);
 }
 
 function renderDayDialogSummary(dayPosts) {
@@ -1623,6 +1933,100 @@ function resetFilters() {
   themeFilter.value = "all";
   ownerFilter.value = "";
   render();
+}
+
+function filteredEvents() {
+  const query = eventSearchInput.value.trim().toLowerCase();
+  const category = eventCategoryFilter.value;
+  const scope = eventScopeFilter.value;
+  const importance = eventImportanceFilter.value;
+  const range = getEventVisibleRange();
+  return getEventsForVisibleYears()
+    .filter((event) => {
+      const eventDate = parseDateKey(event.date);
+      const categoryLabel = eventCategories[event.category]?.label || "";
+      const searchable = [
+        event.title,
+        event.description,
+        categoryLabel,
+        event.scope,
+        event.importance,
+        ...(event.ideas || []),
+        ...(event.hashtags || []),
+      ].join(" ").toLowerCase();
+      return eventDate >= range.start && eventDate <= range.end
+        && (!query || searchable.includes(query))
+        && (category === "all" || event.category === category)
+        && (scope === "all" || event.scope === scope)
+        && (importance === "all" || event.importance === importance);
+    });
+}
+
+function getEventVisibleRange() {
+  if (state.viewMode === "week") {
+    const start = startOfWeek(state.visibleDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return { start, end };
+  }
+  if (state.viewMode === "day") {
+    const start = new Date(state.visibleDate.getFullYear(), state.visibleDate.getMonth(), state.visibleDate.getDate());
+    return { start, end: new Date(start) };
+  }
+  const start = new Date(state.visibleDate.getFullYear(), state.visibleDate.getMonth(), 1);
+  const end = new Date(state.visibleDate.getFullYear(), state.visibleDate.getMonth() + 1, 0);
+  if (state.viewMode === "month") {
+    return {
+      start: startOfCalendar(start.getFullYear(), start.getMonth()),
+      end: endOfCalendarMonth(start.getFullYear(), start.getMonth()),
+    };
+  }
+  return { start, end };
+}
+
+function endOfCalendarMonth(year, month) {
+  const lastDay = new Date(year, month + 1, 0);
+  const end = new Date(lastDay);
+  end.setDate(lastDay.getDate() + (6 - getMondayBasedDay(lastDay)));
+  return end;
+}
+
+function getEventsForVisibleYears() {
+  const years = new Set();
+  const start = getCalendarStartDate();
+  const days = Math.max(getDaysToRender(), 31);
+  for (let index = 0; index < days; index += 1) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    years.add(date.getFullYear());
+  }
+  years.add(state.visibleDate.getFullYear());
+  return Array.from(years).flatMap(buildEventsForYear).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function buildEventsForYear(year) {
+  return eventDefinitions.map((definition) => {
+    const date = getEventDate(definition, year);
+    return {
+      ...definition,
+      date: toDateKey(date),
+      year,
+    };
+  });
+}
+
+function getEventDate(definition, year) {
+  if (definition.rule === "second-sunday-may") return nthWeekdayOfMonth(year, 4, 0, 2);
+  if (definition.rule === "black-friday") return nthWeekdayOfMonth(year, 10, 5, 4);
+  return new Date(year, definition.month - 1, definition.day);
+}
+
+function nthWeekdayOfMonth(year, monthIndex, weekday, occurrence) {
+  const date = new Date(year, monthIndex, 1);
+  const offset = (weekday - date.getDay() + 7) % 7;
+  date.setDate(1 + offset + ((occurrence - 1) * 7));
+  return date;
 }
 
 function filteredPosts() {
@@ -2315,6 +2719,18 @@ function populateThemeSelects() {
     : "all";
 }
 
+function populateEventCategoryFilter() {
+  const currentValue = eventCategoryFilter.value || "all";
+  eventCategoryFilter.querySelectorAll("option:not([value='all'])").forEach((option) => option.remove());
+  Object.entries(eventCategories).forEach(([id, category]) => {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = `${category.icon} ${category.label}`;
+    eventCategoryFilter.append(option);
+  });
+  eventCategoryFilter.value = currentValue === "all" || eventCategories[currentValue] ? currentValue : "all";
+}
+
 function populateStatsThemeFilter() {
   const currentValue = statsThemeFilter.value || "all";
   statsThemeFilter.innerHTML = "";
@@ -2555,10 +2971,11 @@ function getMonthDaysToRender() {
 }
 
 function getPeriodLabel(start) {
-  if (state.viewMode === "day") return formatFullDate(state.visibleDate);
-  if (state.viewMode === "week") return formatWeekRange(start);
-  if (state.viewMode === "list") return `Lista - ${formatMonthLabel(state.visibleDate)}`;
-  return formatMonthLabel(state.visibleDate);
+  const prefix = state.appMode === "events" ? "Eventi - " : "";
+  if (state.viewMode === "day") return `${prefix}${formatFullDate(state.visibleDate)}`;
+  if (state.viewMode === "week") return `${prefix}${formatWeekRange(start)}`;
+  if (state.viewMode === "list") return `${state.appMode === "events" ? "Eventi" : "Lista"} - ${formatMonthLabel(state.visibleDate)}`;
+  return `${prefix}${formatMonthLabel(state.visibleDate)}`;
 }
 
 function startOfCalendar(year, month) {

@@ -25,9 +25,9 @@
           <button class="icon-button hamburger-button" id="hamburgerButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
           <div class="hamburger-panel" id="hamburgerPanel" hidden>
             <button class="menu-item" id="settingsButton" type="button">Impostazioni</button>
-            <button class="menu-item" id="statsButton" type="button">Statistiche</button>
+            <button class="menu-item" id="statsButton" type="button" data-editorial-action>Statistiche</button>
             <button class="menu-item" id="printButton" type="button">Stampa</button>
-            <button class="menu-item" id="trashButton" type="button">Cestino</button>
+            <button class="menu-item" id="trashButton" type="button" data-editorial-action>Cestino</button>
             <button class="menu-item" id="logoutButton" type="button" hidden>Logout</button>
           </div>
         </div>
@@ -37,13 +37,18 @@
     <main class="app-shell">
       <aside class="sidebar">
         <div>
-          <p class="eyebrow">Planner editoriale</p>
-          <h1>Calendario contenuti MP</h1>
+          <p class="eyebrow" id="sidebarEyebrow">Planner editoriale</p>
+          <h1 id="sidebarTitle">Calendario contenuti MP</h1>
+        </div>
+
+        <div class="mode-switch" aria-label="Modalita calendario">
+          <button id="editorialModeButton" type="button" aria-pressed="true">Editoriale</button>
+          <button id="eventsModeButton" type="button" aria-pressed="false">Eventi</button>
         </div>
 
         <button class="primary-action" id="newPostButton" type="button" hidden>+ Nuovo contenuto</button>
 
-        <details class="panel collapsible-panel">
+        <details class="panel collapsible-panel" data-editorial-panel>
           <summary>Ricerca e filtri</summary>
           <label>
             Cerca
@@ -91,22 +96,58 @@
           </label>
         </details>
 
-        <details class="panel stats collapsible-panel">
+        <details class="panel stats collapsible-panel" data-editorial-panel>
           <summary>Riepilogo mese</summary>
           <div><span id="monthCount">0</span><small>contenuti</small></div>
           <div><span id="readyCount">0</span><small>pronti o programmati</small></div>
           <div><span id="publishedCount">0</span><small>pubblicati</small></div>
         </details>
 
-        <details class="panel collapsible-panel">
+        <details class="panel collapsible-panel" data-editorial-panel>
           <summary>Piattaforme</summary>
           <div class="platform-stats" id="platformStats"></div>
         </details>
 
-        <details class="panel collapsible-panel">
+        <details class="panel collapsible-panel" data-editorial-panel>
           <summary>Avvisi</summary>
           <div class="warning-list" id="warningList"></div>
         </details>
+
+        <details class="panel collapsible-panel" data-events-panel hidden open>
+          <summary>Eventi e ricorrenze</summary>
+          <label>
+            Cerca evento
+            <input id="eventSearchInput" type="search" placeholder="Es. ambiente, festa, sport...">
+          </label>
+          <label>
+            Categoria
+            <select id="eventCategoryFilter">
+              <option value="all">Tutte</option>
+            </select>
+          </label>
+          <label>
+            Area
+            <select id="eventScopeFilter">
+              <option value="all">Tutte</option>
+              <option value="italia">Italia</option>
+              <option value="internazionale">Internazionale</option>
+            </select>
+          </label>
+          <label>
+            Importanza
+            <select id="eventImportanceFilter">
+              <option value="all">Tutte</option>
+              <option value="alta">Alta</option>
+              <option value="media">Media</option>
+              <option value="bassa">Bassa</option>
+            </select>
+          </label>
+        </details>
+
+        <section class="panel event-source-panel" data-events-panel hidden>
+          <strong>Calendario eventi</strong>
+          <p>Ricorrenze automatiche separate dal calendario editoriale. Puoi trasformare un evento in contenuto quando serve.</p>
+        </section>
 
       </aside>
       <button class="sidebar-resizer" id="sidebarResizer" type="button" aria-label="Ridimensiona barra laterale"></button>
@@ -123,11 +164,12 @@
             <button class="secondary-action compact-action" id="todayButton" type="button" title="Torna a oggi">Oggi</button>
           </div>
           <div class="toolbar-actions">
-            <button class="primary-action compact-action" id="toolbarNewPostButton" type="button" title="Nuovo contenuto">+ Nuovo</button>
-            <button class="secondary-action compact-action filter-action" id="filterToolbarButton" type="button" title="Apri ricerca e filtri">
+            <button class="primary-action compact-action" id="toolbarNewPostButton" type="button" title="Nuovo contenuto" data-editorial-action>+ Nuovo</button>
+            <button class="secondary-action compact-action filter-action" id="filterToolbarButton" type="button" title="Apri ricerca e filtri" data-editorial-action>
               Filtri <span id="filterBadge" hidden>0</span>
             </button>
-            <button class="secondary-action compact-action" id="resetFiltersButton" type="button" hidden>Reset filtri</button>
+            <button class="secondary-action compact-action" id="resetFiltersButton" type="button" hidden data-editorial-action>Reset filtri</button>
+            <span class="event-mode-label" id="eventModeLabel" hidden>Ricorrenze automatiche</span>
             <div class="view-switch" aria-label="Tipo vista">
               <button id="monthViewButton" type="button" aria-pressed="true" title="Vista mese">Mese</button>
               <button id="weekViewButton" type="button" aria-pressed="false" title="Vista settimana">Settimana</button>
@@ -286,6 +328,31 @@
         <div class="day-detail-list" id="dayDialogList"></div>
         <footer>
           <button class="primary-action" id="addDayDialogPost" type="button">+ Nuovo contenuto</button>
+        </footer>
+      </section>
+    </dialog>
+
+    <dialog id="eventDialog">
+      <section class="event-detail-panel">
+        <header>
+          <div>
+            <p class="eyebrow" id="eventDialogCategory">Evento</p>
+            <h2 id="eventDialogTitle">Dettaglio evento</h2>
+          </div>
+          <button class="ghost-button" id="closeEventDialog" type="button" aria-label="Chiudi">x</button>
+        </header>
+        <div class="event-detail-meta" id="eventDialogMeta"></div>
+        <p id="eventDialogDescription"></p>
+        <section>
+          <h3>Spunti contenuto</h3>
+          <ul id="eventIdeasList"></ul>
+        </section>
+        <section>
+          <h3>Hashtag</h3>
+          <p id="eventHashtags"></p>
+        </section>
+        <footer>
+          <button class="primary-action" id="createPostFromEvent" type="button">Crea contenuto da evento</button>
         </footer>
       </section>
     </dialog>
