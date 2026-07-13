@@ -1519,6 +1519,15 @@ body.is-dark .period-button:focus-visible {
 .list-select {
   display: grid;
   place-items: center;
+  min-width: 34px;
+  min-height: 34px;
+  cursor: pointer;
+}
+
+.list-select input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 
 .list-item[data-platform="TikTok"] { border-left-color: #111827; }
