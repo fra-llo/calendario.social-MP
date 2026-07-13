@@ -324,6 +324,8 @@ const selectedListPosts = new Set();
 const dismissedStatsInsights = new Set();
 let selectedEvent = null;
 let selectedContentDetail = null;
+let listSelectionDrag = null;
+let suppressListClick = false;
 
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
@@ -404,6 +406,8 @@ listSortSelect.addEventListener("change", render);
 listGroupSelect.addEventListener("change", render);
 selectAllList.addEventListener("change", toggleSelectAllList);
 document.querySelector("#applyBulkAction").addEventListener("click", applyBulkAction);
+document.querySelector("#deleteSelectedList").addEventListener("click", deleteSelectedListPosts);
+listView.addEventListener("pointerdown", startListSelectionDrag);
 
 document.querySelectorAll("[data-settings-tab-button]").forEach((button) => {
   button.addEventListener("click", () => setSettingsTab(button.dataset.settingsTabButton));
@@ -1262,7 +1266,10 @@ function renderEventListView() {
     row.className = "list-item event-list-item";
     row.style.borderLeftColor = category?.color || "var(--accent)";
     row.tabIndex = 0;
-    row.addEventListener("click", () => openEventDialog(event));
+    row.addEventListener("click", () => {
+      if (suppressListClick) return;
+      openEventDialog(event);
+    });
     row.addEventListener("keydown", (keyboardEvent) => {
       if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
         keyboardEvent.preventDefault();
@@ -1280,18 +1287,7 @@ function renderEventListView() {
     const detail = document.createElement("p");
     detail.textContent = event.description;
 
-    const actions = document.createElement("div");
-    const open = document.createElement("button");
-    open.className = "secondary-action";
-    open.type = "button";
-    open.textContent = "Apri";
-    open.addEventListener("click", (clickEvent) => {
-      clickEvent.stopPropagation();
-      openEventDialog(event);
-    });
-    actions.append(open);
-
-    row.append(main, detail, actions);
+    row.append(main, detail);
     listView.append(row);
   });
 }
@@ -1516,7 +1512,15 @@ function renderDayDialogList(dayPosts) {
   dayPosts.forEach((post) => {
     const item = document.createElement("article");
     item.className = "day-detail-item";
+    item.tabIndex = 0;
     applyPostColor(item, post.color);
+    item.addEventListener("click", () => openContentDetailDialog(post));
+    item.addEventListener("keydown", (keyboardEvent) => {
+      if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
+        keyboardEvent.preventDefault();
+        openContentDetailDialog(post);
+      }
+    });
 
     const theme = getTheme(post.theme);
     const main = document.createElement("div");
@@ -1532,25 +1536,7 @@ function renderDayDialogList(dayPosts) {
     ].filter(Boolean).join(" - ");
     main.append(title, meta);
 
-    const actions = document.createElement("div");
-    const edit = document.createElement("button");
-    edit.className = "secondary-action";
-    edit.type = "button";
-    edit.textContent = "Modifica";
-    edit.addEventListener("click", () => {
-      closeDayDialog();
-      openPostDialog(post);
-    });
-    const duplicate = document.createElement("button");
-    duplicate.className = "secondary-action";
-    duplicate.type = "button";
-    duplicate.textContent = "Duplica";
-    duplicate.addEventListener("click", () => {
-      closeDayDialog();
-      duplicatePost(post.id);
-    });
-    actions.append(edit, duplicate);
-    item.append(main, actions);
+    item.append(main);
     dayDialogList.append(item);
   });
 }
@@ -1658,7 +1644,7 @@ function renderListView() {
 function createListHeader() {
   const header = document.createElement("div");
   header.className = "list-table-header";
-  ["", "Data", "Titolo", "Tema", "Formato", "Stato", "Orario", "Azioni"].forEach((label) => {
+  ["", "Data", "Titolo", "Tema", "Formato", "Stato", "Orario"].forEach((label) => {
     const cell = document.createElement("span");
     cell.textContent = label;
     header.append(cell);
@@ -1670,11 +1656,15 @@ function createListRow(post) {
   const row = document.createElement("article");
   row.className = "list-item is-table-row";
   row.dataset.platform = post.platform;
+  row.dataset.id = post.id;
   row.tabIndex = 0;
   row.classList.toggle("is-incomplete", isIncompletePost(post));
   row.classList.toggle("is-overdue", isOverduePost(post));
   applyPostColor(row, post.color);
-  row.addEventListener("click", () => openContentDetailDialog(post));
+  row.addEventListener("click", () => {
+    if (suppressListClick) return;
+    openContentDetailDialog(post);
+  });
   row.addEventListener("keydown", (keyboardEvent) => {
     if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
       keyboardEvent.preventDefault();
@@ -1733,26 +1723,7 @@ function createListRow(post) {
   timeCell.className = "list-muted-cell";
   timeCell.textContent = post.time || "-";
 
-  const actions = document.createElement("div");
-  const edit = document.createElement("button");
-  edit.className = "secondary-action";
-  edit.type = "button";
-  edit.textContent = "Modifica";
-  edit.addEventListener("click", (event) => {
-    event.stopPropagation();
-    openPostDialog(post);
-  });
-  const duplicate = document.createElement("button");
-  duplicate.className = "secondary-action";
-  duplicate.type = "button";
-  duplicate.textContent = "Duplica";
-  duplicate.addEventListener("click", (event) => {
-    event.stopPropagation();
-    duplicatePost(post.id);
-  });
-  actions.append(edit, duplicate);
-
-  row.append(select, dateCell, main, themeCell, formatCell, statusCell, timeCell, actions);
+  row.append(select, dateCell, main, themeCell, formatCell, statusCell, timeCell);
   return row;
 }
 
@@ -1893,6 +1864,106 @@ function applyBulkAction() {
   bulkThemeSelect.value = "";
   selectedListPosts.clear();
   render();
+}
+
+function deleteSelectedListPosts() {
+  const ids = Array.from(selectedListPosts);
+  if (!ids.length) return;
+  const now = new Date().toISOString();
+  state.posts = state.posts.map((post) => {
+    if (!ids.includes(post.id)) return post;
+    return normalizePost({
+      ...post,
+      deletedAt: now,
+      deletedBy: cloud.user?.uid || "local",
+      history: [...(post.history || []), historyEntry("Eliminazione massiva da vista lista")],
+    });
+  });
+  persistPosts();
+  ids.forEach((id) => {
+    const post = state.posts.find((item) => item.id === id);
+    if (post) saveCloudPost(post);
+  });
+  showUndo(`${ids.length} contenuti spostati nel cestino.`, () => {
+    state.posts = state.posts.map((post) => {
+      if (!ids.includes(post.id)) return post;
+      return normalizePost({
+        ...post,
+        deletedAt: "",
+        deletedBy: "",
+        history: [...(post.history || []), historyEntry("Eliminazione massiva annullata")],
+      });
+    });
+    persistPosts();
+    ids.forEach((id) => {
+      const post = state.posts.find((item) => item.id === id);
+      if (post) saveCloudPost(post);
+    });
+    render();
+  });
+  selectedListPosts.clear();
+  render();
+}
+
+function startListSelectionDrag(event) {
+  if (state.appMode !== "editorial" || state.viewMode !== "list" || event.button !== 0) return;
+  if (event.target.closest("button, input, select, textarea, label, .list-table-header")) return;
+  const startX = event.clientX;
+  const startY = event.clientY;
+  listSelectionDrag = {
+    startX,
+    startY,
+    box: document.createElement("div"),
+    active: false,
+  };
+  listSelectionDrag.box.className = "selection-box";
+  document.body.append(listSelectionDrag.box);
+  window.addEventListener("pointermove", updateListSelectionDrag);
+  window.addEventListener("pointerup", finishListSelectionDrag, { once: true });
+}
+
+function updateListSelectionDrag(event) {
+  if (!listSelectionDrag) return;
+  const left = Math.min(listSelectionDrag.startX, event.clientX);
+  const top = Math.min(listSelectionDrag.startY, event.clientY);
+  const width = Math.abs(event.clientX - listSelectionDrag.startX);
+  const height = Math.abs(event.clientY - listSelectionDrag.startY);
+  if (width > 4 || height > 4) listSelectionDrag.active = true;
+  Object.assign(listSelectionDrag.box.style, {
+    left: `${left}px`,
+    top: `${top}px`,
+    width: `${width}px`,
+    height: `${height}px`,
+  });
+  if (!listSelectionDrag.active) return;
+  const selectionRect = listSelectionDrag.box.getBoundingClientRect();
+  listView.querySelectorAll(".list-item.is-table-row[data-id]").forEach((row) => {
+    const id = row.dataset.id;
+    if (!id) return;
+    if (rectsIntersect(selectionRect, row.getBoundingClientRect())) selectedListPosts.add(id);
+  });
+  renderListCheckboxes();
+  updateListSelectionState(getSortedListPosts());
+}
+
+function finishListSelectionDrag() {
+  if (!listSelectionDrag) return;
+  suppressListClick = listSelectionDrag.active;
+  listSelectionDrag.box.remove();
+  listSelectionDrag = null;
+  window.removeEventListener("pointermove", updateListSelectionDrag);
+  if (suppressListClick) setTimeout(() => { suppressListClick = false; }, 0);
+}
+
+function rectsIntersect(a, b) {
+  return a.left <= b.right && a.right >= b.left && a.top <= b.bottom && a.bottom >= b.top;
+}
+
+function renderListCheckboxes() {
+  listView.querySelectorAll(".list-item.is-table-row[data-id]").forEach((row) => {
+    const checkbox = row.querySelector("input[type='checkbox']");
+    if (checkbox) checkbox.checked = selectedListPosts.has(row.dataset.id);
+  });
 }
 
 function renderStats() {
