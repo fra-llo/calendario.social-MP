@@ -234,6 +234,19 @@
             <span id="selectedListCount">0 selezionati</span>
           </div>
         </section>
+        <div class="bulk-action-bar" id="listBulkActionBar" hidden>
+          <span id="listBulkActionSummary">0 contenuti selezionati</span>
+          <button class="secondary-action" id="listBulkActionsButton" type="button">Azioni</button>
+          <button class="ghost-action" id="clearListSelectionButton" type="button">Deseleziona</button>
+        </div>
+        <div class="bulk-context-menu" id="listBulkContextMenu" hidden>
+          <button type="button" data-bulk-menu-action="ready">Segna come pronto</button>
+          <button type="button" data-bulk-menu-action="scheduled">Segna come programmato</button>
+          <button type="button" data-bulk-menu-action="published">Segna come pubblicato</button>
+          <button type="button" data-bulk-menu-action="select-visible">Seleziona visibili</button>
+          <button type="button" data-bulk-menu-action="clear">Deseleziona tutto</button>
+          <button class="danger-menu-action" type="button" data-bulk-menu-action="delete">Elimina selezionati</button>
+        </div>
         <div class="list-view" id="listView" hidden></div>
       </section>
     </main>

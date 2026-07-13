@@ -1329,6 +1329,70 @@ body.is-dark .period-button:focus-visible {
   font-weight: 850;
 }
 
+.bulk-action-bar {
+  position: sticky;
+  top: 10px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border: 1px solid rgba(15, 133, 122, 0.28);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--accent-soft));
+  box-shadow: var(--shadow-soft);
+}
+
+.bulk-action-bar[hidden] {
+  display: none;
+}
+
+.bulk-action-bar span {
+  margin-right: auto;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.bulk-context-menu {
+  position: fixed;
+  z-index: 90;
+  display: grid;
+  min-width: 230px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.bulk-context-menu[hidden] {
+  display: none;
+}
+
+.bulk-context-menu button {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+  font-weight: 850;
+}
+
+.bulk-context-menu button:hover,
+.bulk-context-menu button:focus-visible {
+  background: var(--surface-soft);
+}
+
+.bulk-context-menu .danger-menu-action {
+  color: var(--danger);
+}
+
 .list-group-heading {
   margin: 10px 0 0;
   border-top: 1px solid var(--line);
@@ -1388,6 +1452,11 @@ body.is-dark .period-button:focus-visible {
   gap: 14px;
   border-left-width: 4px;
   border-radius: 0;
+}
+
+.list-item.is-table-row.is-selected {
+  outline: 2px solid rgba(15, 133, 122, 0.24);
+  background: color-mix(in srgb, var(--surface) 88%, var(--accent-soft));
 }
 
 .list-table-header + .list-item.is-table-row {

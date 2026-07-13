@@ -134,6 +134,11 @@ const listSortSelect = document.querySelector("#listSortSelect");
 const listGroupSelect = document.querySelector("#listGroupSelect");
 const selectAllList = document.querySelector("#selectAllList");
 const selectedListCount = document.querySelector("#selectedListCount");
+const listBulkActionBar = document.querySelector("#listBulkActionBar");
+const listBulkActionSummary = document.querySelector("#listBulkActionSummary");
+const listBulkActionsButton = document.querySelector("#listBulkActionsButton");
+const listBulkContextMenu = document.querySelector("#listBulkContextMenu");
+const clearListSelectionButton = document.querySelector("#clearListSelectionButton");
 const bulkStatusSelect = document.querySelector("#bulkStatusSelect");
 const bulkOwnerInput = document.querySelector("#bulkOwnerInput");
 const bulkThemeSelect = document.querySelector("#bulkThemeSelect");
@@ -408,6 +413,18 @@ selectAllList.addEventListener("change", toggleSelectAllList);
 document.querySelector("#applyBulkAction").addEventListener("click", applyBulkAction);
 document.querySelector("#deleteSelectedList").addEventListener("click", deleteSelectedListPosts);
 listView.addEventListener("pointerdown", startListSelectionDrag);
+listView.addEventListener("contextmenu", openListContextMenuFromRow);
+listBulkActionsButton.addEventListener("click", () => openListBulkMenuFromElement(listBulkActionsButton));
+clearListSelectionButton.addEventListener("click", clearListSelection);
+listBulkContextMenu.addEventListener("click", handleListBulkMenuAction);
+document.addEventListener("click", (event) => {
+  if (!listBulkContextMenu.hidden && !event.target.closest("#listBulkContextMenu, #listBulkActionsButton")) {
+    closeListBulkMenu();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeListBulkMenu();
+});
 
 document.querySelectorAll("[data-settings-tab-button]").forEach((button) => {
   button.addEventListener("click", () => setSettingsTab(button.dataset.settingsTabButton));
@@ -1051,6 +1068,10 @@ function renderMainView() {
   calendarGrid.hidden = isListView;
   listView.hidden = !isListView;
   listToolbar.hidden = true;
+  if (!isListView || state.appMode !== "editorial") {
+    listBulkActionBar.hidden = true;
+    closeListBulkMenu();
+  }
 
   Object.entries(viewButtons).forEach(([viewMode, button]) => {
     button.setAttribute("aria-pressed", String(state.viewMode === viewMode));
@@ -1660,6 +1681,7 @@ function createListRow(post) {
   row.tabIndex = 0;
   row.classList.toggle("is-incomplete", isIncompletePost(post));
   row.classList.toggle("is-overdue", isOverduePost(post));
+  row.classList.toggle("is-selected", selectedListPosts.has(post.id));
   applyPostColor(row, post.color);
   row.addEventListener("click", () => {
     if (suppressListClick) return;
@@ -1821,9 +1843,13 @@ function toggleSelectAllList() {
 
 function updateListSelectionState(posts) {
   const selectedVisible = posts.filter((post) => selectedListPosts.has(post.id)).length;
+  const totalSelected = selectedListPosts.size;
   selectedListCount.textContent = `${selectedVisible} selezionati`;
+  listBulkActionSummary.textContent = `${totalSelected} contenut${totalSelected === 1 ? "o" : "i"} selezionat${totalSelected === 1 ? "o" : "i"}`;
+  listBulkActionBar.hidden = totalSelected === 0 || state.appMode !== "editorial" || state.viewMode !== "list";
   selectAllList.checked = posts.length > 0 && selectedVisible === posts.length;
   selectAllList.indeterminate = selectedVisible > 0 && selectedVisible < posts.length;
+  if (totalSelected === 0) closeListBulkMenu();
 }
 
 function populateBulkThemeSelect() {
@@ -1902,7 +1928,83 @@ function deleteSelectedListPosts() {
     render();
   });
   selectedListPosts.clear();
+  closeListBulkMenu();
   render();
+}
+
+function setSelectedListStatus(status) {
+  const ids = Array.from(selectedListPosts);
+  if (!ids.length) return;
+  state.posts = state.posts.map((post) => {
+    if (!ids.includes(post.id)) return post;
+    return normalizePost({
+      ...post,
+      status,
+      history: [...(post.history || []), historyEntry(`Stato impostato a ${status} da selezione multipla`)],
+    });
+  });
+  persistPosts(cloudActive());
+  selectedListPosts.clear();
+  closeListBulkMenu();
+  render();
+}
+
+function selectVisibleListPosts() {
+  getSortedListPosts().forEach((post) => selectedListPosts.add(post.id));
+  closeListBulkMenu();
+  renderListView();
+}
+
+function clearListSelection() {
+  selectedListPosts.clear();
+  closeListBulkMenu();
+  renderListView();
+}
+
+function openListContextMenuFromRow(event) {
+  if (state.appMode !== "editorial" || state.viewMode !== "list") return;
+  const row = event.target.closest(".list-item.is-table-row[data-id]");
+  if (!row) return;
+  event.preventDefault();
+  if (!selectedListPosts.has(row.dataset.id)) {
+    selectedListPosts.clear();
+    selectedListPosts.add(row.dataset.id);
+    renderListCheckboxes();
+    updateListSelectionState(getSortedListPosts());
+  }
+  openListBulkMenuAt(event.clientX, event.clientY);
+}
+
+function openListBulkMenuFromElement(element) {
+  const rect = element.getBoundingClientRect();
+  openListBulkMenuAt(rect.left, rect.bottom + 8);
+}
+
+function openListBulkMenuAt(x, y) {
+  if (!selectedListPosts.size) return;
+  listBulkContextMenu.hidden = false;
+  const menuRect = listBulkContextMenu.getBoundingClientRect();
+  const left = Math.min(x, window.innerWidth - menuRect.width - 12);
+  const top = Math.min(y, window.innerHeight - menuRect.height - 12);
+  Object.assign(listBulkContextMenu.style, {
+    left: `${Math.max(12, left)}px`,
+    top: `${Math.max(12, top)}px`,
+  });
+}
+
+function closeListBulkMenu() {
+  listBulkContextMenu.hidden = true;
+}
+
+function handleListBulkMenuAction(event) {
+  const action = event.target.closest("[data-bulk-menu-action]")?.dataset.bulkMenuAction;
+  if (!action) return;
+  if (action === "ready") setSelectedListStatus("Pronto");
+  if (action === "scheduled") setSelectedListStatus("Programmato");
+  if (action === "published") setSelectedListStatus("Pubblicato");
+  if (action === "select-visible") selectVisibleListPosts();
+  if (action === "clear") clearListSelection();
+  if (action === "delete") deleteSelectedListPosts();
 }
 
 function startListSelectionDrag(event) {
@@ -1963,6 +2065,7 @@ function renderListCheckboxes() {
   listView.querySelectorAll(".list-item.is-table-row[data-id]").forEach((row) => {
     const checkbox = row.querySelector("input[type='checkbox']");
     if (checkbox) checkbox.checked = selectedListPosts.has(row.dataset.id);
+    row.classList.toggle("is-selected", selectedListPosts.has(row.dataset.id));
   });
 }
 
