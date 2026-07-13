@@ -1364,6 +1364,15 @@ body.is-dark .period-button:focus-visible {
   box-shadow: var(--shadow-soft);
 }
 
+.list-item[tabindex] {
+  cursor: pointer;
+}
+
+.list-item[tabindex]:focus-visible {
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 2px;
+}
+
 .event-list-item {
   grid-template-columns: minmax(0, 1fr) minmax(220px, 0.9fr) auto;
 }
@@ -1567,10 +1576,19 @@ body.is-dark .period-button:focus-visible {
   padding: 22px;
 }
 
+.content-detail-panel {
+  display: grid;
+  gap: 16px;
+  width: min(820px, calc(100vw - 28px));
+  padding: 22px;
+}
+
 .day-detail-panel header,
 .day-detail-panel footer,
 .event-detail-panel header,
-.event-detail-panel footer {
+.event-detail-panel footer,
+.content-detail-panel header,
+.content-detail-panel footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1581,11 +1599,19 @@ body.is-dark .period-button:focus-visible {
 .day-detail-panel p,
 .event-detail-panel h2,
 .event-detail-panel h3,
-.event-detail-panel p {
+.event-detail-panel p,
+.content-detail-panel h2,
+.content-detail-panel h3,
+.content-detail-panel p {
   margin: 0;
 }
 
 .event-detail-panel section {
+  display: grid;
+  gap: 8px;
+}
+
+.content-detail-panel section {
   display: grid;
   gap: 8px;
 }
@@ -1617,6 +1643,38 @@ body.is-dark .period-button:focus-visible {
   background: var(--surface-soft);
   font-size: 0.82rem;
   font-weight: 850;
+}
+
+.content-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.content-detail-grid div {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: var(--surface-soft);
+}
+
+.content-detail-grid span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.content-detail-grid strong {
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.content-detail-panel section p {
+  white-space: pre-wrap;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .day-detail-summary {
@@ -2082,7 +2140,8 @@ form footer > div {
   }
 
   .stats-summary-grid,
-  .stats-layout {
+  .stats-layout,
+  .content-detail-grid {
     grid-template-columns: 1fr;
   }
 

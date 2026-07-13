@@ -417,6 +417,30 @@
       </form>
     </dialog>
 
+    <dialog id="contentDetailDialog">
+      <section class="content-detail-panel">
+        <header>
+          <div>
+            <p class="eyebrow">Contenuto</p>
+            <h2 id="contentDetailTitle">Dettaglio contenuto</h2>
+          </div>
+          <button class="ghost-button" id="closeContentDetailDialog" type="button" aria-label="Chiudi">x</button>
+        </header>
+        <div class="content-detail-grid" id="contentDetailGrid"></div>
+        <section>
+          <h3>Script</h3>
+          <p id="contentDetailCopy"></p>
+        </section>
+        <section>
+          <h3>Note interne</h3>
+          <p id="contentDetailNotes"></p>
+        </section>
+        <footer>
+          <button class="primary-action" id="unlockContentEdit" type="button">Sblocca modifica</button>
+        </footer>
+      </section>
+    </dialog>
+
     <dialog id="postDialog">
       <form id="postForm" method="dialog">
         <header>

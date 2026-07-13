@@ -117,12 +117,13 @@ const eventDefinitions = [
 ];
 
 const initialSettings = loadSettings();
+const initialManualEvents = loadManualEvents();
 const state = {
   visibleDate: new Date(),
   viewMode: initialSettings.defaultView,
   appMode: "editorial",
   posts: loadPosts(),
-  manualEvents: loadManualEvents(),
+  manualEvents: initialManualEvents.length ? initialManualEvents : initialSettings.manualEvents,
   settings: initialSettings,
 };
 
@@ -257,6 +258,12 @@ const manualEventFields = {
   ideas: document.querySelector("#manualEventIdeas"),
   hashtags: document.querySelector("#manualEventHashtags"),
 };
+const contentDetailDialog = document.querySelector("#contentDetailDialog");
+const contentDetailTitle = document.querySelector("#contentDetailTitle");
+const contentDetailGrid = document.querySelector("#contentDetailGrid");
+const contentDetailCopy = document.querySelector("#contentDetailCopy");
+const contentDetailNotes = document.querySelector("#contentDetailNotes");
+const unlockContentEditButton = document.querySelector("#unlockContentEdit");
 
 const viewButtons = {
   month: document.querySelector("#monthViewButton"),
@@ -316,6 +323,7 @@ let statsVisibleDate = new Date(state.visibleDate);
 const selectedListPosts = new Set();
 const dismissedStatsInsights = new Set();
 let selectedEvent = null;
+let selectedContentDetail = null;
 
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
@@ -353,6 +361,8 @@ editManualEventButton.addEventListener("click", editSelectedManualEvent);
 document.querySelector("#closeManualEventDialog").addEventListener("click", closeManualEventDialog);
 document.querySelector("#cancelManualEventDialog").addEventListener("click", closeManualEventDialog);
 manualEventForm.addEventListener("submit", saveManualEvent);
+document.querySelector("#closeContentDetailDialog").addEventListener("click", closeContentDetailDialog);
+unlockContentEditButton.addEventListener("click", unlockSelectedContentEdit);
 addDayDialogPost.addEventListener("click", () => {
   const date = addDayDialogPost.dataset.date;
   closeDayDialog();
@@ -424,7 +434,8 @@ darkModeToggle.addEventListener("change", () => {
 document.addEventListener("keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") {
     event.preventDefault();
-    openPostDialog();
+    if (state.appMode === "events") openManualEventDialog();
+    else openPostDialog();
   }
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "f") {
     event.preventDefault();
@@ -585,8 +596,10 @@ function subscribeCloudData() {
       return;
     }
     state.settings = normalizeSettings(snapshot.data());
+    state.manualEvents = state.settings.manualEvents;
     state.viewMode = state.settings.defaultView;
     persistSettings(false);
+    persistManualEvents(false);
     applySettings();
     render();
   });
@@ -1179,7 +1192,17 @@ function createEventDayCell(date, todayKey) {
   count.textContent = `${dayEvents.length}`;
   count.title = `${dayEvents.length} eventi`;
 
-  top.append(dayButton, count);
+  const addButton = document.createElement("button");
+  addButton.className = "add-day";
+  addButton.type = "button";
+  addButton.textContent = "+";
+  addButton.setAttribute("aria-label", `Aggiungi evento per ${formatDateForLabel(date)}`);
+  addButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openManualEventDialog({ date: dateKey });
+  });
+
+  top.append(dayButton, count, addButton);
 
   const list = document.createElement("div");
   list.className = "post-list event-list";
@@ -1238,6 +1261,14 @@ function renderEventListView() {
     const row = document.createElement("article");
     row.className = "list-item event-list-item";
     row.style.borderLeftColor = category?.color || "var(--accent)";
+    row.tabIndex = 0;
+    row.addEventListener("click", () => openEventDialog(event));
+    row.addEventListener("keydown", (keyboardEvent) => {
+      if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
+        keyboardEvent.preventDefault();
+        openEventDialog(event);
+      }
+    });
 
     const main = document.createElement("div");
     const title = document.createElement("h3");
@@ -1254,7 +1285,10 @@ function renderEventListView() {
     open.className = "secondary-action";
     open.type = "button";
     open.textContent = "Apri";
-    open.addEventListener("click", () => openEventDialog(event));
+    open.addEventListener("click", (clickEvent) => {
+      clickEvent.stopPropagation();
+      openEventDialog(event);
+    });
     actions.append(open);
 
     row.append(main, detail, actions);
@@ -1336,7 +1370,8 @@ function openEventDialog(event) {
   });
   eventHashtags.textContent = (event.hashtags || []).join(" ");
   deleteManualEventButton.hidden = !event.manual;
-  editManualEventButton.hidden = !event.manual;
+  editManualEventButton.hidden = false;
+  editManualEventButton.textContent = event.manual ? "Sblocca modifica" : "Copia e modifica";
   if (!eventDialog.open) eventDialog.showModal();
 }
 
@@ -1370,7 +1405,8 @@ function createPostFromSelectedEvent() {
 }
 
 function openManualEventDialog(event = {}) {
-  const normalized = normalizeManualEvent({
+  const draft = {
+    id: "",
     title: "",
     date: toDateKey(state.visibleDate),
     category: "cultura",
@@ -1380,16 +1416,16 @@ function openManualEventDialog(event = {}) {
     ideas: [],
     hashtags: [],
     ...event,
-  });
-  manualEventFields.id.value = normalized.id || "";
-  manualEventFields.title.value = normalized.title || "";
-  manualEventFields.date.value = normalized.date || toDateKey(state.visibleDate);
-  manualEventFields.category.value = eventCategories[normalized.category] ? normalized.category : "cultura";
-  manualEventFields.scope.value = normalized.scope || "italia";
-  manualEventFields.importance.value = normalized.importance || "media";
-  manualEventFields.description.value = normalized.description === "Evento inserito manualmente." ? "" : normalized.description;
-  manualEventFields.ideas.value = (normalized.ideas || []).join("\n");
-  manualEventFields.hashtags.value = (normalized.hashtags || []).join(" ");
+  };
+  manualEventFields.id.value = draft.id || "";
+  manualEventFields.title.value = draft.title || "";
+  manualEventFields.date.value = draft.date || toDateKey(state.visibleDate);
+  manualEventFields.category.value = eventCategories[draft.category] ? draft.category : "cultura";
+  manualEventFields.scope.value = draft.scope || "italia";
+  manualEventFields.importance.value = draft.importance || "media";
+  manualEventFields.description.value = draft.description === "Evento inserito manualmente." ? "" : draft.description || "";
+  manualEventFields.ideas.value = (draft.ideas || []).join("\n");
+  manualEventFields.hashtags.value = (draft.hashtags || []).join(" ");
   if (!manualEventDialog.open) manualEventDialog.showModal();
   manualEventFields.title.focus();
 }
@@ -1431,10 +1467,10 @@ function deleteSelectedManualEvent() {
 }
 
 function editSelectedManualEvent() {
-  if (!selectedEvent?.manual) return;
+  if (!selectedEvent) return;
   const eventToEdit = selectedEvent;
   closeEventDialog();
-  openManualEventDialog(eventToEdit);
+  openManualEventDialog(eventToEdit.manual ? eventToEdit : { ...eventToEdit, id: "", manual: true });
 }
 
 function themeForEventCategory(category) {
@@ -1634,12 +1670,21 @@ function createListRow(post) {
   const row = document.createElement("article");
   row.className = "list-item is-table-row";
   row.dataset.platform = post.platform;
+  row.tabIndex = 0;
   row.classList.toggle("is-incomplete", isIncompletePost(post));
   row.classList.toggle("is-overdue", isOverduePost(post));
   applyPostColor(row, post.color);
+  row.addEventListener("click", () => openContentDetailDialog(post));
+  row.addEventListener("keydown", (keyboardEvent) => {
+    if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
+      keyboardEvent.preventDefault();
+      openContentDetailDialog(post);
+    }
+  });
 
   const select = document.createElement("label");
   select.className = "list-select";
+  select.addEventListener("click", (event) => event.stopPropagation());
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.checked = selectedListPosts.has(post.id);
@@ -1693,16 +1738,64 @@ function createListRow(post) {
   edit.className = "secondary-action";
   edit.type = "button";
   edit.textContent = "Modifica";
-  edit.addEventListener("click", () => openPostDialog(post));
+  edit.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openPostDialog(post);
+  });
   const duplicate = document.createElement("button");
   duplicate.className = "secondary-action";
   duplicate.type = "button";
   duplicate.textContent = "Duplica";
-  duplicate.addEventListener("click", () => duplicatePost(post.id));
+  duplicate.addEventListener("click", (event) => {
+    event.stopPropagation();
+    duplicatePost(post.id);
+  });
   actions.append(edit, duplicate);
 
   row.append(select, dateCell, main, themeCell, formatCell, statusCell, timeCell, actions);
   return row;
+}
+
+function openContentDetailDialog(post) {
+  selectedContentDetail = post;
+  const theme = getTheme(post.theme);
+  contentDetailTitle.textContent = post.title || "Contenuto senza titolo";
+  contentDetailGrid.innerHTML = "";
+  [
+    ["Data", formatShortDate(parseDateKey(post.date))],
+    ["Orario", post.time || "-"],
+    ["Piattaforma", formatPlatformLabel(post.platform)],
+    ["Formato", post.format || "-"],
+    ["Stato", formatStatusLabel(post.status)],
+    ["Priorità", post.priority || "Media"],
+    ["Tema", theme ? `${theme.icon} ${theme.name}` : "-"],
+    ["Responsabile", post.owner || "Senza responsabile"],
+    ["Obiettivo", post.goal || "-"],
+    ["Approvazione", post.approval || "Bozza"],
+    ["Tag", post.tags || "-"],
+    ["Asset", post.assetLink || post.assets || "-"],
+  ].forEach(([label, value]) => {
+    const item = document.createElement("div");
+    const labelNode = document.createElement("span");
+    labelNode.textContent = label;
+    const valueNode = document.createElement("strong");
+    valueNode.textContent = value;
+    item.append(labelNode, valueNode);
+    contentDetailGrid.append(item);
+  });
+  contentDetailCopy.textContent = post.copy || "Nessuno script inserito.";
+  contentDetailNotes.textContent = post.notes || "Nessuna nota interna.";
+  if (!contentDetailDialog.open) contentDetailDialog.showModal();
+}
+
+function closeContentDetailDialog() {
+  contentDetailDialog.close();
+}
+
+function unlockSelectedContentEdit() {
+  if (!selectedContentDetail) return;
+  closeContentDetailDialog();
+  openPostDialog(selectedContentDetail);
 }
 
 function getSortedListPosts() {
@@ -2688,6 +2781,7 @@ function exportBackup() {
   const backup = {
     exportedAt: new Date().toISOString(),
     posts: state.posts,
+    manualEvents: state.manualEvents,
     settings: state.settings,
   };
   downloadFile("backup-calendario-social.json", JSON.stringify(backup, null, 2), "application/json");
@@ -2701,9 +2795,11 @@ function restoreBackup(event) {
     try {
       const backup = JSON.parse(String(reader.result));
       state.posts = Array.isArray(backup.posts) ? backup.posts.map(normalizePost) : [];
+      state.manualEvents = Array.isArray(backup.manualEvents) ? backup.manualEvents.map(normalizeManualEvent).filter(Boolean) : [];
       state.settings = normalizeSettings({ ...state.settings, ...(backup.settings || {}) });
       state.viewMode = state.settings.defaultView;
       persistPosts();
+      persistManualEvents();
       persistSettings();
       applySettings();
       if (cloudActive()) replaceCloudPosts();
@@ -2748,8 +2844,10 @@ function loadManualEvents() {
   }
 }
 
-function persistManualEvents() {
+function persistManualEvents(syncCloud = true) {
   localStorage.setItem(manualEventsKey, JSON.stringify(state.manualEvents));
+  state.settings.manualEvents = state.manualEvents;
+  if (syncCloud) saveCloudSettings();
 }
 
 function loadSettings() {
@@ -2788,6 +2886,7 @@ function getDefaultSettings() {
     goals: [...defaultGoals],
     themes: structuredCloneSafe(defaultThemes),
     templates: structuredCloneSafe(defaultTemplates),
+    manualEvents: [],
   };
 }
 
@@ -2804,6 +2903,7 @@ function normalizeSettings(settings) {
     goals: Array.isArray(settings.goals) && settings.goals.length ? settings.goals : defaults.goals,
     themes: normalizeThemes(settings.themes || defaults.themes),
     templates: settings.templates && Object.keys(settings.templates).length ? settings.templates : defaults.templates,
+    manualEvents: Array.isArray(settings.manualEvents) ? settings.manualEvents.map(normalizeManualEvent).filter(Boolean) : defaults.manualEvents,
   };
 }
 
