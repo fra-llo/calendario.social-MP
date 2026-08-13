@@ -466,9 +466,9 @@
 
         <div class="form-row">
           <label>
-            Template
+            Formato
             <select id="templateSelect">
-              <option value="">Nessun template</option>
+              <option value="">Nessun formato</option>
               <option value="Reel educativo">Reel educativo</option>
               <option value="Carosello tips">Carosello tips</option>
               <option value="Behind the scenes">Behind the scenes</option>
@@ -494,7 +494,7 @@
 
         <div class="form-row">
           <label>
-            Data
+            Data pubblicazione
             <input id="postDate" type="date" required>
           </label>
           <label>
@@ -516,13 +516,21 @@
             </select>
           </label>
           <label>
-            Formato
-            <input id="postFormat" type="text" maxlength="40" placeholder="Es. Reel, carosello, short" list="formatOptions">
-            <datalist id="formatOptions"></datalist>
+            Categoria
+            <select id="postFormat">
+              <option value="">Nessuna</option>
+              <option>Carosello</option>
+              <option>Reel</option>
+              <option>Post flash</option>
+              <option>Intervista</option>
+              <option>Story</option>
+              <option>Post Adv</option>
+              <option>Reel Adv</option>
+            </select>
           </label>
         </div>
 
-        <div class="form-row">
+        <div class="form-row" hidden>
           <label>
             Stato
             <select id="postStatus" required>
@@ -581,24 +589,29 @@
             </select>
           </label>
           <label>
+            Altro obiettivo
+            <input id="postGoalOther" type="text" maxlength="80" placeholder="Inserisci altro obiettivo">
+          </label>
+          <label>
             Tema
             <select id="postTheme"></select>
           </label>
           <label>
-            Tag
-            <input id="postTags" type="text" maxlength="120" placeholder="Es. promo, tutorial, lancio">
+            Altro tema
+            <input id="postThemeOther" type="text" maxlength="80" placeholder="Inserisci altro tema">
           </label>
         </div>
 
-        <label>
-          Link asset
-          <input id="postAssetLink" type="url" placeholder="Canva, Drive, Dropbox, CapCut...">
-        </label>
+        <input id="postTags" type="hidden">
 
-        <label>
-          Asset necessari
-          <input id="postAssets" type="text" maxlength="160" placeholder="Foto prodotto, video, grafiche, hashtag...">
-        </label>
+        <section class="asset-links-field">
+          Link asset
+          <input id="postAssetLink" type="hidden">
+          <div class="asset-links-list" id="assetLinksList"></div>
+          <button class="secondary-action" id="addAssetLinkButton" type="button">+ Link asset</button>
+        </section>
+
+        <input id="postAssets" type="hidden">
 
         <fieldset>
           <legend>Checklist</legend>
@@ -606,21 +619,63 @@
           <label class="check-row"><input id="checkCopy" type="checkbox"> Script</label>
           <label class="check-row"><input id="checkCreative" type="checkbox"> Grafica</label>
           <label class="check-row"><input id="checkReview" type="checkbox"> Revisione</label>
-          <label class="check-row"><input id="checkScheduled" type="checkbox"> Programmato</label>
+          <label class="check-row"><input id="checkScheduled" type="checkbox"> Programmato/Pubblicato</label>
         </fieldset>
 
-        <label class="script-field">
+        <section class="rich-field script-field">
           <span class="field-heading">
             Script
             <small id="copyCounter">0 caratteri</small>
           </span>
-          <textarea id="postCopy" rows="4" placeholder="Testo del post, caption, hook..."></textarea>
-        </label>
+          <div class="rich-toolbar" data-rich-toolbar="postCopyEditor">
+            <select data-rich-command="fontName" aria-label="Font">
+              <option value="Arial">Arial</option>
+              <option value="Helvetica">Helvetica</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Times New Roman">Times</option>
+              <option value="Verdana">Verdana</option>
+            </select>
+            <select data-rich-command="fontSize" aria-label="Dimensione">
+              <option value="2">Piccolo</option>
+              <option value="3" selected>Normale</option>
+              <option value="4">Medio</option>
+              <option value="5">Grande</option>
+              <option value="6">Molto grande</option>
+            </select>
+            <button type="button" data-rich-command="bold">B</button>
+            <button type="button" data-rich-command="italic">I</button>
+            <button type="button" data-rich-command="underline">U</button>
+            <input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo">
+          </div>
+          <textarea id="postCopy" hidden></textarea>
+          <div class="rich-editor" id="postCopyEditor" contenteditable="true" data-placeholder="Testo del post, caption, hook..."></div>
+        </section>
 
-        <label>
+        <section class="rich-field">
           Note interne
-          <textarea id="postNotes" rows="4" placeholder="Indicazioni, approvazioni, dubbi, cose da controllare..."></textarea>
-        </label>
+          <div class="rich-toolbar" data-rich-toolbar="postNotesEditor">
+            <select data-rich-command="fontName" aria-label="Font">
+              <option value="Arial">Arial</option>
+              <option value="Helvetica">Helvetica</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Times New Roman">Times</option>
+              <option value="Verdana">Verdana</option>
+            </select>
+            <select data-rich-command="fontSize" aria-label="Dimensione">
+              <option value="2">Piccolo</option>
+              <option value="3" selected>Normale</option>
+              <option value="4">Medio</option>
+              <option value="5">Grande</option>
+              <option value="6">Molto grande</option>
+            </select>
+            <button type="button" data-rich-command="bold">B</button>
+            <button type="button" data-rich-command="italic">I</button>
+            <button type="button" data-rich-command="underline">U</button>
+            <input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo">
+          </div>
+          <textarea id="postNotes" hidden></textarea>
+          <div class="rich-editor" id="postNotesEditor" contenteditable="true" data-placeholder="Indicazioni, approvazioni, dubbi, cose da controllare..."></div>
+        </section>
 
         <details class="history-box" id="historyBox" hidden>
           <summary>Storico modifiche</summary>

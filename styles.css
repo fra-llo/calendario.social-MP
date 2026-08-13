@@ -293,6 +293,71 @@ textarea {
   resize: vertical;
 }
 
+.asset-links-field,
+.rich-field {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.asset-links-list {
+  display: grid;
+  gap: 8px;
+}
+
+.asset-link-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.45fr) minmax(180px, 1fr) 42px;
+  gap: 8px;
+  align-items: center;
+}
+
+.rich-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px;
+  background: var(--surface-soft);
+}
+
+.rich-toolbar select,
+.rich-toolbar input[type="color"],
+.rich-toolbar button {
+  width: auto;
+  min-height: 34px;
+}
+
+.rich-toolbar button {
+  min-width: 34px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 9px;
+  background: var(--surface);
+  font-weight: 900;
+}
+
+.rich-editor {
+  min-height: 118px;
+  max-height: 280px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 11px;
+  color: var(--ink);
+  background: var(--surface);
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.rich-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted);
+}
+
 fieldset {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));

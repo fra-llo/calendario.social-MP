@@ -291,12 +291,16 @@ const fields = {
   color: document.querySelector("#postColor"),
   owner: document.querySelector("#postOwner"),
   goal: document.querySelector("#postGoal"),
+  goalOther: document.querySelector("#postGoalOther"),
   theme: document.querySelector("#postTheme"),
+  themeOther: document.querySelector("#postThemeOther"),
   tags: document.querySelector("#postTags"),
   assetLink: document.querySelector("#postAssetLink"),
   assets: document.querySelector("#postAssets"),
   copy: document.querySelector("#postCopy"),
+  copyEditor: document.querySelector("#postCopyEditor"),
   notes: document.querySelector("#postNotes"),
+  notesEditor: document.querySelector("#postNotesEditor"),
   recurrence: document.querySelector("#postRecurrence"),
   checkIdea: document.querySelector("#checkIdea"),
   checkCopy: document.querySelector("#checkCopy"),
@@ -304,6 +308,9 @@ const fields = {
   checkReview: document.querySelector("#checkReview"),
   checkScheduled: document.querySelector("#checkScheduled"),
 };
+
+const assetLinksList = document.querySelector("#assetLinksList");
+const addAssetLinkButton = document.querySelector("#addAssetLinkButton");
 
 const cloud = {
   enabled: false,
@@ -383,7 +390,13 @@ datePickerForm.addEventListener("submit", jumpToSelectedDate);
 postForm.addEventListener("submit", savePost);
 fields.template.addEventListener("change", applyTemplate);
 fields.platform.addEventListener("change", applyRecommendedTime);
-fields.copy.addEventListener("input", updateCopyCounter);
+fields.copyEditor.addEventListener("input", updateCopyCounter);
+fields.notesEditor.addEventListener("input", syncRichEditorsToFields);
+document.querySelectorAll("[data-rich-toolbar]").forEach((toolbar) => {
+  toolbar.addEventListener("click", handleRichToolbarAction);
+  toolbar.addEventListener("change", handleRichToolbarAction);
+});
+addAssetLinkButton.addEventListener("click", () => addAssetLinkRow());
 document.querySelector("#exportCsvButton").addEventListener("click", exportCsv);
 document.querySelector("#exportFilteredCsvButton").addEventListener("click", exportFilteredCsv);
 document.querySelector("#backupButton").addEventListener("click", exportBackup);
@@ -1609,6 +1622,85 @@ function isValidColor(color) {
   return /^#[0-9a-f]{6}$/i.test(String(color || ""));
 }
 
+function renderAssetLinkRows(links = []) {
+  assetLinksList.innerHTML = "";
+  const rows = links.length ? links : [{ title: "", url: "" }];
+  rows.forEach((link) => addAssetLinkRow(link));
+}
+
+function addAssetLinkRow(link = { title: "", url: "" }) {
+  const row = document.createElement("div");
+  row.className = "asset-link-row";
+  row.innerHTML = `
+    <input type="text" data-asset-title maxlength="80" placeholder="Titolo link" value="${escapeAttribute(link.title || "")}">
+    <input type="url" data-asset-url placeholder="https://..." value="${escapeAttribute(link.url || "")}">
+    <button class="ghost-action" type="button" aria-label="Rimuovi link">x</button>
+  `;
+  row.querySelector("button").addEventListener("click", () => {
+    row.remove();
+    if (!assetLinksList.children.length) addAssetLinkRow();
+  });
+  assetLinksList.append(row);
+}
+
+function collectAssetLinksFromForm() {
+  return Array.from(assetLinksList.querySelectorAll(".asset-link-row")).map((row) => ({
+    title: row.querySelector("[data-asset-title]").value.trim(),
+    url: row.querySelector("[data-asset-url]").value.trim(),
+  })).filter((link) => link.title || link.url);
+}
+
+function assetLinksFromLegacy(post) {
+  if (Array.isArray(post.assetLinks) && post.assetLinks.length) return post.assetLinks;
+  if (post.assetLink || post.assets) return [{ title: post.assets || "Asset", url: post.assetLink || "" }];
+  return [];
+}
+
+function escapeAttribute(value) {
+  return String(value).replaceAll("&", "&amp;").replaceAll("\"", "&quot;").replaceAll("<", "&lt;");
+}
+
+function setRichEditorValue(editor, field, value) {
+  editor.innerHTML = sanitizeRichHtml(value || "");
+  field.value = editor.innerHTML;
+}
+
+function syncRichEditorsToFields() {
+  fields.copy.value = sanitizeRichHtml(fields.copyEditor.innerHTML).trim();
+  fields.notes.value = sanitizeRichHtml(fields.notesEditor.innerHTML).trim();
+}
+
+function handleRichToolbarAction(event) {
+  const control = event.target.closest("[data-rich-command]");
+  if (!control) return;
+  if (event.type === "click" && control.tagName !== "BUTTON") return;
+  if (event.type === "change" && control.tagName === "BUTTON") return;
+  event.preventDefault();
+  const toolbar = control.closest("[data-rich-toolbar]");
+  const editor = document.querySelector(`#${toolbar.dataset.richToolbar}`);
+  if (!editor) return;
+  editor.focus();
+  const command = control.dataset.richCommand;
+  const value = control.type === "color" || control.tagName === "SELECT" ? control.value : null;
+  document.execCommand(command, false, value);
+  syncRichEditorsToFields();
+  updateCopyCounter();
+}
+
+function sanitizeRichHtml(html) {
+  const template = document.createElement("template");
+  template.innerHTML = String(html || "");
+  template.content.querySelectorAll("script, style, iframe, object, embed").forEach((node) => node.remove());
+  template.content.querySelectorAll("*").forEach((node) => {
+    Array.from(node.attributes).forEach((attribute) => {
+      const name = attribute.name.toLowerCase();
+      const value = attribute.value.toLowerCase();
+      if (name.startsWith("on") || value.includes("javascript:")) node.removeAttribute(attribute.name);
+    });
+  });
+  return template.innerHTML;
+}
+
 function getPostChipMeta(post) {
   const fieldsToShow = state.settings.visibleFields;
   const theme = getTheme(post.theme);
@@ -1752,21 +1844,22 @@ function createListRow(post) {
 function openContentDetailDialog(post) {
   selectedContentDetail = post;
   const theme = getTheme(post.theme);
+  const assetSummary = assetLinksFromLegacy(post).map((asset) => (
+    asset.url ? `${asset.title || "Asset"}: ${asset.url}` : asset.title
+  )).filter(Boolean).join(" | ") || "-";
   contentDetailTitle.textContent = post.title || "Contenuto senza titolo";
   contentDetailGrid.innerHTML = "";
   [
-    ["Data", formatShortDate(parseDateKey(post.date))],
+    ["Data pubblicazione", formatShortDate(parseDateKey(post.date))],
     ["Orario", post.time || "-"],
     ["Piattaforma", formatPlatformLabel(post.platform)],
-    ["Formato", post.format || "-"],
+    ["Categoria", post.format || "-"],
     ["Stato", formatStatusLabel(post.status)],
     ["Priorità", post.priority || "Media"],
-    ["Tema", theme ? `${theme.icon} ${theme.name}` : "-"],
+    ["Tema", [theme ? `${theme.icon} ${theme.name}` : "", post.themeOther || ""].filter(Boolean).join(" - ") || "-"],
     ["Responsabile", post.owner || "Senza responsabile"],
     ["Obiettivo", post.goal || "-"],
-    ["Approvazione", post.approval || "Bozza"],
-    ["Tag", post.tags || "-"],
-    ["Asset", post.assetLink || post.assets || "-"],
+    ["Asset", assetSummary],
   ].forEach(([label, value]) => {
     const item = document.createElement("div");
     const labelNode = document.createElement("span");
@@ -1776,8 +1869,8 @@ function openContentDetailDialog(post) {
     item.append(labelNode, valueNode);
     contentDetailGrid.append(item);
   });
-  contentDetailCopy.textContent = post.copy || "Nessuno script inserito.";
-  contentDetailNotes.textContent = post.notes || "Nessuna nota interna.";
+  contentDetailCopy.innerHTML = sanitizeRichHtml(post.copy) || "Nessuno script inserito.";
+  contentDetailNotes.innerHTML = sanitizeRichHtml(post.notes) || "Nessuna nota interna.";
   if (!contentDetailDialog.open) contentDetailDialog.showModal();
 }
 
@@ -2486,14 +2579,17 @@ function openPostDialog(post = {}) {
   fields.priority.value = normalized.priority || "Media";
   setSelectedColor(normalized.color || pastelColors[0].value);
   fields.owner.value = normalized.owner || "";
-  ensureSelectOption(fields.goal, normalized.goal);
-  fields.goal.value = state.settings.goals.includes(normalized.goal) ? normalized.goal : state.settings.goals[0];
+  const hasKnownGoal = state.settings.goals.includes(normalized.goal);
+  fields.goal.value = hasKnownGoal ? normalized.goal : state.settings.goals[0];
+  fields.goalOther.value = hasKnownGoal ? "" : normalized.goal || "";
   fields.theme.value = state.settings.themes.some((theme) => theme.id === normalized.theme) ? normalized.theme : state.settings.themes[0]?.id || "";
+  fields.themeOther.value = normalized.themeOther || "";
   fields.tags.value = normalized.tags || "";
   fields.assetLink.value = normalized.assetLink || "";
   fields.assets.value = normalized.assets || "";
-  fields.copy.value = normalized.copy || "";
-  fields.notes.value = normalized.notes || "";
+  renderAssetLinkRows(normalized.assetLinks?.length ? normalized.assetLinks : assetLinksFromLegacy(normalized));
+  setRichEditorValue(fields.copyEditor, fields.copy, normalized.copy || "");
+  setRichEditorValue(fields.notesEditor, fields.notes, normalized.notes || "");
   fields.recurrence.value = normalized.recurrence || "none";
   fields.checkIdea.checked = Boolean(normalized.checklist.idea);
   fields.checkCopy.checked = Boolean(normalized.checklist.copy);
@@ -2508,7 +2604,8 @@ function openPostDialog(post = {}) {
 }
 
 function updateCopyCounter() {
-  const count = fields.copy.value.length;
+  syncRichEditorsToFields();
+  const count = fields.copyEditor.textContent.trim().length;
   copyCounter.textContent = `${count} ${count === 1 ? "carattere" : "caratteri"}`;
 }
 
@@ -2728,6 +2825,8 @@ function savePost(event) {
 }
 
 function collectPostFromForm() {
+  syncRichEditorsToFields();
+  const assetLinks = collectAssetLinksFromForm();
   return normalizePost({
     id: fields.id.value || createId(),
     title: fields.title.value.trim(),
@@ -2740,11 +2839,13 @@ function collectPostFromForm() {
     priority: fields.priority.value,
     color: fields.color.value,
     owner: fields.owner.value.trim(),
-    goal: fields.goal.value,
+    goal: fields.goalOther.value.trim() || fields.goal.value,
     theme: fields.theme.value,
+    themeOther: fields.themeOther.value.trim(),
     tags: fields.tags.value.trim(),
-    assetLink: fields.assetLink.value.trim(),
-    assets: fields.assets.value.trim(),
+    assetLinks,
+    assetLink: assetLinks[0]?.url || "",
+    assets: assetLinks.map((asset) => asset.title).filter(Boolean).join(", "),
     copy: fields.copy.value.trim(),
     notes: fields.notes.value.trim(),
     recurrence: fields.recurrence.value,
@@ -2911,7 +3012,7 @@ function exportFilteredCsv() {
 
 function downloadPostsCsv(posts, filename) {
   const rows = [
-    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "theme", "tags", "assetLink", "assets", "copy", "notes"],
+    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "theme", "themeOther", "tags", "assetLinks", "assetLink", "assets", "copy", "notes"],
     ...posts.map((post) => [
       post.id,
       post.title,
@@ -2926,7 +3027,9 @@ function downloadPostsCsv(posts, filename) {
       post.owner,
       post.goal,
       post.theme,
+      post.themeOther,
       post.tags,
+      JSON.stringify(post.assetLinks || []),
       post.assetLink,
       post.assets,
       post.copy,
@@ -3086,7 +3189,7 @@ function populateTemplateSelect() {
   fields.template.innerHTML = "";
   const empty = document.createElement("option");
   empty.value = "";
-  empty.textContent = "Nessun template";
+  empty.textContent = "Nessun formato";
   fields.template.append(empty);
   Object.keys(getTemplates()).forEach((name) => {
     const option = document.createElement("option");
@@ -3111,6 +3214,7 @@ function populateGoalSelect() {
 
 function populateFormatOptions() {
   const datalist = document.querySelector("#formatOptions");
+  if (!datalist) return;
   datalist.innerHTML = "";
   state.settings.formats.forEach((format) => {
     const option = document.createElement("option");
@@ -3337,7 +3441,14 @@ function normalizePost(post) {
     owner: post.owner || "",
     goal: post.goal || "Awareness",
     theme: post.theme || post.category || defaultThemes[0].id,
+    themeOther: post.themeOther || "",
     tags: post.tags || "",
+    assetLinks: Array.isArray(post.assetLinks)
+      ? post.assetLinks.map((asset) => ({
+        title: asset.title || "",
+        url: asset.url || "",
+      })).filter((asset) => asset.title || asset.url)
+      : [],
     assetLink: post.assetLink || "",
     assets: post.assets || "",
     copy: post.copy || "",
@@ -3388,13 +3499,25 @@ function rowToPost(row) {
     owner: row.owner,
     goal: row.goal,
     theme: row.theme,
+    themeOther: row.themeOther,
     tags: row.tags,
+    assetLinks: parseAssetLinks(row.assetLinks),
     assetLink: row.assetLink,
     assets: row.assets,
     copy: row.copy,
     notes: row.notes,
     history: [historyEntry("Importato da CSV")],
   });
+}
+
+function parseAssetLinks(value) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 function getCalendarStartDate() {
