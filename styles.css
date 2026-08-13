@@ -324,6 +324,46 @@ textarea {
   background: var(--surface-soft);
 }
 
+.rich-tools {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.rich-tools summary {
+  cursor: pointer;
+  padding: 9px 10px;
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-weight: 900;
+  list-style: none;
+}
+
+.rich-tools summary::-webkit-details-marker {
+  display: none;
+}
+
+.rich-tools summary::after {
+  content: "Apri";
+  float: right;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.rich-tools[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.rich-tools[open] summary::after {
+  content: "Chiudi";
+}
+
+.rich-tools .rich-toolbar {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .rich-toolbar select,
 .rich-toolbar input[type="color"],
 .rich-toolbar button {
