@@ -315,8 +315,8 @@ textarea {
 }
 
 .rich-toolbar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(74px, max-content));
   gap: 6px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -337,10 +337,12 @@ textarea {
   border-radius: 7px;
   padding: 6px 9px;
   background: var(--surface);
+  white-space: nowrap;
   font-weight: 900;
 }
 
 .rich-editor {
+  resize: vertical;
   min-height: 118px;
   max-height: 280px;
   overflow: auto;
@@ -351,6 +353,12 @@ textarea {
   background: var(--surface);
   font-weight: 400;
   line-height: 1.45;
+}
+
+.rich-editor ul,
+.rich-editor ol {
+  margin: 0;
+  padding-left: 22px;
 }
 
 .rich-editor:empty::before {

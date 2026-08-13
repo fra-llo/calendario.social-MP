@@ -569,20 +569,15 @@
         <div class="form-row">
           <label>
             Obiettivo
-            <select id="postGoal">
-              <option>Awareness</option>
-              <option>Vendita</option>
-              <option>Community</option>
-              <option>Educazione</option>
-              <option>Engagement</option>
-              <option value="__other">Altro...</option>
-            </select>
-            <input id="postGoalOther" type="text" maxlength="80" placeholder="Inserisci altro obiettivo" hidden>
+            <input id="postGoal" type="text" maxlength="80" list="goalOptions" placeholder="Nessuno">
+            <datalist id="goalOptions"></datalist>
+            <input id="postGoalOther" type="hidden">
           </label>
           <label>
             Tema
-            <select id="postTheme"></select>
-            <input id="postThemeOther" type="text" maxlength="80" placeholder="Inserisci altro tema" hidden>
+            <input id="postTheme" type="text" maxlength="80" list="themeOptions" placeholder="Nessuno">
+            <datalist id="themeOptions"></datalist>
+            <input id="postThemeOther" type="hidden">
           </label>
         </div>
 
@@ -629,6 +624,13 @@
             <button type="button" data-rich-command="bold">B</button>
             <button type="button" data-rich-command="italic">I</button>
             <button type="button" data-rich-command="underline">U</button>
+            <button type="button" data-rich-command="strikeThrough">S</button>
+            <button type="button" data-rich-command="insertUnorderedList">• Lista</button>
+            <button type="button" data-rich-command="insertOrderedList">1. Lista</button>
+            <button type="button" data-rich-command="justifyLeft">Sinistra</button>
+            <button type="button" data-rich-command="justifyCenter">Centro</button>
+            <button type="button" data-rich-command="justifyRight">Destra</button>
+            <button type="button" data-rich-command="removeFormat">Pulisci</button>
             <input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo">
           </div>
           <textarea id="postCopy" hidden></textarea>
@@ -655,6 +657,13 @@
             <button type="button" data-rich-command="bold">B</button>
             <button type="button" data-rich-command="italic">I</button>
             <button type="button" data-rich-command="underline">U</button>
+            <button type="button" data-rich-command="strikeThrough">S</button>
+            <button type="button" data-rich-command="insertUnorderedList">• Lista</button>
+            <button type="button" data-rich-command="insertOrderedList">1. Lista</button>
+            <button type="button" data-rich-command="justifyLeft">Sinistra</button>
+            <button type="button" data-rich-command="justifyCenter">Centro</button>
+            <button type="button" data-rich-command="justifyRight">Destra</button>
+            <button type="button" data-rich-command="removeFormat">Pulisci</button>
             <input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo">
           </div>
           <textarea id="postNotes" hidden></textarea>

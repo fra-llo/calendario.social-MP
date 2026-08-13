@@ -392,8 +392,6 @@ fields.template.addEventListener("change", applyTemplate);
 fields.platform.addEventListener("change", applyRecommendedTime);
 fields.copyEditor.addEventListener("input", updateCopyCounter);
 fields.notesEditor.addEventListener("input", syncRichEditorsToFields);
-fields.goal.addEventListener("change", updateOtherFieldVisibility);
-fields.theme.addEventListener("change", updateOtherFieldVisibility);
 document.querySelectorAll("[data-rich-toolbar]").forEach((toolbar) => {
   toolbar.addEventListener("click", handleRichToolbarAction);
   toolbar.addEventListener("change", handleRichToolbarAction);
@@ -1658,6 +1656,22 @@ function assetLinksFromLegacy(post) {
   return [];
 }
 
+function themeInputValue(post) {
+  if (post.themeOther) return post.themeOther;
+  const theme = getTheme(post.theme);
+  return theme ? theme.name : "";
+}
+
+function resolveThemeFromInput(value) {
+  const text = String(value || "").trim();
+  if (!text) return { theme: "", themeOther: "" };
+  const match = state.settings.themes.find((theme) => (
+    theme.id === text || theme.name.toLowerCase() === text.toLowerCase() || `${theme.icon} ${theme.name}`.toLowerCase() === text.toLowerCase()
+  ));
+  if (match) return { theme: match.id, themeOther: "" };
+  return { theme: state.settings.themes[0]?.id || "", themeOther: text };
+}
+
 function escapeAttribute(value) {
   return String(value).replaceAll("&", "&amp;").replaceAll("\"", "&quot;").replaceAll("<", "&lt;");
 }
@@ -2581,11 +2595,9 @@ function openPostDialog(post = {}) {
   fields.priority.value = normalized.priority || "Media";
   setSelectedColor(normalized.color || pastelColors[0].value);
   fields.owner.value = normalized.owner || "";
-  const hasKnownGoal = state.settings.goals.includes(normalized.goal);
-  fields.goal.value = hasKnownGoal ? normalized.goal : "__other";
-  fields.goalOther.value = hasKnownGoal ? "" : normalized.goal || "";
-  const hasKnownTheme = state.settings.themes.some((theme) => theme.id === normalized.theme);
-  fields.theme.value = normalized.themeOther || !hasKnownTheme ? "__other" : normalized.theme;
+  fields.goal.value = normalized.goal || "";
+  fields.goalOther.value = "";
+  fields.theme.value = themeInputValue(normalized);
   fields.themeOther.value = normalized.themeOther || "";
   fields.tags.value = normalized.tags || "";
   fields.assetLink.value = normalized.assetLink || "";
@@ -2599,7 +2611,6 @@ function openPostDialog(post = {}) {
   fields.checkCreative.checked = Boolean(normalized.checklist.creative);
   fields.checkReview.checked = Boolean(normalized.checklist.review);
   fields.checkScheduled.checked = Boolean(normalized.checklist.scheduled);
-  updateOtherFieldVisibility();
   renderHistory(normalized.history);
   updateCopyCounter();
 
@@ -2797,9 +2808,8 @@ function resetSettings() {
 
 function normalizePostThemes() {
   const validThemeIds = state.settings.themes.map((theme) => theme.id);
-  const fallbackTheme = validThemeIds[0] || defaultThemes[0].id;
   state.posts = state.posts.map((post) => (
-    validThemeIds.includes(post.theme) ? post : { ...post, theme: fallbackTheme }
+    !post.theme || validThemeIds.includes(post.theme) ? post : { ...post, theme: "" }
   ));
 }
 
@@ -2831,6 +2841,7 @@ function savePost(event) {
 function collectPostFromForm() {
   syncRichEditorsToFields();
   const assetLinks = collectAssetLinksFromForm();
+  const themeData = resolveThemeFromInput(fields.theme.value);
   return normalizePost({
     id: fields.id.value || createId(),
     title: fields.title.value.trim(),
@@ -2843,9 +2854,9 @@ function collectPostFromForm() {
     priority: fields.priority.value,
     color: fields.color.value,
     owner: fields.owner.value.trim(),
-    goal: fields.goal.value === "__other" ? fields.goalOther.value.trim() : fields.goal.value,
-    theme: fields.theme.value === "__other" ? state.settings.themes[0]?.id || "" : fields.theme.value,
-    themeOther: fields.theme.value === "__other" ? fields.themeOther.value.trim() : "",
+    goal: fields.goal.value.trim(),
+    theme: themeData.theme,
+    themeOther: themeData.themeOther,
     tags: fields.tags.value.trim(),
     assetLinks,
     assetLink: assetLinks[0]?.url || "",
@@ -3209,20 +3220,18 @@ function populateTemplateSelect() {
 }
 
 function populateGoalSelect() {
-  const currentValue = fields.goal.value;
-  fields.goal.innerHTML = "";
+  const datalist = document.querySelector("#goalOptions");
+  if (!datalist) return;
+  datalist.innerHTML = "";
+  const none = document.createElement("option");
+  none.value = "";
+  none.label = "Nessuno";
+  datalist.append(none);
   state.settings.goals.forEach((goal) => {
     const option = document.createElement("option");
     option.value = goal;
-    option.textContent = goal;
-    fields.goal.append(option);
+    datalist.append(option);
   });
-  const other = document.createElement("option");
-  other.value = "__other";
-  other.textContent = "Altro...";
-  fields.goal.append(other);
-  fields.goal.value = state.settings.goals.includes(currentValue) || currentValue === "__other" ? currentValue : state.settings.goals[0];
-  updateOtherFieldVisibility();
 }
 
 function populateFormatOptions() {
@@ -3237,10 +3246,17 @@ function populateFormatOptions() {
 }
 
 function populateThemeSelects() {
-  const currentPostTheme = fields.theme.value;
   const currentFilter = themeFilter.value || "all";
-  fields.theme.innerHTML = "";
+  const datalist = document.querySelector("#themeOptions");
+  if (datalist) datalist.innerHTML = "";
   themeFilter.innerHTML = "";
+
+  if (datalist) {
+    const none = document.createElement("option");
+    none.value = "";
+    none.label = "Nessuno";
+    datalist.append(none);
+  }
 
   const all = document.createElement("option");
   all.value = "all";
@@ -3248,36 +3264,21 @@ function populateThemeSelects() {
   themeFilter.append(all);
 
   state.settings.themes.forEach((theme) => {
-    const postOption = document.createElement("option");
-    postOption.value = theme.id;
-    postOption.textContent = `${theme.icon} ${theme.name}`;
-    fields.theme.append(postOption);
+    if (datalist) {
+      const postOption = document.createElement("option");
+      postOption.value = theme.name;
+      postOption.label = `${theme.icon} ${theme.name}`;
+      datalist.append(postOption);
+    }
 
     const filterOption = document.createElement("option");
     filterOption.value = theme.id;
     filterOption.textContent = `${theme.icon} ${theme.name}`;
     themeFilter.append(filterOption);
   });
-
-  const otherTheme = document.createElement("option");
-  otherTheme.value = "__other";
-  otherTheme.textContent = "Altro...";
-  fields.theme.append(otherTheme);
-
-  fields.theme.value = state.settings.themes.some((theme) => theme.id === currentPostTheme)
-    ? currentPostTheme
-    : currentPostTheme === "__other" ? "__other" : state.settings.themes[0]?.id || "";
   themeFilter.value = currentFilter === "all" || state.settings.themes.some((theme) => theme.id === currentFilter)
     ? currentFilter
     : "all";
-  updateOtherFieldVisibility();
-}
-
-function updateOtherFieldVisibility() {
-  fields.goalOther.hidden = fields.goal.value !== "__other";
-  fields.goalOther.required = fields.goal.value === "__other";
-  fields.themeOther.hidden = fields.theme.value !== "__other";
-  fields.themeOther.required = fields.theme.value === "__other";
 }
 
 function populateEventCategoryFilter() {
@@ -3317,13 +3318,14 @@ function getTemplates() {
 }
 
 function getTheme(themeId) {
-  return state.settings.themes.find((theme) => theme.id === resolveThemeId(themeId)) || state.settings.themes[0] || null;
+  const resolved = resolveThemeId(themeId);
+  return resolved ? state.settings.themes.find((theme) => theme.id === resolved) || null : null;
 }
 
 function resolveThemeId(themeId) {
   return state.settings.themes.some((theme) => theme.id === themeId)
     ? themeId
-    : state.settings.themes[0]?.id || defaultThemes[0].id;
+    : "";
 }
 
 function parseLines(value) {
@@ -3465,8 +3467,8 @@ function normalizePost(post) {
     priority: post.priority || "Media",
     color: isValidColor(post.color) ? post.color : pastelColors[0].value,
     owner: post.owner || "",
-    goal: post.goal || "Awareness",
-    theme: post.theme || post.category || defaultThemes[0].id,
+    goal: post.goal || "",
+    theme: post.theme || post.category || "",
     themeOther: post.themeOther || "",
     tags: post.tags || "",
     assetLinks: Array.isArray(post.assetLinks)
