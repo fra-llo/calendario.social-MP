@@ -466,15 +466,16 @@
 
         <div class="form-row">
           <label>
-            Formato
-            <select id="templateSelect">
-              <option value="">Nessun formato</option>
-              <option value="Reel educativo">Reel educativo</option>
-              <option value="Carosello tips">Carosello tips</option>
-              <option value="Behind the scenes">Behind the scenes</option>
-              <option value="Recensione cliente">Recensione cliente</option>
-              <option value="Post LinkedIn">Post LinkedIn</option>
-              <option value="Short YouTube">Short YouTube</option>
+            Categoria
+            <select id="postFormat">
+              <option value="">Nessuna</option>
+              <option>Carosello</option>
+              <option>Reel</option>
+              <option>Post flash</option>
+              <option>Intervista</option>
+              <option>Story</option>
+              <option>Post Adv</option>
+              <option>Reel Adv</option>
             </select>
           </label>
           <label>
@@ -515,19 +516,7 @@
               <option>X</option>
             </select>
           </label>
-          <label>
-            Categoria
-            <select id="postFormat">
-              <option value="">Nessuna</option>
-              <option>Carosello</option>
-              <option>Reel</option>
-              <option>Post flash</option>
-              <option>Intervista</option>
-              <option>Story</option>
-              <option>Post Adv</option>
-              <option>Reel Adv</option>
-            </select>
-          </label>
+          <input id="templateSelect" type="hidden">
         </div>
 
         <div class="form-row" hidden>
@@ -555,9 +544,9 @@
           <label>
             Priorita
             <select id="postPriority">
+              <option>Bassa</option>
               <option>Media</option>
               <option>Alta</option>
-              <option>Bassa</option>
             </select>
           </label>
           <label>
@@ -586,19 +575,14 @@
               <option>Community</option>
               <option>Educazione</option>
               <option>Engagement</option>
+              <option value="__other">Altro...</option>
             </select>
-          </label>
-          <label>
-            Altro obiettivo
-            <input id="postGoalOther" type="text" maxlength="80" placeholder="Inserisci altro obiettivo">
+            <input id="postGoalOther" type="text" maxlength="80" placeholder="Inserisci altro obiettivo" hidden>
           </label>
           <label>
             Tema
             <select id="postTheme"></select>
-          </label>
-          <label>
-            Altro tema
-            <input id="postThemeOther" type="text" maxlength="80" placeholder="Inserisci altro tema">
+            <input id="postThemeOther" type="text" maxlength="80" placeholder="Inserisci altro tema" hidden>
           </label>
         </div>
 
@@ -619,7 +603,7 @@
           <label class="check-row"><input id="checkCopy" type="checkbox"> Script</label>
           <label class="check-row"><input id="checkCreative" type="checkbox"> Grafica</label>
           <label class="check-row"><input id="checkReview" type="checkbox"> Revisione</label>
-          <label class="check-row"><input id="checkScheduled" type="checkbox"> Programmato/Pubblicato</label>
+          <label class="check-row"><input id="checkScheduled" type="checkbox"> Progr./Pubbl.</label>
         </fieldset>
 
         <section class="rich-field script-field">

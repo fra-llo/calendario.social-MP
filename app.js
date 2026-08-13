@@ -392,6 +392,8 @@ fields.template.addEventListener("change", applyTemplate);
 fields.platform.addEventListener("change", applyRecommendedTime);
 fields.copyEditor.addEventListener("input", updateCopyCounter);
 fields.notesEditor.addEventListener("input", syncRichEditorsToFields);
+fields.goal.addEventListener("change", updateOtherFieldVisibility);
+fields.theme.addEventListener("change", updateOtherFieldVisibility);
 document.querySelectorAll("[data-rich-toolbar]").forEach((toolbar) => {
   toolbar.addEventListener("click", handleRichToolbarAction);
   toolbar.addEventListener("change", handleRichToolbarAction);
@@ -2580,9 +2582,10 @@ function openPostDialog(post = {}) {
   setSelectedColor(normalized.color || pastelColors[0].value);
   fields.owner.value = normalized.owner || "";
   const hasKnownGoal = state.settings.goals.includes(normalized.goal);
-  fields.goal.value = hasKnownGoal ? normalized.goal : state.settings.goals[0];
+  fields.goal.value = hasKnownGoal ? normalized.goal : "__other";
   fields.goalOther.value = hasKnownGoal ? "" : normalized.goal || "";
-  fields.theme.value = state.settings.themes.some((theme) => theme.id === normalized.theme) ? normalized.theme : state.settings.themes[0]?.id || "";
+  const hasKnownTheme = state.settings.themes.some((theme) => theme.id === normalized.theme);
+  fields.theme.value = normalized.themeOther || !hasKnownTheme ? "__other" : normalized.theme;
   fields.themeOther.value = normalized.themeOther || "";
   fields.tags.value = normalized.tags || "";
   fields.assetLink.value = normalized.assetLink || "";
@@ -2596,6 +2599,7 @@ function openPostDialog(post = {}) {
   fields.checkCreative.checked = Boolean(normalized.checklist.creative);
   fields.checkReview.checked = Boolean(normalized.checklist.review);
   fields.checkScheduled.checked = Boolean(normalized.checklist.scheduled);
+  updateOtherFieldVisibility();
   renderHistory(normalized.history);
   updateCopyCounter();
 
@@ -2839,9 +2843,9 @@ function collectPostFromForm() {
     priority: fields.priority.value,
     color: fields.color.value,
     owner: fields.owner.value.trim(),
-    goal: fields.goalOther.value.trim() || fields.goal.value,
-    theme: fields.theme.value,
-    themeOther: fields.themeOther.value.trim(),
+    goal: fields.goal.value === "__other" ? fields.goalOther.value.trim() : fields.goal.value,
+    theme: fields.theme.value === "__other" ? state.settings.themes[0]?.id || "" : fields.theme.value,
+    themeOther: fields.theme.value === "__other" ? fields.themeOther.value.trim() : "",
     tags: fields.tags.value.trim(),
     assetLinks,
     assetLink: assetLinks[0]?.url || "",
@@ -3185,6 +3189,10 @@ function normalizeSettings(settings) {
 }
 
 function populateTemplateSelect() {
+  if (fields.template.type === "hidden") {
+    fields.template.value = "";
+    return;
+  }
   const currentValue = fields.template.value;
   fields.template.innerHTML = "";
   const empty = document.createElement("option");
@@ -3209,7 +3217,12 @@ function populateGoalSelect() {
     option.textContent = goal;
     fields.goal.append(option);
   });
-  fields.goal.value = state.settings.goals.includes(currentValue) ? currentValue : state.settings.goals[0];
+  const other = document.createElement("option");
+  other.value = "__other";
+  other.textContent = "Altro...";
+  fields.goal.append(other);
+  fields.goal.value = state.settings.goals.includes(currentValue) || currentValue === "__other" ? currentValue : state.settings.goals[0];
+  updateOtherFieldVisibility();
 }
 
 function populateFormatOptions() {
@@ -3246,12 +3259,25 @@ function populateThemeSelects() {
     themeFilter.append(filterOption);
   });
 
+  const otherTheme = document.createElement("option");
+  otherTheme.value = "__other";
+  otherTheme.textContent = "Altro...";
+  fields.theme.append(otherTheme);
+
   fields.theme.value = state.settings.themes.some((theme) => theme.id === currentPostTheme)
     ? currentPostTheme
-    : state.settings.themes[0]?.id || "";
+    : currentPostTheme === "__other" ? "__other" : state.settings.themes[0]?.id || "";
   themeFilter.value = currentFilter === "all" || state.settings.themes.some((theme) => theme.id === currentFilter)
     ? currentFilter
     : "all";
+  updateOtherFieldVisibility();
+}
+
+function updateOtherFieldVisibility() {
+  fields.goalOther.hidden = fields.goal.value !== "__other";
+  fields.goalOther.required = fields.goal.value === "__other";
+  fields.themeOther.hidden = fields.theme.value !== "__other";
+  fields.themeOther.required = fields.theme.value === "__other";
 }
 
 function populateEventCategoryFilter() {
