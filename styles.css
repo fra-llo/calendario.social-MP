@@ -742,17 +742,6 @@ body.is-dark .period-button:focus-visible {
   grid-column: auto;
 }
 
-.stats-card-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.stats-card-heading label {
-  min-width: 150px;
-}
-
 .stats-insights-card summary {
   cursor: pointer;
   color: var(--ink);
@@ -779,24 +768,6 @@ body.is-dark .period-button:focus-visible {
 .theme-distribution {
   display: grid;
   gap: 14px;
-}
-
-.theme-distribution label {
-  font-weight: 850;
-}
-
-.theme-stack {
-  display: flex;
-  width: 100%;
-  height: 12px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--muted) 14%, transparent);
-}
-
-.theme-stack span {
-  display: block;
-  min-width: 4px;
 }
 
 .theme-bars {
@@ -2365,11 +2336,6 @@ form footer > div {
     width: min(100vw - 20px, 720px);
     max-height: calc(100vh - 20px);
     padding: 16px;
-  }
-
-  .stats-card-heading {
-    align-items: stretch;
-    flex-direction: column;
   }
 
   .stats-bar-row,

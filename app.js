@@ -186,8 +186,6 @@ const statsPeriodInput = document.querySelector("#statsPeriodInput");
 const statsSummaryGrid = document.querySelector("#statsSummaryGrid");
 const statsPlatformBars = document.querySelector("#statsPlatformBars");
 const statsStatusBars = document.querySelector("#statsStatusBars");
-const statsThemeFilter = document.querySelector("#statsThemeFilter");
-const themeStack = document.querySelector("#themeStack");
 const themeBars = document.querySelector("#themeBars");
 const statsInsights = document.querySelector("#statsInsights");
 const copyCounter = document.querySelector("#copyCounter");
@@ -456,8 +454,6 @@ Object.entries(viewButtons).forEach(([viewMode, button]) => {
   control.addEventListener("input", render);
   control.addEventListener("change", render);
 });
-
-statsThemeFilter.addEventListener("change", renderThemeDistribution);
 
 darkModeToggle.addEventListener("change", () => {
   state.settings.dark = darkModeToggle.checked;
@@ -915,7 +911,6 @@ function closeTrashDialog() {
 function openStatsDialog() {
   closeHamburgerMenu();
   statsVisibleDate = new Date(state.visibleDate);
-  populateStatsThemeFilter();
   renderStatsDialog();
   if (!statsDialog.open) statsDialog.showModal();
 }
@@ -2262,7 +2257,6 @@ function renderStatsDistributionBars(container, items, mode) {
 
 function renderThemeDistribution(monthPosts = getMonthPosts(state.posts, statsDialog.open ? statsVisibleDate : state.visibleDate)) {
   const themes = state.settings.themes;
-  const selectedTheme = statsThemeFilter.value || "all";
   const total = monthPosts.length || 0;
   const distribution = themes.map((theme) => {
     const count = monthPosts.filter((post) => resolveThemeId(post.theme) === theme.id).length;
@@ -2272,11 +2266,7 @@ function renderThemeDistribution(monthPosts = getMonthPosts(state.posts, statsDi
       percentage: total ? Math.round((count / total) * 100) : 0,
     };
   });
-  const visibleDistribution = selectedTheme === "all"
-    ? distribution
-    : distribution.filter((theme) => theme.id === selectedTheme);
 
-  themeStack.innerHTML = "";
   themeBars.innerHTML = "";
 
   if (!total) {
@@ -2287,15 +2277,7 @@ function renderThemeDistribution(monthPosts = getMonthPosts(state.posts, statsDi
     return;
   }
 
-  distribution.filter((theme) => theme.count > 0).forEach((theme) => {
-    const segment = document.createElement("span");
-    segment.style.backgroundColor = theme.color;
-    segment.style.width = `${Math.max(theme.percentage, 2)}%`;
-    segment.title = `${formatThemeLabel(theme)}: ${theme.percentage}%`;
-    themeStack.append(segment);
-  });
-
-  visibleDistribution.forEach((theme) => {
+  distribution.forEach((theme) => {
     const row = document.createElement("div");
     row.className = "theme-bar-row";
     row.innerHTML = `
@@ -3298,24 +3280,6 @@ function populateEventCategoryFilter() {
     manualEventFields.category.append(option.cloneNode(true));
   });
   eventCategoryFilter.value = currentValue === "all" || eventCategories[currentValue] ? currentValue : "all";
-}
-
-function populateStatsThemeFilter() {
-  const currentValue = statsThemeFilter.value || "all";
-  statsThemeFilter.innerHTML = "";
-  const all = document.createElement("option");
-  all.value = "all";
-  all.textContent = "✓ Tutti i temi";
-  statsThemeFilter.append(all);
-  state.settings.themes.forEach((theme) => {
-    const option = document.createElement("option");
-    option.value = theme.id;
-    option.textContent = formatThemeLabel(theme);
-    statsThemeFilter.append(option);
-  });
-  statsThemeFilter.value = currentValue === "all" || state.settings.themes.some((theme) => theme.id === currentValue)
-    ? currentValue
-    : "all";
 }
 
 function getTemplates() {
