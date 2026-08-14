@@ -2216,7 +2216,7 @@ function getPlatformStats(posts) {
     const count = posts.filter((post) => post.platform === platform).length;
     const target = Number(state.settings.monthlyTargets[platform]) || 0;
     return {
-      label: formatPlatformLabel(platform),
+      label: platform,
       count,
       target,
       percentage: target ? Math.min(100, Math.round((count / target) * 100)) : 0,
