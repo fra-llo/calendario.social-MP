@@ -2727,7 +2727,7 @@ function createThemeEditorRow(theme = {}) {
   const icon = document.createElement("input");
   icon.type = "text";
   icon.maxLength = 4;
-  icon.value = theme.icon || "";
+  icon.value = normalizeThemeIcon(theme.icon);
   icon.setAttribute("aria-label", "Icona tema");
 
   const name = document.createElement("input");
@@ -2772,7 +2772,7 @@ function collectThemesFromEditor() {
     if (!themeName) return null;
     return {
       id: row.dataset.themeId || slugify(themeName) || `tema-${index + 1}`,
-      icon: icon.value.trim(),
+      icon: normalizeThemeIcon(icon.value),
       name: themeName,
       color: isValidColor(color.value) ? color.value : defaultThemes[index % defaultThemes.length].color,
     };
@@ -3329,7 +3329,7 @@ function getTheme(themeId) {
 
 function formatThemeLabel(theme) {
   if (!theme) return "";
-  return [theme.icon, theme.name].filter(Boolean).join(" ");
+  return [normalizeThemeIcon(theme.icon), theme.name].filter(Boolean).join(" ");
 }
 
 function resolveThemeId(themeId) {
@@ -3349,7 +3349,7 @@ function normalizeThemes(themes) {
     return {
       id: theme.id || slugify(name) || `tema-${index + 1}`,
       name,
-      icon: String(theme.icon || "").trim().slice(0, 4),
+      icon: normalizeThemeIcon(theme.icon),
       color: isValidColor(theme.color) ? theme.color : defaultThemes[index % defaultThemes.length].color,
     };
   }).filter(Boolean) : [];
@@ -3362,7 +3362,7 @@ function parseThemes(value) {
     if (!name) return null;
     return {
       id: slugify(name) || `tema-${index + 1}`,
-      icon: icon || "",
+      icon: normalizeThemeIcon(icon),
       name,
       color: isValidColor(color) ? color : defaultThemes[index % defaultThemes.length].color,
     };
@@ -3374,6 +3374,11 @@ function themesToText(themes) {
   return normalizeThemes(themes).map((theme) => (
     [theme.icon, theme.name, theme.color].join(" | ")
   )).join("\n");
+}
+
+function normalizeThemeIcon(icon) {
+  const value = String(icon || "").trim();
+  return value === "." || value === "•" ? "" : value.slice(0, 4);
 }
 
 function parseTemplates(value, themes = state.settings.themes) {
