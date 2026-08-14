@@ -2225,12 +2225,12 @@ function getPlatformStats(posts) {
 }
 
 function getStatusStats(posts) {
-  const statuses = ["Idea", "Da scrivere", "Pronto", "Programmato", "Pubblicato"];
+  const statuses = ["Idea", "Script", "Grafica", "Revisionato", "Programmato"];
   const total = posts.length || 0;
   return statuses.map((status) => {
-    const count = posts.filter((post) => post.status === status).length;
+    const count = posts.filter((post) => checklistStageLabel(post) === status).length;
     return {
-      label: formatStatusLabel(status),
+      label: status,
       count,
       target: total,
       percentage: total ? Math.round((count / total) * 100) : 0,
