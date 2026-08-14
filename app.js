@@ -3644,8 +3644,8 @@ function checklistStageLabel(post) {
     ["idea", "Idea"],
     ["copy", "Script"],
     ["creative", "Grafica"],
-    ["review", "Revisione"],
-    ["scheduled", "Programmazione"],
+    ["review", "Revisionato"],
+    ["scheduled", "Programmato"],
   ];
   const completed = steps.filter(([key]) => Boolean(post.checklist?.[key]));
   return completed.length ? completed[completed.length - 1][1] : "Checklist: nessuno stato";
