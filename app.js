@@ -2256,10 +2256,10 @@ function renderStatsDistributionBars(container, items, mode) {
 }
 
 function renderThemeDistribution(monthPosts = getMonthPosts(state.posts, statsDialog.open ? statsVisibleDate : state.visibleDate)) {
-  const themes = state.settings.themes;
   const total = monthPosts.length || 0;
+  const themes = getThemesForDistribution(monthPosts);
   const distribution = themes.map((theme) => {
-    const count = monthPosts.filter((post) => resolveThemeId(post.theme) === theme.id).length;
+    const count = monthPosts.filter((post) => getPostThemeKey(post) === theme.id).length;
     return {
       ...theme,
       count,
@@ -2288,6 +2288,31 @@ function renderThemeDistribution(monthPosts = getMonthPosts(state.posts, statsDi
     row.querySelector(".theme-label").title = theme.name;
     themeBars.append(row);
   });
+}
+
+function getThemesForDistribution(posts) {
+  const themes = [...state.settings.themes];
+  posts.forEach((post) => {
+    if (!post.themeOther) return;
+    const id = `custom-${slugify(post.themeOther) || "tema"}`;
+    if (themes.some((theme) => theme.id === id || theme.name.toLowerCase() === post.themeOther.toLowerCase())) return;
+    themes.push({
+      id,
+      icon: "",
+      name: post.themeOther,
+      color: isValidColor(post.color) ? post.color : defaultThemes[themes.length % defaultThemes.length].color,
+      custom: true,
+    });
+  });
+  return themes;
+}
+
+function getPostThemeKey(post) {
+  if (post.themeOther) {
+    const existing = state.settings.themes.find((theme) => theme.name.toLowerCase() === post.themeOther.toLowerCase());
+    return existing ? existing.id : `custom-${slugify(post.themeOther) || "tema"}`;
+  }
+  return resolveThemeId(post.theme);
 }
 
 function renderStatsInsights(posts) {
@@ -2808,6 +2833,7 @@ function savePost(event) {
 function collectPostFromForm() {
   syncRichEditorsToFields();
   const assetLinks = collectAssetLinksFromForm();
+  const themeData = resolveThemeFromForm();
   return normalizePost({
     id: fields.id.value || createId(),
     title: fields.title.value.trim(),
@@ -2821,8 +2847,8 @@ function collectPostFromForm() {
     color: fields.color.value,
     owner: fields.owner.value.trim(),
     goal: fields.goal.value === "__other" ? fields.goalOther.value.trim() : fields.goal.value,
-    theme: fields.theme.value === "__other" ? "" : fields.theme.value,
-    themeOther: fields.theme.value === "__other" ? fields.themeOther.value.trim() : "",
+    theme: themeData.theme,
+    themeOther: themeData.themeOther,
     tags: fields.tags.value.trim(),
     assetLinks,
     assetLink: assetLinks[0]?.url || "",
@@ -2838,6 +2864,36 @@ function collectPostFromForm() {
       scheduled: fields.checkScheduled.checked,
     },
   });
+}
+
+function resolveThemeFromForm() {
+  if (fields.theme.value !== "__other") return { theme: fields.theme.value, themeOther: "" };
+  const name = fields.themeOther.value.trim();
+  if (!name) return { theme: "", themeOther: "" };
+  const existing = state.settings.themes.find((theme) => theme.name.toLowerCase() === name.toLowerCase());
+  if (existing) return { theme: existing.id, themeOther: "" };
+  const theme = createThemeFromName(name, fields.color.value);
+  state.settings.themes = normalizeThemes([...state.settings.themes, theme]);
+  persistSettings();
+  populateThemeSelects();
+  return { theme: theme.id, themeOther: "" };
+}
+
+function createThemeFromName(name, color) {
+  const baseId = slugify(name) || "tema";
+  const ids = new Set(state.settings.themes.map((theme) => theme.id));
+  let id = baseId;
+  let index = 2;
+  while (ids.has(id)) {
+    id = `${baseId}-${index}`;
+    index += 1;
+  }
+  return {
+    id,
+    icon: "",
+    name,
+    color: isValidColor(color) ? color : defaultThemes[state.settings.themes.length % defaultThemes.length].color,
+  };
 }
 
 function deleteCurrentPost() {
