@@ -1566,7 +1566,7 @@ function renderDayDialogList(dayPosts) {
       post.platform,
       post.status,
       post.priority || "Media",
-      theme ? `${theme.icon} ${theme.name}` : "",
+      formatThemeLabel(theme),
     ].filter(Boolean).join(" - ");
     main.append(title, meta);
 
@@ -1707,7 +1707,7 @@ function getPostChipMeta(post) {
   return [
     fieldsToShow.time && post.time ? post.time : "",
     fieldsToShow.platform ? formatPlatformLabel(post.platform) : "",
-    theme ? `${theme.icon} ${theme.name}` : "",
+    formatThemeLabel(theme),
     fieldsToShow.priority ? post.priority || "Media" : "",
     fieldsToShow.owner && post.owner ? post.owner : "",
   ].filter(Boolean).join(" - ");
@@ -1816,7 +1816,7 @@ function createListRow(post) {
   themePill.className = "list-theme-pill";
   themePill.style.backgroundColor = theme?.color ? `${theme.color}16` : "var(--surface-soft)";
   themePill.style.color = theme?.color || "var(--ink)";
-  themePill.textContent = theme ? `${theme.icon} ${theme.name}` : "Tema";
+  themePill.textContent = theme ? formatThemeLabel(theme) : "Tema";
   themeCell.append(themePill);
 
   const formatCell = document.createElement("div");
@@ -1854,7 +1854,7 @@ function openContentDetailDialog(post) {
     ["Categoria", post.format || "-"],
     ["Stato", formatStatusLabel(post.status)],
     ["Priorità", post.priority || "Media"],
-    ["Tema", [theme ? `${theme.icon} ${theme.name}` : "", post.themeOther || ""].filter(Boolean).join(" - ") || "-"],
+    ["Tema", [formatThemeLabel(theme), post.themeOther || ""].filter(Boolean).join(" - ") || "-"],
     ["Responsabile", post.owner || "Senza responsabile"],
     ["Obiettivo", post.goal || "-"],
     ["Asset", assetSummary],
@@ -1953,7 +1953,7 @@ function populateBulkThemeSelect() {
   state.settings.themes.forEach((theme) => {
     const option = document.createElement("option");
     option.value = theme.id;
-    option.textContent = `${theme.icon} ${theme.name}`;
+    option.textContent = formatThemeLabel(theme);
     bulkThemeSelect.append(option);
   });
   bulkThemeSelect.value = state.settings.themes.some((theme) => theme.id === currentValue) ? currentValue : "";
@@ -2291,7 +2291,7 @@ function renderThemeDistribution(monthPosts = getMonthPosts(state.posts, statsDi
     const segment = document.createElement("span");
     segment.style.backgroundColor = theme.color;
     segment.style.width = `${Math.max(theme.percentage, 2)}%`;
-    segment.title = `${theme.icon} ${theme.name}: ${theme.percentage}%`;
+    segment.title = `${formatThemeLabel(theme)}: ${theme.percentage}%`;
     themeStack.append(segment);
   });
 
@@ -2299,7 +2299,7 @@ function renderThemeDistribution(monthPosts = getMonthPosts(state.posts, statsDi
     const row = document.createElement("div");
     row.className = "theme-bar-row";
     row.innerHTML = `
-      <span class="theme-label">${theme.icon}</span>
+      <span class="theme-label">${formatThemeLabel(theme)}</span>
       <span class="theme-meter"><span style="width: ${theme.percentage}%; background-color: ${theme.color}"></span></span>
       <strong>${theme.percentage}%</strong>
     `;
@@ -2727,7 +2727,7 @@ function createThemeEditorRow(theme = {}) {
   const icon = document.createElement("input");
   icon.type = "text";
   icon.maxLength = 4;
-  icon.value = theme.icon || "•";
+  icon.value = theme.icon || "";
   icon.setAttribute("aria-label", "Icona tema");
 
   const name = document.createElement("input");
@@ -2759,7 +2759,7 @@ function createThemeEditorRow(theme = {}) {
 function addThemeSettingRow() {
   themeEditor.append(createThemeEditorRow({
     id: "",
-    icon: "•",
+    icon: "",
     name: "Nuovo tema",
     color: defaultThemes[themeEditor.querySelectorAll(".theme-editor-row").length % defaultThemes.length].color,
   }));
@@ -2772,7 +2772,7 @@ function collectThemesFromEditor() {
     if (!themeName) return null;
     return {
       id: row.dataset.themeId || slugify(themeName) || `tema-${index + 1}`,
-      icon: icon.value.trim() || "•",
+      icon: icon.value.trim(),
       name: themeName,
       color: isValidColor(color.value) ? color.value : defaultThemes[index % defaultThemes.length].color,
     };
@@ -3257,12 +3257,12 @@ function populateThemeSelects() {
   state.settings.themes.forEach((theme) => {
     const postOption = document.createElement("option");
     postOption.value = theme.id;
-    postOption.textContent = `${theme.icon} ${theme.name}`;
+    postOption.textContent = formatThemeLabel(theme);
     fields.theme.append(postOption);
 
     const filterOption = document.createElement("option");
     filterOption.value = theme.id;
-    filterOption.textContent = `${theme.icon} ${theme.name}`;
+    filterOption.textContent = formatThemeLabel(theme);
     themeFilter.append(filterOption);
   });
   const otherTheme = document.createElement("option");
@@ -3310,7 +3310,7 @@ function populateStatsThemeFilter() {
   state.settings.themes.forEach((theme) => {
     const option = document.createElement("option");
     option.value = theme.id;
-    option.textContent = `${theme.icon} ${theme.name}`;
+    option.textContent = formatThemeLabel(theme);
     statsThemeFilter.append(option);
   });
   statsThemeFilter.value = currentValue === "all" || state.settings.themes.some((theme) => theme.id === currentValue)
@@ -3325,6 +3325,11 @@ function getTemplates() {
 function getTheme(themeId) {
   const resolved = resolveThemeId(themeId);
   return resolved ? state.settings.themes.find((theme) => theme.id === resolved) || null : null;
+}
+
+function formatThemeLabel(theme) {
+  if (!theme) return "";
+  return [theme.icon, theme.name].filter(Boolean).join(" ");
 }
 
 function resolveThemeId(themeId) {
@@ -3344,7 +3349,7 @@ function normalizeThemes(themes) {
     return {
       id: theme.id || slugify(name) || `tema-${index + 1}`,
       name,
-      icon: String(theme.icon || "•").trim().slice(0, 4),
+      icon: String(theme.icon || "").trim().slice(0, 4),
       color: isValidColor(theme.color) ? theme.color : defaultThemes[index % defaultThemes.length].color,
     };
   }).filter(Boolean) : [];
@@ -3357,7 +3362,7 @@ function parseThemes(value) {
     if (!name) return null;
     return {
       id: slugify(name) || `tema-${index + 1}`,
-      icon: icon || "•",
+      icon: icon || "",
       name,
       color: isValidColor(color) ? color : defaultThemes[index % defaultThemes.length].color,
     };

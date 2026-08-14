@@ -806,14 +806,18 @@ body.is-dark .period-button:focus-visible {
 
 .theme-bar-row {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 58px;
+  grid-template-columns: minmax(120px, 0.34fr) minmax(0, 1fr) 58px;
   align-items: center;
   gap: 10px;
 }
 
 .theme-label {
-  font-size: 1.1rem;
-  text-align: center;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .theme-meter {
@@ -2370,7 +2374,7 @@ form footer > div {
 
   .stats-bar-row,
   .theme-bar-row {
-    grid-template-columns: 72px minmax(0, 1fr) 44px;
+    grid-template-columns: minmax(96px, 0.42fr) minmax(0, 1fr) 44px;
   }
 
   .day-detail-item {
