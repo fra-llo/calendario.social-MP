@@ -222,8 +222,6 @@ const memberList = document.querySelector("#memberList");
 const visibleFieldSettings = {
   time: document.querySelector("#showTimeSetting"),
   platform: document.querySelector("#showPlatformSetting"),
-  status: document.querySelector("#showStatusSetting"),
-  approval: document.querySelector("#showApprovalSetting"),
   priority: document.querySelector("#showPrioritySetting"),
   owner: document.querySelector("#showOwnerSetting"),
   checklist: document.querySelector("#showChecklistSetting"),
@@ -1355,9 +1353,9 @@ function createPostChip(post) {
   chip.append(title);
   if (meta.textContent) chip.append(meta);
   if (state.settings.visibleFields.checklist) {
-    const progress = document.createElement("small");
-    progress.textContent = `${checklistProgress(post)}% checklist`;
-    chip.append(progress);
+    const checklist = document.createElement("small");
+    checklist.textContent = checklistStageLabel(post);
+    chip.append(checklist);
   }
   return chip;
 }
@@ -1710,8 +1708,6 @@ function getPostChipMeta(post) {
     fieldsToShow.time && post.time ? post.time : "",
     fieldsToShow.platform ? formatPlatformLabel(post.platform) : "",
     theme ? `${theme.icon} ${theme.name}` : "",
-    fieldsToShow.status ? formatStatusLabel(post.status) : "",
-    fieldsToShow.approval ? post.approval || "Bozza" : "",
     fieldsToShow.priority ? post.priority || "Media" : "",
     fieldsToShow.owner && post.owner ? post.owner : "",
   ].filter(Boolean).join(" - ");
@@ -3156,8 +3152,6 @@ function getDefaultSettings() {
     visibleFields: {
       time: true,
       platform: true,
-      status: true,
-      approval: true,
       priority: false,
       owner: false,
       checklist: true,
@@ -3178,13 +3172,18 @@ function normalizeSettings(settings) {
     defaultView: ["month", "week", "day", "list"].includes(settings.defaultView) ? settings.defaultView : defaults.defaultView,
     monthlyTargets: { ...defaults.monthlyTargets, ...(settings.monthlyTargets || {}) },
     warningRules: { ...defaults.warningRules, ...(settings.warningRules || {}) },
-    visibleFields: { ...defaults.visibleFields, ...(settings.visibleFields || {}) },
+    visibleFields: sanitizeVisibleFields({ ...defaults.visibleFields, ...(settings.visibleFields || {}) }),
     formats: Array.isArray(settings.formats) && settings.formats.length ? settings.formats : defaults.formats,
     goals: Array.isArray(settings.goals) && settings.goals.length ? settings.goals : defaults.goals,
     themes: normalizeThemes(settings.themes || defaults.themes),
     templates: settings.templates && Object.keys(settings.templates).length ? settings.templates : defaults.templates,
     manualEvents: Array.isArray(settings.manualEvents) ? settings.manualEvents.map(normalizeManualEvent).filter(Boolean) : defaults.manualEvents,
   };
+}
+
+function sanitizeVisibleFields(fields = {}) {
+  const { status, approval, ...allowedFields } = fields;
+  return allowedFields;
 }
 
 function populateTemplateSelect() {
@@ -3633,6 +3632,18 @@ function sortPosts(a, b) {
 function checklistProgress(post) {
   const values = Object.values(post.checklist || {});
   return Math.round((values.filter(Boolean).length / values.length) * 100);
+}
+
+function checklistStageLabel(post) {
+  const steps = [
+    ["idea", "Idea"],
+    ["copy", "Script"],
+    ["creative", "Grafica"],
+    ["review", "Revisione"],
+    ["scheduled", "Programmazione"],
+  ];
+  const completed = steps.filter(([key]) => Boolean(post.checklist?.[key]));
+  return completed.length ? completed[completed.length - 1][1] : "Checklist: nessuno stato";
 }
 
 function historyEntry(action) {
