@@ -607,32 +607,40 @@
           </span>
           <details class="rich-tools">
             <summary>Strumenti di scrittura</summary>
-            <div class="rich-toolbar" data-rich-toolbar="postCopyEditor">
-              <select data-rich-command="fontName" aria-label="Font">
+            <div class="rich-toolbar rich-toolbar-word" data-rich-toolbar="postCopyEditor">
+              <select class="rich-font-select" data-rich-command="fontName" aria-label="Font">
                 <option value="Arial">Arial</option>
                 <option value="Helvetica">Helvetica</option>
                 <option value="Georgia">Georgia</option>
                 <option value="Times New Roman">Times</option>
+                <option value="Courier New">Courier New</option>
                 <option value="Verdana">Verdana</option>
               </select>
-              <select data-rich-command="fontSize" aria-label="Dimensione">
+              <select class="rich-size-select" data-rich-command="fontSize" aria-label="Dimensione">
                 <option value="2">Piccolo</option>
                 <option value="3" selected>Normale</option>
                 <option value="4">Medio</option>
                 <option value="5">Grande</option>
                 <option value="6">Molto grande</option>
               </select>
-              <button type="button" data-rich-command="bold">B</button>
-              <button type="button" data-rich-command="italic">I</button>
-              <button type="button" data-rich-command="underline">U</button>
-              <button type="button" data-rich-command="strikeThrough">S</button>
-              <button type="button" data-rich-command="insertUnorderedList">• Lista</button>
-              <button type="button" data-rich-command="insertOrderedList">1. Lista</button>
-              <button type="button" data-rich-command="justifyLeft">Sinistra</button>
-              <button type="button" data-rich-command="justifyCenter">Centro</button>
-              <button type="button" data-rich-command="justifyRight">Destra</button>
-              <button type="button" data-rich-command="removeFormat">Pulisci</button>
-              <input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo">
+              <button type="button" title="Aumenta testo" data-rich-command="fontSize" data-rich-value="5">A^</button>
+              <button type="button" title="Riduci testo" data-rich-command="fontSize" data-rich-value="2">A˅</button>
+              <button type="button" title="Maiuscolo/minuscolo" data-rich-action="toggleCase">Aa</button>
+              <button type="button" title="Grassetto" data-rich-command="bold"><strong>G</strong></button>
+              <button type="button" title="Corsivo" data-rich-command="italic"><em>C</em></button>
+              <button type="button" title="Sottolineato" data-rich-command="underline"><u>S</u></button>
+              <button type="button" title="Barrato" data-rich-command="strikeThrough"><s>ab</s></button>
+              <button type="button" title="Pedice" data-rich-command="subscript">x₂</button>
+              <button type="button" title="Apice" data-rich-command="superscript">x²</button>
+              <label class="rich-color-tool" title="Colore testo">A<input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo"></label>
+              <label class="rich-color-tool" title="Evidenziatore">▰<input type="color" value="#fff2a8" data-rich-command="backColor" aria-label="Evidenziatore"></label>
+              <button type="button" title="Elenco puntato" data-rich-command="insertUnorderedList">•≡</button>
+              <button type="button" title="Elenco numerato" data-rich-command="insertOrderedList">1≡</button>
+              <button type="button" title="Allinea a sinistra" data-rich-command="justifyLeft">☰</button>
+              <button type="button" title="Allinea al centro" data-rich-command="justifyCenter">≡</button>
+              <button type="button" title="Allinea a destra" data-rich-command="justifyRight">☷</button>
+              <button type="button" title="Giustifica" data-rich-command="justifyFull">▤</button>
+              <button type="button" title="Pulisci formattazione" data-rich-command="removeFormat">⌫</button>
             </div>
           </details>
           <textarea id="postCopy" hidden></textarea>
@@ -643,32 +651,40 @@
           Note interne
           <details class="rich-tools">
             <summary>Strumenti di scrittura</summary>
-            <div class="rich-toolbar" data-rich-toolbar="postNotesEditor">
-              <select data-rich-command="fontName" aria-label="Font">
+            <div class="rich-toolbar rich-toolbar-word" data-rich-toolbar="postNotesEditor">
+              <select class="rich-font-select" data-rich-command="fontName" aria-label="Font">
                 <option value="Arial">Arial</option>
                 <option value="Helvetica">Helvetica</option>
                 <option value="Georgia">Georgia</option>
                 <option value="Times New Roman">Times</option>
+                <option value="Courier New">Courier New</option>
                 <option value="Verdana">Verdana</option>
               </select>
-              <select data-rich-command="fontSize" aria-label="Dimensione">
+              <select class="rich-size-select" data-rich-command="fontSize" aria-label="Dimensione">
                 <option value="2">Piccolo</option>
                 <option value="3" selected>Normale</option>
                 <option value="4">Medio</option>
                 <option value="5">Grande</option>
                 <option value="6">Molto grande</option>
               </select>
-              <button type="button" data-rich-command="bold">B</button>
-              <button type="button" data-rich-command="italic">I</button>
-              <button type="button" data-rich-command="underline">U</button>
-              <button type="button" data-rich-command="strikeThrough">S</button>
-              <button type="button" data-rich-command="insertUnorderedList">• Lista</button>
-              <button type="button" data-rich-command="insertOrderedList">1. Lista</button>
-              <button type="button" data-rich-command="justifyLeft">Sinistra</button>
-              <button type="button" data-rich-command="justifyCenter">Centro</button>
-              <button type="button" data-rich-command="justifyRight">Destra</button>
-              <button type="button" data-rich-command="removeFormat">Pulisci</button>
-              <input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo">
+              <button type="button" title="Aumenta testo" data-rich-command="fontSize" data-rich-value="5">A^</button>
+              <button type="button" title="Riduci testo" data-rich-command="fontSize" data-rich-value="2">A˅</button>
+              <button type="button" title="Maiuscolo/minuscolo" data-rich-action="toggleCase">Aa</button>
+              <button type="button" title="Grassetto" data-rich-command="bold"><strong>G</strong></button>
+              <button type="button" title="Corsivo" data-rich-command="italic"><em>C</em></button>
+              <button type="button" title="Sottolineato" data-rich-command="underline"><u>S</u></button>
+              <button type="button" title="Barrato" data-rich-command="strikeThrough"><s>ab</s></button>
+              <button type="button" title="Pedice" data-rich-command="subscript">x₂</button>
+              <button type="button" title="Apice" data-rich-command="superscript">x²</button>
+              <label class="rich-color-tool" title="Colore testo">A<input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo"></label>
+              <label class="rich-color-tool" title="Evidenziatore">▰<input type="color" value="#fff2a8" data-rich-command="backColor" aria-label="Evidenziatore"></label>
+              <button type="button" title="Elenco puntato" data-rich-command="insertUnorderedList">•≡</button>
+              <button type="button" title="Elenco numerato" data-rich-command="insertOrderedList">1≡</button>
+              <button type="button" title="Allinea a sinistra" data-rich-command="justifyLeft">☰</button>
+              <button type="button" title="Allinea al centro" data-rich-command="justifyCenter">≡</button>
+              <button type="button" title="Allinea a destra" data-rich-command="justifyRight">☷</button>
+              <button type="button" title="Giustifica" data-rich-command="justifyFull">▤</button>
+              <button type="button" title="Pulisci formattazione" data-rich-command="removeFormat">⌫</button>
             </div>
           </details>
           <textarea id="postNotes" hidden></textarea>

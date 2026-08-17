@@ -1666,7 +1666,7 @@ function syncRichEditorsToFields() {
 }
 
 function handleRichToolbarAction(event) {
-  const control = event.target.closest("[data-rich-command]");
+  const control = event.target.closest("[data-rich-command], [data-rich-action]");
   if (!control) return;
   if (event.type === "click" && control.tagName !== "BUTTON") return;
   if (event.type === "change" && control.tagName === "BUTTON") return;
@@ -1675,11 +1675,26 @@ function handleRichToolbarAction(event) {
   const editor = document.querySelector(`#${toolbar.dataset.richToolbar}`);
   if (!editor) return;
   editor.focus();
+  if (control.dataset.richAction === "toggleCase") {
+    toggleSelectionCase(editor);
+    syncRichEditorsToFields();
+    updateCopyCounter();
+    return;
+  }
   const command = control.dataset.richCommand;
-  const value = control.type === "color" || control.tagName === "SELECT" ? control.value : null;
+  const value = control.dataset.richValue || (control.type === "color" || control.tagName === "SELECT" ? control.value : null);
   document.execCommand(command, false, value);
   syncRichEditorsToFields();
   updateCopyCounter();
+}
+
+function toggleSelectionCase(editor) {
+  const selection = window.getSelection();
+  if (!selection.rangeCount || !editor.contains(selection.anchorNode)) return;
+  const selectedText = selection.toString();
+  if (!selectedText) return;
+  const nextText = selectedText === selectedText.toUpperCase() ? selectedText.toLowerCase() : selectedText.toUpperCase();
+  document.execCommand("insertText", false, nextText);
 }
 
 function sanitizeRichHtml(html) {

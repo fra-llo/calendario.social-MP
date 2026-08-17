@@ -364,11 +364,30 @@ textarea {
   background: transparent;
 }
 
+.rich-toolbar-word {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+}
+
 .rich-toolbar select,
 .rich-toolbar input[type="color"],
 .rich-toolbar button {
   width: auto;
   min-height: 34px;
+}
+
+.rich-toolbar-word .rich-font-select {
+  min-width: 150px;
+  max-width: 220px;
+  flex: 1 1 150px;
+}
+
+.rich-toolbar-word .rich-size-select {
+  width: 76px;
+  flex: 0 0 76px;
 }
 
 .rich-toolbar button {
@@ -379,6 +398,57 @@ textarea {
   background: var(--surface);
   white-space: nowrap;
   font-weight: 900;
+}
+
+.rich-toolbar-word button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+}
+
+.rich-toolbar-word button:nth-of-type(3),
+.rich-toolbar-word button:nth-of-type(10),
+.rich-toolbar-word button:nth-of-type(13) {
+  margin-left: 8px;
+}
+
+.rich-color-tool {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.rich-color-tool::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  left: 6px;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.rich-color-tool input[type="color"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .rich-editor {
