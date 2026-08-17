@@ -1356,18 +1356,6 @@ function createPostChip(post) {
     checklist.textContent = checklistStageLabel(post);
     chip.append(checklist);
   }
-  const summary = document.createElement("div");
-  summary.className = "post-chip-summary";
-  getPostChipSummary(post).forEach(([label, value]) => {
-    const item = document.createElement("span");
-    const term = document.createElement("b");
-    term.textContent = label;
-    const detail = document.createElement("em");
-    detail.textContent = value;
-    item.append(term, detail);
-    summary.append(item);
-  });
-  chip.append(summary);
   return chip;
 }
 
@@ -1772,18 +1760,6 @@ function getPostChipMeta(post) {
     fieldsToShow.priority ? post.priority || "Media" : "",
     fieldsToShow.owner && post.owner ? post.owner : "",
   ].filter(Boolean).join(" - ");
-}
-
-function getPostChipSummary(post) {
-  const theme = getTheme(post.theme);
-  return [
-    ["Quando", [formatShortDate(parseDateKey(post.date)), post.time || ""].filter(Boolean).join(" ")],
-    ["Piattaforma", formatPlatformLabel(post.platform)],
-    ["Tema", formatThemeLabel(theme) || post.themeOther || "Nessuno"],
-    ["Responsabile", post.owner || "Senza responsabile"],
-    ["Categoria", post.format || "Nessuna"],
-    ["Checklist", checklistStageLabel(post)],
-  ];
 }
 
 function formatPlatformLabel(platform) {
