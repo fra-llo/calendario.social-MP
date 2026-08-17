@@ -20,20 +20,20 @@
 
 body.is-dark {
   color-scheme: dark;
-  --bg: #171717;
-  --surface: #242424;
-  --surface-soft: #1f1f1f;
-  --ink: #f5f5f5;
-  --muted: #b8b8b8;
-  --line: #3a3a3a;
-  --accent: #2dd4bf;
-  --accent-dark: #14b8a6;
-  --accent-soft: rgba(45, 212, 191, 0.16);
-  --danger: #f87171;
-  --warning: #facc15;
-  --control: #333333;
-  --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  --shadow-soft: 0 8px 26px rgba(0, 0, 0, 0.25);
+  --bg: #101412;
+  --surface: #1b211f;
+  --surface-soft: #151a18;
+  --ink: #eef4f1;
+  --muted: #9aa8a3;
+  --line: #2c3835;
+  --accent: #5bc8bb;
+  --accent-dark: #36a99d;
+  --accent-soft: rgba(91, 200, 187, 0.16);
+  --danger: #ff8a80;
+  --warning: #f7c76b;
+  --control: #242c29;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+  --shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.32);
 }
 
 * {
@@ -46,6 +46,12 @@ body {
   color: var(--ink);
   background: var(--bg);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.is-dark {
+  background:
+    linear-gradient(180deg, rgba(91, 200, 187, 0.045), transparent 280px),
+    var(--bg);
 }
 
 body.is-resizing-sidebar {
@@ -611,6 +617,76 @@ body.is-dark .icon-button,
 body.is-dark .period-button:hover,
 body.is-dark .period-button:focus-visible {
   background: var(--control);
+}
+
+body.is-dark .auth-banner,
+body.is-dark .sidebar,
+body.is-dark .panel,
+body.is-dark #hamburgerPanel,
+body.is-dark dialog form,
+body.is-dark dialog > section,
+body.is-dark .stats-card,
+body.is-dark .list-toolbar,
+body.is-dark .bulk-action-bar {
+  border-color: rgba(133, 156, 149, 0.22);
+  background: color-mix(in srgb, var(--surface) 88%, #0c0f0e 12%);
+}
+
+body.is-dark .sidebar {
+  background: linear-gradient(180deg, #171f1c 0%, var(--surface-soft) 100%);
+}
+
+body.is-dark input,
+body.is-dark select,
+body.is-dark textarea,
+body.is-dark .rich-editor,
+body.is-dark .rich-tools,
+body.is-dark fieldset,
+body.is-dark .color-menu-trigger,
+body.is-dark .asset-link-row input {
+  border-color: rgba(133, 156, 149, 0.28);
+  background: #111614;
+}
+
+body.is-dark input::placeholder,
+body.is-dark textarea::placeholder,
+body.is-dark .rich-editor:empty::before {
+  color: #73817c;
+}
+
+body.is-dark .day-cell {
+  border-color: rgba(133, 156, 149, 0.22);
+  background: linear-gradient(180deg, #1b211f 0%, #171d1b 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025), 0 1px 0 rgba(0, 0, 0, 0.18);
+}
+
+body.is-dark .day-cell.is-muted {
+  background: #131816;
+  opacity: 0.78;
+}
+
+body.is-dark .day-cell.is-empty {
+  background-image: linear-gradient(135deg, rgba(91, 200, 187, 0.035), transparent 44%);
+}
+
+body.is-dark .post-chip,
+body.is-dark .event-chip {
+  background: color-mix(in srgb, var(--surface-soft) 78%, var(--accent-soft) 22%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+body.is-dark .list-row {
+  background: color-mix(in srgb, var(--surface) 82%, var(--bg) 18%);
+}
+
+body.is-dark .menu-item:hover,
+body.is-dark .view-switch button[aria-pressed="true"],
+body.is-dark .mode-switch button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent-soft) 72%, var(--control) 28%);
+}
+
+body.is-dark .primary-action {
+  color: #071211;
 }
 
 .secondary-action:hover,
