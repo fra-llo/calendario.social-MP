@@ -458,6 +458,10 @@ textarea {
   cursor: pointer;
 }
 
+.rich-editor-wrap {
+  position: relative;
+}
+
 .rich-editor {
   resize: vertical;
   min-height: 118px;
@@ -465,11 +469,22 @@ textarea {
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 10px 11px;
+  padding: 10px 11px 26px;
   color: var(--ink);
   background: var(--surface);
   font-weight: 400;
   line-height: 1.45;
+}
+
+.rich-counter {
+  position: absolute;
+  right: 10px;
+  bottom: 7px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .rich-editor ul,

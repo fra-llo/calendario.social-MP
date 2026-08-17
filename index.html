@@ -601,10 +601,7 @@
         </fieldset>
 
         <section class="rich-field script-field">
-          <span class="field-heading">
-            Script
-            <small id="copyCounter">0 caratteri</small>
-          </span>
+          <span class="field-heading">Script</span>
           <details class="rich-tools">
             <summary>Strumenti di scrittura</summary>
             <div class="rich-toolbar rich-toolbar-word" data-rich-toolbar="postCopyEditor">
@@ -642,7 +639,10 @@
             </div>
           </details>
           <textarea id="postCopy" hidden></textarea>
-          <div class="rich-editor" id="postCopyEditor" contenteditable="true" data-placeholder="Testo del post, caption, hook..."></div>
+          <div class="rich-editor-wrap">
+            <div class="rich-editor" id="postCopyEditor" contenteditable="true" data-placeholder="Testo del post, caption, hook..."></div>
+            <small class="rich-counter" id="copyCounter">0 caratteri</small>
+          </div>
         </section>
 
         <section class="rich-field">
