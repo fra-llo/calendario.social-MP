@@ -1237,6 +1237,7 @@ body.is-dark .period-button:focus-visible {
 
 .calendar-grid {
   gap: 8px;
+  overflow: visible;
 }
 
 .calendar-grid.is-week-view .day-cell {
@@ -1252,6 +1253,7 @@ body.is-dark .period-button:focus-visible {
 }
 
 .day-cell {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1261,6 +1263,7 @@ body.is-dark .period-button:focus-visible {
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: 0 1px 0 rgba(31, 35, 40, 0.03);
+  overflow: visible;
 }
 
 .day-cell.is-muted {
@@ -1364,6 +1367,7 @@ body.is-dark .period-button:focus-visible {
 }
 
 .post-chip {
+  position: relative;
   display: grid;
   gap: 4px;
   width: 100%;
@@ -1380,11 +1384,16 @@ body.is-dark .period-button:focus-visible {
   box-shadow: 0 1px 0 rgba(20, 20, 20, 0.03);
   line-height: 1.25;
   text-align: left;
+  transform-origin: top left;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
 }
 
-.post-chip:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-soft);
+.post-chip:hover,
+.post-chip:focus-visible {
+  z-index: 8;
+  border-color: color-mix(in srgb, var(--post-color, var(--accent)) 44%, var(--line));
+  transform: translateY(-2px) scale(1.035);
+  box-shadow: 0 12px 26px rgba(24, 26, 31, 0.14);
 }
 
 .event-mode-label {
@@ -1485,6 +1494,56 @@ body.is-dark .period-button:focus-visible {
   padding: 2px 7px;
   color: color-mix(in srgb, var(--post-color, var(--accent)) 72%, var(--ink));
   background: color-mix(in srgb, var(--post-color, var(--accent)) 14%, var(--surface));
+}
+
+.post-chip-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 8px;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  border-top: 1px solid color-mix(in srgb, var(--post-color, var(--accent)) 18%, var(--line));
+  margin-top: 0;
+  padding-top: 0;
+  transition: max-height 140ms ease, opacity 120ms ease, margin-top 140ms ease, padding-top 140ms ease;
+}
+
+.post-chip:hover .post-chip-summary,
+.post-chip:focus-visible .post-chip-summary {
+  max-height: 120px;
+  opacity: 1;
+  margin-top: 4px;
+  padding-top: 7px;
+}
+
+.post-chip-summary span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  white-space: normal;
+}
+
+.post-chip-summary b {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.post-chip-summary em {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 820;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .post-chip[data-priority="Alta"] {
