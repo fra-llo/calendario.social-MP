@@ -1095,26 +1095,26 @@ body.is-dark .period-button:focus-visible {
   text-align: left;
 }
 
+.menu-icon {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--muted);
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
 .menu-item:hover {
   background: var(--accent-soft);
   color: var(--accent);
 }
 
-.menu-item::before {
-  display: inline-grid;
-  place-items: center;
-  flex: 0 0 22px;
-  width: 22px;
-  color: var(--ink);
-  font-size: 1.08rem;
-  line-height: 1;
+.menu-item:hover .menu-icon {
+  color: var(--accent);
 }
-
-#settingsButton::before { content: "⚙"; }
-#statsButton::before { content: "▥"; }
-#printButton::before { content: "⎙"; }
-#trashButton::before { content: "🗑"; }
-#logoutButton::before { content: "↪"; }
 
 .collapsible-panel {
   display: block;
