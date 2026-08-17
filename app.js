@@ -390,7 +390,9 @@ fields.copyEditor.addEventListener("input", updateCopyCounter);
 fields.notesEditor.addEventListener("input", syncRichEditorsToFields);
 fields.goal.addEventListener("change", updateOtherFieldVisibility);
 fields.theme.addEventListener("change", updateOtherFieldVisibility);
+document.addEventListener("selectionchange", rememberRichEditorSelection);
 document.querySelectorAll("[data-rich-toolbar]").forEach((toolbar) => {
+  toolbar.addEventListener("mousedown", preserveRichEditorSelection);
   toolbar.addEventListener("click", handleRichToolbarAction);
   toolbar.addEventListener("change", handleRichToolbarAction);
 });
@@ -1665,6 +1667,8 @@ function syncRichEditorsToFields() {
   fields.notes.value = sanitizeRichHtml(fields.notesEditor.innerHTML).trim();
 }
 
+let savedRichSelection = null;
+
 function handleRichToolbarAction(event) {
   const control = event.target.closest("[data-rich-command], [data-rich-action]");
   if (!control) return;
@@ -1674,6 +1678,7 @@ function handleRichToolbarAction(event) {
   const toolbar = control.closest("[data-rich-toolbar]");
   const editor = document.querySelector(`#${toolbar.dataset.richToolbar}`);
   if (!editor) return;
+  restoreRichEditorSelection(editor);
   editor.focus();
   if (control.dataset.richAction === "toggleCase") {
     toggleSelectionCase(editor);
@@ -1686,6 +1691,31 @@ function handleRichToolbarAction(event) {
   document.execCommand(command, false, value);
   syncRichEditorsToFields();
   updateCopyCounter();
+}
+
+function rememberRichEditorSelection() {
+  const selection = window.getSelection();
+  if (!selection.rangeCount) return;
+  const node = selection.anchorNode;
+  const editor = node?.nodeType === Node.ELEMENT_NODE ? node.closest?.(".rich-editor") : node?.parentElement?.closest(".rich-editor");
+  if (!editor) return;
+  savedRichSelection = {
+    editorId: editor.id,
+    range: selection.getRangeAt(0).cloneRange(),
+  };
+}
+
+function restoreRichEditorSelection(editor) {
+  if (!savedRichSelection || savedRichSelection.editorId !== editor.id) return;
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(savedRichSelection.range);
+}
+
+function preserveRichEditorSelection(event) {
+  const control = event.target.closest("button[data-rich-command], button[data-rich-action]");
+  if (!control) return;
+  event.preventDefault();
 }
 
 function toggleSelectionCase(editor) {
