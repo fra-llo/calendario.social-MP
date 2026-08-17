@@ -628,14 +628,16 @@
               <button type="button" title="Corsivo" data-rich-command="italic"><em>C</em></button>
               <button type="button" title="Sottolineato" data-rich-command="underline"><u>S</u></button>
               <button type="button" title="Barrato" data-rich-command="strikeThrough"><s>ab</s></button>
-              <label class="rich-color-tool" title="Colore testo">A<input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo"></label>
-              <label class="rich-color-tool" title="Evidenziatore">▰<input type="color" value="#fff2a8" data-rich-command="backColor" aria-label="Evidenziatore"></label>
+              <label class="rich-color-tool" style="--rich-picked-color: #202329;" title="Colore testo">A<input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo"></label>
+              <label class="rich-color-tool" style="--rich-picked-color: #fff2a8;" title="Evidenziatore">▰<input type="color" value="#fff2a8" data-rich-command="backColor" aria-label="Evidenziatore"></label>
               <button type="button" title="Elenco puntato" data-rich-command="insertUnorderedList">•≡</button>
               <button type="button" title="Elenco numerato" data-rich-command="insertOrderedList">1≡</button>
-              <button type="button" title="Allinea a sinistra" data-rich-command="justifyLeft">☰</button>
-              <button type="button" title="Allinea al centro" data-rich-command="justifyCenter">≡</button>
-              <button type="button" title="Allinea a destra" data-rich-command="justifyRight">☷</button>
-              <button type="button" title="Giustifica" data-rich-command="justifyFull">▤</button>
+              <span class="rich-align-group" aria-label="Allineamento testo">
+                <button type="button" title="Allinea a sinistra" data-rich-command="justifyLeft">☰</button>
+                <button type="button" title="Allinea al centro" data-rich-command="justifyCenter">≡</button>
+                <button type="button" title="Allinea a destra" data-rich-command="justifyRight">☷</button>
+                <button type="button" title="Giustifica" data-rich-command="justifyFull">▤</button>
+              </span>
               <button type="button" title="Pulisci formattazione" data-rich-command="removeFormat">⌫</button>
             </div>
           </details>
@@ -668,14 +670,16 @@
               <button type="button" title="Corsivo" data-rich-command="italic"><em>C</em></button>
               <button type="button" title="Sottolineato" data-rich-command="underline"><u>S</u></button>
               <button type="button" title="Barrato" data-rich-command="strikeThrough"><s>ab</s></button>
-              <label class="rich-color-tool" title="Colore testo">A<input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo"></label>
-              <label class="rich-color-tool" title="Evidenziatore">▰<input type="color" value="#fff2a8" data-rich-command="backColor" aria-label="Evidenziatore"></label>
+              <label class="rich-color-tool" style="--rich-picked-color: #202329;" title="Colore testo">A<input type="color" value="#202329" data-rich-command="foreColor" aria-label="Colore testo"></label>
+              <label class="rich-color-tool" style="--rich-picked-color: #fff2a8;" title="Evidenziatore">▰<input type="color" value="#fff2a8" data-rich-command="backColor" aria-label="Evidenziatore"></label>
               <button type="button" title="Elenco puntato" data-rich-command="insertUnorderedList">•≡</button>
               <button type="button" title="Elenco numerato" data-rich-command="insertOrderedList">1≡</button>
-              <button type="button" title="Allinea a sinistra" data-rich-command="justifyLeft">☰</button>
-              <button type="button" title="Allinea al centro" data-rich-command="justifyCenter">≡</button>
-              <button type="button" title="Allinea a destra" data-rich-command="justifyRight">☷</button>
-              <button type="button" title="Giustifica" data-rich-command="justifyFull">▤</button>
+              <span class="rich-align-group" aria-label="Allineamento testo">
+                <button type="button" title="Allinea a sinistra" data-rich-command="justifyLeft">☰</button>
+                <button type="button" title="Allinea al centro" data-rich-command="justifyCenter">≡</button>
+                <button type="button" title="Allinea a destra" data-rich-command="justifyRight">☷</button>
+                <button type="button" title="Giustifica" data-rich-command="justifyFull">▤</button>
+              </span>
               <button type="button" title="Pulisci formattazione" data-rich-command="removeFormat">⌫</button>
             </div>
           </details>

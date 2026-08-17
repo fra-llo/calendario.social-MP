@@ -392,8 +392,10 @@ fields.goal.addEventListener("change", updateOtherFieldVisibility);
 fields.theme.addEventListener("change", updateOtherFieldVisibility);
 document.addEventListener("selectionchange", rememberRichEditorSelection);
 document.querySelectorAll("[data-rich-toolbar]").forEach((toolbar) => {
+  toolbar.addEventListener("pointerdown", rememberRichToolbarSelection, true);
   toolbar.addEventListener("mousedown", preserveRichEditorSelection);
   toolbar.addEventListener("click", handleRichToolbarAction);
+  toolbar.addEventListener("input", handleRichToolbarAction);
   toolbar.addEventListener("change", handleRichToolbarAction);
 });
 addAssetLinkButton.addEventListener("click", () => addAssetLinkRow());
@@ -1686,11 +1688,17 @@ function handleRichToolbarAction(event) {
     updateCopyCounter();
     return;
   }
-  const command = control.dataset.richCommand;
+  const command = control.dataset.richCommand === "backColor" ? "hiliteColor" : control.dataset.richCommand;
   const value = control.dataset.richValue || (control.type === "color" || control.tagName === "SELECT" ? control.value : null);
+  if (control.type === "color") control.closest(".rich-color-tool")?.style.setProperty("--rich-picked-color", control.value);
   document.execCommand(command, false, value);
   syncRichEditorsToFields();
   updateCopyCounter();
+}
+
+function rememberRichToolbarSelection(event) {
+  if (!event.target.closest("[data-rich-command], [data-rich-action], .rich-color-tool")) return;
+  rememberRichEditorSelection();
 }
 
 function rememberRichEditorSelection() {

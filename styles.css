@@ -410,6 +410,19 @@ textarea {
   font-size: 0.88rem;
 }
 
+.rich-align-group {
+  display: inline-grid;
+  grid-template-columns: repeat(4, 34px);
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.rich-align-group button {
+  min-width: 34px;
+  width: 34px;
+  padding: 5px 0;
+}
+
 .rich-color-tool {
   position: relative;
   display: inline-flex;
@@ -433,7 +446,7 @@ textarea {
   left: 6px;
   height: 3px;
   border-radius: 999px;
-  background: currentColor;
+  background: var(--rich-picked-color, currentColor);
 }
 
 .rich-color-tool input[type="color"] {
