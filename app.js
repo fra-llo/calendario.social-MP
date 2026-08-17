@@ -1576,7 +1576,6 @@ function renderDayDialogList(dayPosts) {
 
 function applyPostColor(element, color) {
   if (!isValidColor(color)) return;
-  element.style.setProperty("--post-color", color);
   element.style.borderLeftColor = color;
   element.style.backgroundColor = `${color}1a`;
 }
