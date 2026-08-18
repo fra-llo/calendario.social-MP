@@ -521,29 +521,23 @@ textarea {
   gap: 12px;
 }
 
-.mention-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-}
-
-.comments-field textarea {
-  min-height: 88px;
-  resize: vertical;
-}
-
 .comments-list {
   display: grid;
   gap: 8px;
+  max-height: 260px;
+  overflow: auto;
 }
 
 .comment-item {
   display: grid;
   gap: 6px;
+  justify-self: start;
+  width: min(88%, 620px);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 10px;
-  background: var(--surface-soft);
+  border-radius: 14px 14px 14px 4px;
+  padding: 10px 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .comment-item header {
@@ -578,6 +572,52 @@ textarea {
   color: var(--accent);
   background: var(--accent-soft);
   font-weight: 850;
+}
+
+.chat-composer {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.chat-composer textarea {
+  min-height: 58px;
+  max-height: 160px;
+  resize: vertical;
+}
+
+.mention-suggestions {
+  position: absolute;
+  right: 102px;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  display: grid;
+  min-width: 240px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.mention-suggestions button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: transparent;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mention-suggestions button:hover,
+.mention-suggestions button:focus-visible {
+  background: var(--accent-soft);
 }
 
 fieldset {

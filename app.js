@@ -215,6 +215,7 @@ const currentUserUid = document.querySelector("#currentUserUid");
 const accessNote = document.querySelector("#accessNote");
 const adminAccessControls = document.querySelector("#adminAccessControls");
 const memberUidInput = document.querySelector("#memberUidInput");
+const memberNameInput = document.querySelector("#memberNameInput");
 const memberRoleInput = document.querySelector("#memberRoleInput");
 const memberList = document.querySelector("#memberList");
 const visibleFieldSettings = {
@@ -299,7 +300,6 @@ const fields = {
   notes: document.querySelector("#postNotes"),
   notesEditor: document.querySelector("#postNotesEditor"),
   commentDraft: document.querySelector("#postCommentDraft"),
-  commentMention: document.querySelector("#commentMentionSelect"),
   recurrence: document.querySelector("#postRecurrence"),
   checkIdea: document.querySelector("#checkIdea"),
   checkCopy: document.querySelector("#checkCopy"),
@@ -310,6 +310,9 @@ const fields = {
 
 const assetLinksList = document.querySelector("#assetLinksList");
 const addAssetLinkButton = document.querySelector("#addAssetLinkButton");
+const postCommentsList = document.querySelector("#postCommentsList");
+const mentionSuggestions = document.querySelector("#mentionSuggestions");
+const sendCommentButton = document.querySelector("#sendCommentButton");
 
 const cloud = {
   enabled: false,
@@ -394,8 +397,9 @@ fields.copyEditor.addEventListener("input", updateCopyCounter);
 fields.notesEditor.addEventListener("input", syncRichEditorsToFields);
 fields.goal.addEventListener("change", updateOtherFieldVisibility);
 fields.theme.addEventListener("change", updateOtherFieldVisibility);
-fields.owner.addEventListener("input", () => populateMentionSelect({ owner: fields.owner.value }));
-document.querySelector("#insertMentionButton").addEventListener("click", insertSelectedMention);
+fields.commentDraft.addEventListener("input", updateMentionSuggestions);
+fields.commentDraft.addEventListener("keydown", handleCommentDraftKeydown);
+sendCommentButton.addEventListener("click", sendCommentFromComposer);
 document.addEventListener("selectionchange", rememberRichEditorSelection);
 document.querySelectorAll("[data-rich-toolbar]").forEach((toolbar) => {
   toolbar.addEventListener("pointerdown", rememberRichToolbarSelection, true);
@@ -870,6 +874,7 @@ function renderMembers() {
     : "Accedi per gestire la lista utenti.";
   adminAccessControls.hidden = !isAdmin;
   memberUidInput.disabled = !isAdmin;
+  memberNameInput.disabled = !isAdmin;
   memberRoleInput.disabled = !isAdmin;
   document.querySelector("#addMemberButton").disabled = !isAdmin;
 
@@ -887,9 +892,9 @@ function renderMembers() {
 
     const info = document.createElement("div");
     const title = document.createElement("strong");
-    title.textContent = member.email || member.name || member.uid;
+    title.textContent = member.name || member.email || member.uid;
     const meta = document.createElement("small");
-    meta.textContent = `${member.role || "editor"} - ${member.uid}`;
+    meta.textContent = [member.role || "editor", member.email, member.uid].filter(Boolean).join(" - ");
     info.append(title, meta);
 
     row.append(info);
@@ -1049,16 +1054,17 @@ function closeHamburgerMenu() {
 function addMember() {
   if (!cloudActive() || cloud.member?.role !== "admin") return;
   const uid = memberUidInput.value.trim();
+  const name = memberNameInput.value.trim();
   if (!uid) return;
   membersCollection().doc(uid).set({
     uid,
-    email: "",
-    name: "",
+    name,
     role: memberRoleInput.value,
-    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     createdBy: cloud.user.uid,
   }, { merge: true }).then(() => {
     memberUidInput.value = "";
+    memberNameInput.value = "";
   }).catch((error) => {
     accessNote.textContent = error.message;
   });
@@ -2660,8 +2666,8 @@ function openPostDialog(post = {}) {
   setRichEditorValue(fields.notesEditor, fields.notes, normalized.notes || "");
   editingComments = [...(normalized.comments || [])];
   fields.commentDraft.value = "";
-  populateMentionSelect(normalized);
-  renderCommentsList(document.querySelector("#postCommentsList"), editingComments, { emptyText: "Nessun commento interno." });
+  closeMentionSuggestions();
+  renderCommentsList(postCommentsList, editingComments, { emptyText: "Nessun commento interno." });
   fields.recurrence.value = normalized.recurrence || "none";
   fields.checkIdea.checked = Boolean(normalized.checklist.idea);
   fields.checkCopy.checked = Boolean(normalized.checklist.copy);
@@ -2909,7 +2915,6 @@ function collectPostFromForm() {
   };
   const stage = checklistStageLabel({ checklist });
   const status = stage === "Checklist: nessuno stato" ? "Idea" : stage;
-  const comments = collectCommentsFromForm();
   return normalizePost({
     id: fields.id.value || createId(),
     title: fields.title.value.trim(),
@@ -2931,59 +2936,103 @@ function collectPostFromForm() {
     assets: assetLinks.map((asset) => asset.title).filter(Boolean).join(", "),
     copy: fields.copy.value.trim(),
     notes: fields.notes.value.trim(),
-    comments,
+    comments: editingComments,
     recurrence: fields.recurrence.value,
     checklist,
   });
 }
 
-function collectCommentsFromForm() {
+function sendCommentFromComposer() {
   const draft = fields.commentDraft.value.trim();
-  if (!draft) return editingComments;
-  return [
-    ...editingComments,
-    normalizeComment({
-      id: createId(),
-      text: draft,
-      mentions: extractMentions(draft),
-      authorUid: cloud.user?.uid || "",
-      authorEmail: cloud.user?.email || "",
-      authorName: cloud.user?.displayName || cloud.user?.email || "Utente locale",
-      createdAt: new Date().toISOString(),
-    }),
-  ];
+  if (!draft) return;
+  const comment = normalizeComment({
+    id: createId(),
+    text: draft,
+    mentions: extractMentions(draft),
+    authorUid: cloud.user?.uid || "",
+    authorEmail: cloud.user?.email || "",
+    authorName: getCurrentMemberName(),
+    createdAt: new Date().toISOString(),
+  });
+  if (!comment) return;
+  editingComments = [...editingComments, comment];
+  fields.commentDraft.value = "";
+  closeMentionSuggestions();
+  renderCommentsList(postCommentsList, editingComments, { emptyText: "Nessun commento interno." });
+  saveEditingCommentsIfExisting();
 }
 
-function insertSelectedMention() {
-  const value = fields.commentMention.value;
-  if (!value) return;
-  const mention = `@${value}`;
+function saveEditingCommentsIfExisting() {
+  const id = fields.id.value;
+  if (!id) return;
+  const index = state.posts.findIndex((post) => post.id === id);
+  if (index < 0) return;
+  state.posts[index] = normalizePost({
+    ...state.posts[index],
+    comments: editingComments,
+    history: [...(state.posts[index].history || []), historyEntry("Commento interno aggiunto")],
+  });
+  persistPosts();
+  saveCloudPost(state.posts[index]);
+}
+
+function handleCommentDraftKeydown(event) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendCommentFromComposer();
+    return;
+  }
+  if (event.key === "Escape") closeMentionSuggestions();
+}
+
+function updateMentionSuggestions() {
+  const query = currentMentionQuery();
+  if (!query) {
+    closeMentionSuggestions();
+    return;
+  }
+  const people = getMentionPeople({ owner: fields.owner.value })
+    .filter((person) => person.handle.toLowerCase().includes(query.toLowerCase()) || person.label.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 8);
+  if (!people.length) {
+    closeMentionSuggestions();
+    return;
+  }
+  mentionSuggestions.innerHTML = "";
+  people.forEach((person) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = `@${person.handle} - ${person.label}`;
+    button.addEventListener("click", () => insertMentionAtCursor(person.handle));
+    mentionSuggestions.append(button);
+  });
+  mentionSuggestions.hidden = false;
+}
+
+function currentMentionQuery() {
   const target = fields.commentDraft;
-  const start = target.selectionStart ?? target.value.length;
-  const end = target.selectionEnd ?? target.value.length;
-  const prefix = target.value.slice(0, start);
-  const suffix = target.value.slice(end);
-  const spacerBefore = prefix && !/\s$/.test(prefix) ? " " : "";
-  const spacerAfter = suffix && !/^\s/.test(suffix) ? " " : "";
-  target.value = `${prefix}${spacerBefore}${mention}${spacerAfter}${suffix}`;
-  const nextPosition = `${prefix}${spacerBefore}${mention}`.length;
+  const cursor = target.selectionStart ?? target.value.length;
+  const beforeCursor = target.value.slice(0, cursor);
+  const match = beforeCursor.match(/(^|\s)@([\p{L}\p{N}._-]*)$/u);
+  return match ? match[2] : "";
+}
+
+function insertMentionAtCursor(handle) {
+  const target = fields.commentDraft;
+  const cursor = target.selectionStart ?? target.value.length;
+  const beforeCursor = target.value.slice(0, cursor);
+  const afterCursor = target.value.slice(cursor);
+  const replaced = beforeCursor.replace(/(^|\s)@([\p{L}\p{N}._-]*)$/u, `$1@${handle} `);
+  target.value = `${replaced}${afterCursor}`;
+  const nextPosition = replaced.length;
   target.focus();
   target.setSelectionRange(nextPosition, nextPosition);
+  closeMentionSuggestions();
 }
 
-function populateMentionSelect(post = {}) {
-  const people = getMentionPeople(post);
-  fields.commentMention.innerHTML = "";
-  const empty = document.createElement("option");
-  empty.value = "";
-  empty.textContent = "Menziona...";
-  fields.commentMention.append(empty);
-  people.forEach((person) => {
-    const option = document.createElement("option");
-    option.value = person.handle;
-    option.textContent = person.label;
-    fields.commentMention.append(option);
-  });
+function closeMentionSuggestions() {
+  mentionSuggestions.hidden = true;
+  mentionSuggestions.innerHTML = "";
 }
 
 function getMentionPeople(post = {}) {
@@ -2999,6 +3048,11 @@ function getMentionPeople(post = {}) {
   addPerson(post.owner);
   cloud.members.forEach((member) => addPerson(member.name || member.email, member.uid));
   return people;
+}
+
+function getCurrentMemberName() {
+  const member = cloud.members.find((item) => item.uid === cloud.user?.uid);
+  return member?.name || cloud.user?.displayName || cloud.user?.email || "Utente locale";
 }
 
 function mentionHandle(value) {

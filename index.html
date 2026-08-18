@@ -708,16 +708,14 @@
         <section class="comments-field">
           <div class="field-heading-row">
             <span class="field-heading">Commenti interni</span>
-            <span class="form-note">Usa le menzioni per richiamare persone del team.</span>
+            <span class="form-note">Scrivi @ per menzionare una persona.</span>
           </div>
           <div class="comments-list" id="postCommentsList"></div>
-          <div class="mention-row">
-            <select id="commentMentionSelect" aria-label="Menziona utente">
-              <option value="">Menziona...</option>
-            </select>
-            <button class="secondary-action" id="insertMentionButton" type="button">@ Menziona</button>
+          <div class="chat-composer">
+            <textarea id="postCommentDraft" rows="2" maxlength="600" placeholder="Scrivi un commento interno... usa @nome per menzionare"></textarea>
+            <div class="mention-suggestions" id="mentionSuggestions" hidden></div>
+            <button class="primary-action" id="sendCommentButton" type="button">Invia</button>
           </div>
-          <textarea id="postCommentDraft" rows="3" maxlength="600" placeholder="Scrivi un commento interno..."></textarea>
         </section>
 
         <details class="history-box" id="historyBox" hidden>
@@ -859,6 +857,10 @@
               <label>
                 UID utente da aggiungere
                 <input id="memberUidInput" type="text" placeholder="UID Firebase dell'utente">
+              </label>
+              <label>
+                Nome utente
+                <input id="memberNameInput" type="text" maxlength="80" placeholder="Es. Nicole">
               </label>
               <label>
                 Ruolo
