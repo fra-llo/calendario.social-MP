@@ -324,8 +324,8 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 44px;
-  padding: 0 18px;
+  min-height: 38px;
+  padding: 0 16px;
   color: var(--ink);
   font-size: 0.96rem;
   font-weight: 900;
