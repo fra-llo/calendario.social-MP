@@ -2225,7 +2225,7 @@ body.is-dark .primary-action {
   font-size: 1rem;
 }
 
-.content-detail-title {
+.content-detail-panel .content-detail-title {
   color: var(--accent);
   font-size: clamp(1.9rem, 3vw, 2.55rem);
   font-weight: 900;
