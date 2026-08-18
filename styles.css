@@ -1597,6 +1597,47 @@ body.is-dark .primary-action {
   gap: 7px;
 }
 
+.timed-post-list {
+  gap: 9px;
+}
+
+.time-slot {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.time-slot:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.time-slot-label {
+  position: sticky;
+  top: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.time-slot-items {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.time-slot.is-unscheduled {
+  margin-top: 2px;
+}
+
+.time-slot.is-unscheduled .time-slot-label {
+  color: var(--warning);
+}
+
 .more-posts {
   min-height: 30px;
   border: 1px dashed var(--line);
@@ -2783,6 +2824,10 @@ form footer > div {
 
   .day-detail-item {
     grid-template-columns: 1fr;
+  }
+
+  .time-slot {
+    grid-template-columns: 38px minmax(0, 1fr);
   }
 
   .theme-editor-row {

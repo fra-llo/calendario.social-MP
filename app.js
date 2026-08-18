@@ -1192,16 +1192,14 @@ function createDayCell(date, todayKey) {
 
   top.append(dayButton, count, addButton);
 
-  const list = document.createElement("div");
-  list.className = "post-list";
-  const visiblePosts = isMonthView ? dayPosts.slice(0, 3) : dayPosts;
-  visiblePosts.forEach((post) => list.append(createPostChip(post)));
+  const list = isMonthView ? createCompactPostList(dayPosts) : createTimedPostList(dayPosts);
+  const visibleCount = Number(list.dataset.visibleCount || 0);
 
-  if (isMonthView && dayPosts.length > visiblePosts.length) {
+  if (isMonthView && dayPosts.length > visibleCount) {
     const more = document.createElement("button");
     more.className = "more-posts";
     more.type = "button";
-    more.textContent = `+ ${dayPosts.length - visiblePosts.length} altri`;
+    more.textContent = `+ ${dayPosts.length - visibleCount} altri`;
     more.addEventListener("click", () => openDayDialog(dateKey));
     list.append(more);
   }
@@ -1215,6 +1213,62 @@ function createDayCell(date, todayKey) {
 
   cell.append(top, list);
   return cell;
+}
+
+function createCompactPostList(dayPosts) {
+  const list = document.createElement("div");
+  list.className = "post-list";
+  const visiblePosts = dayPosts.slice(0, 3);
+  list.dataset.visibleCount = String(visiblePosts.length);
+  visiblePosts.forEach((post) => list.append(createPostChip(post)));
+  return list;
+}
+
+function createTimedPostList(dayPosts) {
+  const list = document.createElement("div");
+  list.className = "post-list timed-post-list";
+  const withTime = dayPosts.filter((post) => isValidPostTime(post.time));
+  const withoutTime = dayPosts.filter((post) => !isValidPostTime(post.time));
+
+  if (withTime.length) {
+    groupTimedPosts(withTime).forEach(([hour, posts]) => {
+      const slot = document.createElement("section");
+      slot.className = "time-slot";
+      const label = document.createElement("span");
+      label.className = "time-slot-label";
+      label.textContent = hour;
+      const items = document.createElement("div");
+      items.className = "time-slot-items";
+      posts.forEach((post) => items.append(createPostChip(post)));
+      slot.append(label, items);
+      list.append(slot);
+    });
+  }
+
+  if (withoutTime.length) {
+    const slot = document.createElement("section");
+    slot.className = "time-slot is-unscheduled";
+    const label = document.createElement("span");
+    label.className = "time-slot-label";
+    label.textContent = "Senza orario";
+    const items = document.createElement("div");
+    items.className = "time-slot-items";
+    withoutTime.forEach((post) => items.append(createPostChip(post)));
+    slot.append(label, items);
+    list.append(slot);
+  }
+
+  return list;
+}
+
+function groupTimedPosts(posts) {
+  const groups = posts.reduce((accumulator, post) => {
+    const time = post.time;
+    accumulator[time] = accumulator[time] || [];
+    accumulator[time].push(post);
+    return accumulator;
+  }, {});
+  return Object.entries(groups).sort(([first], [second]) => first.localeCompare(second));
 }
 
 function createEventDayCell(date, todayKey) {
@@ -3981,6 +4035,10 @@ function groupBy(items, key) {
 
 function sortPosts(a, b) {
   return `${a.time || "99:99"}${a.title}`.localeCompare(`${b.time || "99:99"}${b.title}`);
+}
+
+function isValidPostTime(time) {
+  return /^\d{2}:\d{2}$/.test(String(time || ""));
 }
 
 function checklistProgress(post) {
