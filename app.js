@@ -1932,7 +1932,7 @@ function unlockSelectedContentEdit() {
 
 function getSortedListPosts() {
   const sortKey = listSortSelect.value;
-  return filteredPosts().sort((a, b) => {
+  return getMonthPosts(filteredPosts(), state.visibleDate).sort((a, b) => {
     if (sortKey === "date") return `${a.date}${a.time || ""}`.localeCompare(`${b.date}${b.time || ""}`);
     if (sortKey === "platform") return `${a.platform}${a.date}`.localeCompare(`${b.platform}${b.date}`);
     if (sortKey === "status") return `${a.status}${a.date}`.localeCompare(`${b.status}${b.date}`);
