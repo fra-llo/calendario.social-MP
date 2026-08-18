@@ -2227,10 +2227,13 @@ body.is-dark .primary-action {
 
 .content-detail-panel .content-detail-title {
   color: var(--accent);
-  font-size: clamp(1.9rem, 3vw, 2.55rem);
+  overflow: hidden;
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
   font-weight: 900;
   line-height: 1.1;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .content-detail-panel footer {
