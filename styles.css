@@ -2262,29 +2262,36 @@ body.is-dark .primary-action {
 .content-detail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 8px;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-soft) 62%, var(--surface) 38%);
 }
 
 .content-detail-grid div {
   display: grid;
   gap: 6px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 11px 12px;
-  background: color-mix(in srgb, var(--surface-soft) 72%, var(--surface) 28%);
+  min-height: 66px;
+  border: 0;
+  border-right: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  padding: 12px 14px;
+  background: transparent;
 }
 
 .content-detail-grid span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 900;
   line-height: 1;
   text-transform: uppercase;
+  letter-spacing: 0.035em;
 }
 
 .content-detail-grid strong {
   color: var(--ink);
-  font-size: 1rem;
+  font-size: 1.02rem;
   line-height: 1.2;
 }
 
@@ -2864,6 +2871,11 @@ form footer > div {
   .stats-layout,
   .content-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .content-detail-grid div {
+    min-height: auto;
+    border-right: 0;
   }
 
   .content-detail-panel {
