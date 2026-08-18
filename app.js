@@ -1991,14 +1991,13 @@ function openContentDetailDialog(post) {
     ["Piattaforma", formatPlatformLabel(post.platform)],
     ["Categoria", post.format || "-"],
     ["Stato", formatStatusLabel(getPostWorkStatus(post))],
+    ["Responsabile", post.owner || "Senza responsabile"],
     ["Priorità", post.priority || "Media"],
     ["Tema", [formatThemeLabel(theme), post.themeOther || ""].filter(Boolean).join(" - ") || "-"],
-    ["Responsabile", post.owner || "Senza responsabile"],
     ["Obiettivo", post.goal || "-"],
-  ].forEach(([label, value], index) => {
+  ].forEach(([label, value]) => {
     const item = document.createElement("div");
     item.className = "content-detail-field";
-    if (index < 3) item.classList.add("is-primary");
     const labelNode = document.createElement("span");
     labelNode.textContent = label;
     const valueNode = document.createElement("strong");

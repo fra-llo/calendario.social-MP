@@ -2276,13 +2276,6 @@ body.is-dark .primary-action {
   background: transparent;
 }
 
-.content-detail-field.is-primary {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px 14px;
-  background: color-mix(in srgb, var(--surface-soft) 68%, var(--surface) 32%);
-}
-
 .content-detail-grid span {
   color: var(--muted);
   font-size: 0.72rem;
@@ -2297,10 +2290,6 @@ body.is-dark .primary-action {
   font-size: 1rem;
   line-height: 1.2;
   text-align: left;
-}
-
-.content-detail-field.is-primary strong {
-  font-size: 1.12rem;
 }
 
 .content-detail-panel section p {
