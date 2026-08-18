@@ -2365,6 +2365,32 @@ body.is-dark .primary-action {
   white-space: nowrap;
 }
 
+.admin-access-controls {
+  display: grid;
+  gap: 10px;
+}
+
+.access-add-row {
+  display: grid;
+  grid-template-columns: minmax(230px, 1.1fr) minmax(190px, 0.9fr) minmax(150px, 0.7fr) auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.access-add-row label {
+  min-width: 0;
+}
+
+.access-add-row input,
+.access-add-row select,
+.access-add-row button {
+  min-height: 48px;
+}
+
+.access-add-row button {
+  white-space: nowrap;
+}
+
 .member-list {
   display: grid;
   gap: 8px;
@@ -2547,6 +2573,10 @@ form footer > div {
     grid-template-columns: 1fr;
   }
 
+  .access-add-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .stats-card:nth-child(1),
   .stats-card:nth-child(2),
   .stats-card:nth-child(3),
@@ -2693,6 +2723,14 @@ form footer > div {
 
   .theme-editor-row .danger-action {
     grid-column: 1 / -1;
+  }
+
+  .access-add-row {
+    grid-template-columns: 1fr;
+  }
+
+  .access-add-row button {
+    width: 100%;
   }
 
   fieldset {
