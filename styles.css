@@ -2453,6 +2453,43 @@ form {
   padding: 22px;
 }
 
+#postDialog form {
+  gap: 11px;
+  padding: 18px 22px;
+}
+
+#postDialog label {
+  gap: 5px;
+}
+
+#postDialog input,
+#postDialog select,
+#postDialog textarea {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+#postDialog .form-row {
+  gap: 12px;
+}
+
+#postDialog .asset-links-field,
+#postDialog .rich-field {
+  gap: 6px;
+}
+
+#postDialog .asset-link-row {
+  gap: 6px;
+}
+
+#postDialog fieldset {
+  padding: 10px 14px;
+}
+
+#postDialog .fold-field > summary {
+  min-height: 34px;
+}
+
 form h2,
 dialog h2 {
   letter-spacing: 0;
@@ -2605,6 +2642,11 @@ form footer > div {
   }
 
   #settingsDialog form {
+    padding: 16px;
+  }
+
+  #postDialog form {
+    gap: 10px;
     padding: 16px;
   }
 
