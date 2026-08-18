@@ -2372,7 +2372,7 @@ body.is-dark .primary-action {
 
 .access-add-row {
   display: grid;
-  grid-template-columns: minmax(230px, 1.1fr) minmax(190px, 0.9fr) minmax(150px, 0.7fr) auto;
+  grid-template-columns: minmax(250px, 1.1fr) minmax(220px, 0.9fr) minmax(150px, 0.6fr) minmax(170px, auto);
   align-items: end;
   gap: 12px;
 }
@@ -2429,6 +2429,16 @@ dialog {
   color: var(--ink);
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+#settingsDialog {
+  width: min(1120px, calc(100vw - 40px));
+  max-width: calc(100vw - 40px);
+  overflow-x: hidden;
+}
+
+#settingsDialog .settings-form {
+  overflow-x: hidden;
 }
 
 dialog::backdrop {
@@ -2586,6 +2596,16 @@ form footer > div {
 }
 
 @media (max-width: 760px) {
+  #settingsDialog {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+  }
+
+  #settingsDialog form {
+    padding: 16px;
+  }
+
   .sidebar,
   .workspace {
     padding: 18px;
