@@ -264,6 +264,7 @@ const contentDetailTitle = document.querySelector("#contentDetailTitle");
 const contentDetailGrid = document.querySelector("#contentDetailGrid");
 const contentDetailCopy = document.querySelector("#contentDetailCopy");
 const contentDetailNotes = document.querySelector("#contentDetailNotes");
+const contentDetailComments = document.querySelector("#contentDetailComments");
 const unlockContentEditButton = document.querySelector("#unlockContentEdit");
 
 const viewButtons = {
@@ -297,6 +298,8 @@ const fields = {
   copyEditor: document.querySelector("#postCopyEditor"),
   notes: document.querySelector("#postNotes"),
   notesEditor: document.querySelector("#postNotesEditor"),
+  commentDraft: document.querySelector("#postCommentDraft"),
+  commentMention: document.querySelector("#commentMentionSelect"),
   recurrence: document.querySelector("#postRecurrence"),
   checkIdea: document.querySelector("#checkIdea"),
   checkCopy: document.querySelector("#checkCopy"),
@@ -334,6 +337,7 @@ let selectedEvent = null;
 let selectedContentDetail = null;
 let listSelectionDrag = null;
 let suppressListClick = false;
+let editingComments = [];
 
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
@@ -390,6 +394,8 @@ fields.copyEditor.addEventListener("input", updateCopyCounter);
 fields.notesEditor.addEventListener("input", syncRichEditorsToFields);
 fields.goal.addEventListener("change", updateOtherFieldVisibility);
 fields.theme.addEventListener("change", updateOtherFieldVisibility);
+fields.owner.addEventListener("input", () => populateMentionSelect({ owner: fields.owner.value }));
+document.querySelector("#insertMentionButton").addEventListener("click", insertSelectedMention);
 document.addEventListener("selectionchange", rememberRichEditorSelection);
 document.querySelectorAll("[data-rich-toolbar]").forEach((toolbar) => {
   toolbar.addEventListener("pointerdown", rememberRichToolbarSelection, true);
@@ -1918,6 +1924,7 @@ function openContentDetailDialog(post) {
   });
   contentDetailCopy.innerHTML = sanitizeRichHtml(post.copy) || "Nessuno script inserito.";
   contentDetailNotes.innerHTML = sanitizeRichHtml(post.notes) || "Nessuna nota interna.";
+  renderCommentsList(contentDetailComments, post.comments || [], { emptyText: "Nessun commento interno." });
   if (!contentDetailDialog.open) contentDetailDialog.showModal();
 }
 
@@ -2651,6 +2658,10 @@ function openPostDialog(post = {}) {
   renderAssetLinkRows(normalized.assetLinks?.length ? normalized.assetLinks : assetLinksFromLegacy(normalized));
   setRichEditorValue(fields.copyEditor, fields.copy, normalized.copy || "");
   setRichEditorValue(fields.notesEditor, fields.notes, normalized.notes || "");
+  editingComments = [...(normalized.comments || [])];
+  fields.commentDraft.value = "";
+  populateMentionSelect(normalized);
+  renderCommentsList(document.querySelector("#postCommentsList"), editingComments, { emptyText: "Nessun commento interno." });
   fields.recurrence.value = normalized.recurrence || "none";
   fields.checkIdea.checked = Boolean(normalized.checklist.idea);
   fields.checkCopy.checked = Boolean(normalized.checklist.copy);
@@ -2898,6 +2909,7 @@ function collectPostFromForm() {
   };
   const stage = checklistStageLabel({ checklist });
   const status = stage === "Checklist: nessuno stato" ? "Idea" : stage;
+  const comments = collectCommentsFromForm();
   return normalizePost({
     id: fields.id.value || createId(),
     title: fields.title.value.trim(),
@@ -2919,9 +2931,133 @@ function collectPostFromForm() {
     assets: assetLinks.map((asset) => asset.title).filter(Boolean).join(", "),
     copy: fields.copy.value.trim(),
     notes: fields.notes.value.trim(),
+    comments,
     recurrence: fields.recurrence.value,
     checklist,
   });
+}
+
+function collectCommentsFromForm() {
+  const draft = fields.commentDraft.value.trim();
+  if (!draft) return editingComments;
+  return [
+    ...editingComments,
+    normalizeComment({
+      id: createId(),
+      text: draft,
+      mentions: extractMentions(draft),
+      authorUid: cloud.user?.uid || "",
+      authorEmail: cloud.user?.email || "",
+      authorName: cloud.user?.displayName || cloud.user?.email || "Utente locale",
+      createdAt: new Date().toISOString(),
+    }),
+  ];
+}
+
+function insertSelectedMention() {
+  const value = fields.commentMention.value;
+  if (!value) return;
+  const mention = `@${value}`;
+  const target = fields.commentDraft;
+  const start = target.selectionStart ?? target.value.length;
+  const end = target.selectionEnd ?? target.value.length;
+  const prefix = target.value.slice(0, start);
+  const suffix = target.value.slice(end);
+  const spacerBefore = prefix && !/\s$/.test(prefix) ? " " : "";
+  const spacerAfter = suffix && !/^\s/.test(suffix) ? " " : "";
+  target.value = `${prefix}${spacerBefore}${mention}${spacerAfter}${suffix}`;
+  const nextPosition = `${prefix}${spacerBefore}${mention}`.length;
+  target.focus();
+  target.setSelectionRange(nextPosition, nextPosition);
+}
+
+function populateMentionSelect(post = {}) {
+  const people = getMentionPeople(post);
+  fields.commentMention.innerHTML = "";
+  const empty = document.createElement("option");
+  empty.value = "";
+  empty.textContent = "Menziona...";
+  fields.commentMention.append(empty);
+  people.forEach((person) => {
+    const option = document.createElement("option");
+    option.value = person.handle;
+    option.textContent = person.label;
+    fields.commentMention.append(option);
+  });
+}
+
+function getMentionPeople(post = {}) {
+  const people = [];
+  const addPerson = (label, fallback = "") => {
+    const name = String(label || fallback || "").trim();
+    if (!name) return;
+    const handle = mentionHandle(name);
+    if (!handle || people.some((person) => person.handle === handle)) return;
+    people.push({ handle, label: name });
+  };
+  addPerson(cloud.user?.displayName, cloud.user?.email);
+  addPerson(post.owner);
+  cloud.members.forEach((member) => addPerson(member.name || member.email, member.uid));
+  return people;
+}
+
+function mentionHandle(value) {
+  return String(value || "")
+    .split("@")[0]
+    .trim()
+    .replace(/\s+/g, "")
+    .replace(/[^\p{L}\p{N}._-]/gu, "")
+    .slice(0, 40);
+}
+
+function extractMentions(text) {
+  return Array.from(new Set((String(text).match(/@[\p{L}\p{N}._-]+/gu) || []).map((mention) => mention.slice(1))));
+}
+
+function renderCommentsList(container, comments, options = {}) {
+  container.innerHTML = "";
+  if (!comments.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-comments";
+    empty.textContent = options.emptyText || "Nessun commento.";
+    container.append(empty);
+    return;
+  }
+  comments
+    .slice()
+    .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+    .forEach((comment) => container.append(createCommentItem(comment)));
+}
+
+function createCommentItem(comment) {
+  const item = document.createElement("article");
+  item.className = "comment-item";
+  const header = document.createElement("header");
+  const author = document.createElement("strong");
+  author.textContent = comment.authorName || comment.authorEmail || "Utente";
+  const date = document.createElement("span");
+  date.textContent = formatDateTime(comment.createdAt);
+  header.append(author, date);
+  const text = document.createElement("p");
+  text.append(...commentTextNodes(comment.text || ""));
+  item.append(header, text);
+  return item;
+}
+
+function commentTextNodes(text) {
+  const nodes = [];
+  String(text).split(/(@[\p{L}\p{N}._-]+)/gu).forEach((part) => {
+    if (!part) return;
+    if (part.startsWith("@")) {
+      const mention = document.createElement("mark");
+      mention.className = "comment-mention";
+      mention.textContent = part;
+      nodes.push(mention);
+    } else {
+      nodes.push(document.createTextNode(part));
+    }
+  });
+  return nodes;
 }
 
 function resolveThemeFromForm() {
@@ -2987,6 +3123,7 @@ function duplicatePost(id) {
     date: toDateKey(nextDate),
     status: "Idea",
     approval: "Bozza",
+    comments: [],
     history: [historyEntry("Duplicato")],
   });
   state.posts.push(copy);
@@ -3009,6 +3146,7 @@ function addRecurringPosts(post) {
       date: toDateKey(date),
       status: "Idea",
       approval: "Bozza",
+      comments: [],
       history: [historyEntry("Creato da ricorrenza")],
     }));
   }
@@ -3107,7 +3245,7 @@ function exportFilteredCsv() {
 
 function downloadPostsCsv(posts, filename) {
   const rows = [
-    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "theme", "themeOther", "tags", "assetLinks", "assetLink", "assets", "copy", "notes"],
+    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "theme", "themeOther", "tags", "assetLinks", "assetLink", "assets", "copy", "notes", "comments"],
     ...posts.map((post) => [
       post.id,
       post.title,
@@ -3129,6 +3267,7 @@ function downloadPostsCsv(posts, filename) {
       post.assets,
       post.copy,
       post.notes,
+      JSON.stringify(post.comments || []),
     ]),
   ];
   downloadFile(filename, rows.map((row) => row.map(csvEscape).join(",")).join("\n"), "text/csv");
@@ -3574,6 +3713,7 @@ function normalizePost(post) {
     assets: post.assets || "",
     copy: post.copy || "",
     notes: post.notes || "",
+    comments: Array.isArray(post.comments) ? post.comments.map(normalizeComment).filter(Boolean) : [],
     recurrence: post.recurrence || "none",
     deletedAt: post.deletedAt || "",
     deletedBy: post.deletedBy || "",
@@ -3585,6 +3725,20 @@ function normalizePost(post) {
       scheduled: Boolean(post.checklist?.scheduled),
     },
     history: Array.isArray(post.history) ? post.history : [],
+  };
+}
+
+function normalizeComment(comment) {
+  const text = String(comment?.text || "").trim();
+  if (!text) return null;
+  return {
+    id: comment.id || createId(),
+    text,
+    mentions: Array.isArray(comment.mentions) ? comment.mentions.filter(Boolean) : extractMentions(text),
+    authorUid: comment.authorUid || "",
+    authorEmail: comment.authorEmail || "",
+    authorName: comment.authorName || comment.authorEmail || "Utente",
+    createdAt: comment.createdAt || new Date().toISOString(),
   };
 }
 
@@ -3627,8 +3781,19 @@ function rowToPost(row) {
     assets: row.assets,
     copy: row.copy,
     notes: row.notes,
+    comments: parseComments(row.comments),
     history: [historyEntry("Importato da CSV")],
   });
+}
+
+function parseComments(value) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map(normalizeComment).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
 }
 
 function parseAssetLinks(value) {

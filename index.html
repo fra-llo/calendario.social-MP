@@ -456,6 +456,10 @@
           <h3>Note interne</h3>
           <p id="contentDetailNotes"></p>
         </section>
+        <section>
+          <h3>Commenti interni</h3>
+          <div class="comments-list" id="contentDetailComments"></div>
+        </section>
         <footer>
           <button class="primary-action" id="unlockContentEdit" type="button">Sblocca modifica</button>
         </footer>
@@ -699,6 +703,21 @@
           </details>
           <textarea id="postNotes" hidden></textarea>
           <div class="rich-editor" id="postNotesEditor" contenteditable="true" data-placeholder="Indicazioni, approvazioni, dubbi, cose da controllare..."></div>
+        </section>
+
+        <section class="comments-field">
+          <div class="field-heading-row">
+            <span class="field-heading">Commenti interni</span>
+            <span class="form-note">Usa le menzioni per richiamare persone del team.</span>
+          </div>
+          <div class="comments-list" id="postCommentsList"></div>
+          <div class="mention-row">
+            <select id="commentMentionSelect" aria-label="Menziona utente">
+              <option value="">Menziona...</option>
+            </select>
+            <button class="secondary-action" id="insertMentionButton" type="button">@ Menziona</button>
+          </div>
+          <textarea id="postCommentDraft" rows="3" maxlength="600" placeholder="Scrivi un commento interno..."></textarea>
         </section>
 
         <details class="history-box" id="historyBox" hidden>

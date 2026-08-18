@@ -509,6 +509,77 @@ textarea {
   color: var(--muted);
 }
 
+.comments-field {
+  display: grid;
+  gap: 10px;
+}
+
+.field-heading-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mention-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.comments-field textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.comments-list {
+  display: grid;
+  gap: 8px;
+}
+
+.comment-item {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: var(--surface-soft);
+}
+
+.comment-item header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.comment-item strong {
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+
+.comment-item span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.comment-item p,
+.empty-comments {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.comment-mention {
+  border-radius: 999px;
+  padding: 1px 5px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 850;
+}
+
 fieldset {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
