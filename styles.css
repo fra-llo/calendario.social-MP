@@ -1598,19 +1598,32 @@ body.is-dark .primary-action {
 }
 
 .timed-post-list {
+  position: relative;
   gap: 0;
+  flex: 1;
+  min-height: 540px;
   padding-top: 0;
 }
 
-.time-slot {
-  display: grid;
-  gap: 5px;
-  margin-top: var(--time-gap, 0);
+.calendar-grid.is-day-view .timed-post-list {
+  min-height: 680px;
 }
 
-.time-slot + .time-slot {
-  border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-  padding-top: 7px;
+.time-slot {
+  position: absolute;
+  top: var(--time-offset, 0);
+  left: 0;
+  width: 100%;
+  display: grid;
+  gap: 5px;
+}
+
+.time-slot-spacer {
+  height: 540px;
+}
+
+.calendar-grid.is-day-view .time-slot-spacer {
+  height: 680px;
 }
 
 .time-slot-label {
@@ -1627,6 +1640,7 @@ body.is-dark .primary-action {
 }
 
 .time-slot.is-unscheduled {
+  position: static;
   margin-top: 12px;
 }
 

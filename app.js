@@ -1229,15 +1229,14 @@ function createTimedPostList(dayPosts) {
   list.className = "post-list timed-post-list";
   const withTime = dayPosts.filter((post) => isValidPostTime(post.time));
   const withoutTime = dayPosts.filter((post) => !isValidPostTime(post.time));
-  let previousMinutes = TIMELINE_START_MINUTES;
 
   if (withTime.length) {
     groupTimedPosts(withTime).forEach(([time, posts]) => {
       const minutes = Math.max(TIMELINE_START_MINUTES, Math.min(TIMELINE_END_MINUTES, timeToMinutes(time)));
-      const minutesFromPrevious = Math.max(0, minutes - previousMinutes);
+      const minutesFromStart = Math.max(0, minutes - TIMELINE_START_MINUTES);
       const slot = document.createElement("section");
       slot.className = "time-slot";
-      slot.style.setProperty("--time-gap", `${minutesFromPrevious * getTimelineMinuteScale()}px`);
+      slot.style.setProperty("--time-offset", `${minutesFromStart * getTimelineMinuteScale()}px`);
       const label = document.createElement("span");
       label.className = "time-slot-label";
       label.textContent = time;
@@ -1246,11 +1245,16 @@ function createTimedPostList(dayPosts) {
       posts.forEach((post) => items.append(createPostChip(post)));
       slot.append(label, items);
       list.append(slot);
-      previousMinutes = minutes;
     });
   }
 
   if (withoutTime.length) {
+    if (withTime.length) {
+      const spacer = document.createElement("div");
+      spacer.className = "time-slot-spacer";
+      list.append(spacer);
+    }
+
     const slot = document.createElement("section");
     slot.className = "time-slot is-unscheduled";
     const label = document.createElement("span");
@@ -1285,7 +1289,7 @@ function timeToMinutes(time) {
 }
 
 function getTimelineMinuteScale() {
-  return state.viewMode === "day" ? 0.42 : 0.28;
+  return state.viewMode === "day" ? 0.55 : 0.42;
 }
 
 function createEventDayCell(date, todayKey) {
