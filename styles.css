@@ -1369,6 +1369,10 @@ body.is-dark .primary-action {
   display: block;
 }
 
+.sidebar .collapsible-panel:first-of-type {
+  border-top: 0;
+}
+
 .collapsible-panel summary,
 .members-details summary {
   cursor: pointer;
