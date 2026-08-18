@@ -1405,7 +1405,7 @@ body.is-dark .primary-action {
 
 .filters-panel[open] {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .filters-panel summary {
@@ -1443,7 +1443,7 @@ body.is-dark .primary-action {
 }
 
 .filters-panel label + label {
-  margin-top: 1px;
+  margin-top: 4px;
 }
 
 .view-switch {
