@@ -2128,6 +2128,28 @@ function applyBulkAction() {
   render();
 }
 
+function updateSelectedListPosts(updater, historyText) {
+  const ids = Array.from(selectedListPosts);
+  if (!ids.length) return [];
+  const changedPosts = [];
+  state.posts = state.posts.map((post) => {
+    if (!ids.includes(post.id)) return post;
+    const updated = normalizePost({
+      ...post,
+      ...updater(post),
+      history: [...(post.history || []), historyEntry(historyText)],
+    });
+    changedPosts.push(updated);
+    return updated;
+  });
+  persistPosts();
+  changedPosts.forEach(saveCloudPost);
+  selectedListPosts.clear();
+  closeListBulkMenu();
+  render();
+  return changedPosts;
+}
+
 function deleteSelectedListPosts() {
   const ids = Array.from(selectedListPosts);
   if (!ids.length) return;
@@ -2169,21 +2191,74 @@ function deleteSelectedListPosts() {
 }
 
 function setSelectedListStatus(status) {
+  updateSelectedListPosts(
+    (post) => ({ status, checklist: checklistForWorkStatus(status, post.checklist) }),
+    `Stato impostato a ${status} da selezione multipla`,
+  );
+}
+
+function setSelectedListPriority(priority) {
+  updateSelectedListPosts(
+    () => ({ priority }),
+    `Priorita impostata a ${priority} da selezione multipla`,
+  );
+}
+
+function promptSelectedListOwner() {
+  const owner = window.prompt("Responsabile da assegnare ai contenuti selezionati:");
+  if (owner === null) return;
+  updateSelectedListPosts(
+    () => ({ owner: owner.trim() }),
+    "Responsabile modificato da selezione multipla",
+  );
+}
+
+function promptSelectedListDate() {
+  const date = window.prompt("Nuova data di pubblicazione (AAAA-MM-GG):");
+  if (date === null) return;
+  const parsedDate = parseDateKey(date);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(parsedDate.getTime()) || toDateKey(parsedDate) !== date) {
+    window.alert("Inserisci una data valida nel formato AAAA-MM-GG.");
+    return;
+  }
+  updateSelectedListPosts(
+    () => ({ date }),
+    `Spostato al ${date} da selezione multipla`,
+  );
+}
+
+function duplicateSelectedListPosts() {
   const ids = Array.from(selectedListPosts);
   if (!ids.length) return;
-  state.posts = state.posts.map((post) => {
-    if (!ids.includes(post.id)) return post;
-    return normalizePost({
+  const copies = activePosts()
+    .filter((post) => ids.includes(post.id))
+    .map((post) => normalizePost({
       ...post,
-      status,
-      checklist: checklistForWorkStatus(status, post.checklist),
-      history: [...(post.history || []), historyEntry(`Stato impostato a ${status} da selezione multipla`)],
-    });
-  });
-  persistPosts(cloudActive());
+      id: createId(),
+      title: `${post.title} copia`,
+      status: "Idea",
+      checklist: checklistForWorkStatus("Idea", post.checklist),
+      comments: [],
+      history: [historyEntry("Duplicato da selezione multipla")],
+    }));
+  state.posts.push(...copies);
+  persistPosts();
+  copies.forEach(saveCloudPost);
   selectedListPosts.clear();
   closeListBulkMenu();
+  showUndo(`${copies.length} contenuti duplicati.`, () => {
+    copies.forEach((post) => permanentlyDeletePost(post.id));
+    render();
+  });
   render();
+}
+
+function exportSelectedListPosts() {
+  const ids = Array.from(selectedListPosts);
+  if (!ids.length) return;
+  const posts = getSortedListPosts().filter((post) => ids.includes(post.id));
+  downloadPostsCsv(posts, "contenuti-social-selezionati.csv");
+  closeListBulkMenu();
 }
 
 function selectVisibleListPosts() {
@@ -2272,8 +2347,12 @@ function closeListBulkMenu() {
 function handleListBulkMenuAction(event) {
   const action = event.target.closest("[data-bulk-menu-action]")?.dataset.bulkMenuAction;
   if (!action) return;
-  if (action === "ready") setSelectedListStatus("Revisionato");
-  if (action === "scheduled") setSelectedListStatus("Programmato");
+  if (action.startsWith("status:")) setSelectedListStatus(action.slice("status:".length));
+  if (action.startsWith("priority:")) setSelectedListPriority(action.slice("priority:".length));
+  if (action === "owner") promptSelectedListOwner();
+  if (action === "date") promptSelectedListDate();
+  if (action === "duplicate") duplicateSelectedListPosts();
+  if (action === "export") exportSelectedListPosts();
   if (action === "select-visible") selectVisibleListPosts();
   if (action === "clear") clearListSelection();
   if (action === "delete") deleteSelectedListPosts();

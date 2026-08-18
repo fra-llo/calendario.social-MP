@@ -255,8 +255,22 @@
           <button class="ghost-action" id="clearListSelectionButton" type="button">Deseleziona</button>
         </div>
         <div class="bulk-context-menu" id="listBulkContextMenu" hidden>
-          <button type="button" data-bulk-menu-action="ready">Segna come revisionato</button>
-          <button type="button" data-bulk-menu-action="scheduled">Segna come programmato</button>
+          <span class="bulk-menu-heading">Stato</span>
+          <button type="button" data-bulk-menu-action="status:Idea">Idea</button>
+          <button type="button" data-bulk-menu-action="status:Script">Script</button>
+          <button type="button" data-bulk-menu-action="status:Grafica">Grafica</button>
+          <button type="button" data-bulk-menu-action="status:Revisionato">Revisionato</button>
+          <button type="button" data-bulk-menu-action="status:Programmato">Programmato</button>
+          <span class="bulk-menu-heading">Priorità</span>
+          <button type="button" data-bulk-menu-action="priority:Bassa">Priorità bassa</button>
+          <button type="button" data-bulk-menu-action="priority:Media">Priorità media</button>
+          <button type="button" data-bulk-menu-action="priority:Alta">Priorità alta</button>
+          <span class="bulk-menu-heading">Modifica</span>
+          <button type="button" data-bulk-menu-action="owner">Assegna responsabile</button>
+          <button type="button" data-bulk-menu-action="date">Sposta a data</button>
+          <button type="button" data-bulk-menu-action="duplicate">Duplica selezionati</button>
+          <button type="button" data-bulk-menu-action="export">Esporta selezionati</button>
+          <span class="bulk-menu-heading">Selezione</span>
           <button type="button" data-bulk-menu-action="select-visible">Seleziona visibili</button>
           <button type="button" data-bulk-menu-action="clear">Deseleziona tutto</button>
           <button class="danger-menu-action" type="button" data-bulk-menu-action="delete">Elimina selezionati</button>

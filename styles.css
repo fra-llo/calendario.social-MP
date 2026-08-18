@@ -1864,6 +1864,20 @@ body.is-dark .primary-action {
   font-weight: 850;
 }
 
+.bulk-menu-heading {
+  padding: 8px 10px 4px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bulk-menu-heading:not(:first-child) {
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
 .bulk-context-menu button:hover,
 .bulk-context-menu button:focus-visible {
   background: var(--surface-soft);
