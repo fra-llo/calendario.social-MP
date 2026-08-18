@@ -324,8 +324,8 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 42px;
-  padding: 0 12px;
+  min-height: 54px;
+  padding: 0 18px;
   color: var(--ink);
   font-size: 0.96rem;
   font-weight: 900;
@@ -659,25 +659,34 @@ fieldset {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 12px;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  padding: 16px;
+  background: var(--accent-soft);
+  box-shadow: inset 4px 0 0 var(--accent);
 }
 
 legend {
-  color: var(--muted);
-  font-size: 0.84rem;
-  font-weight: 800;
+  padding: 0 8px;
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 950;
 }
 
 .check-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 36px;
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 850;
 }
 
 .check-row input {
-  width: auto;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
 }
 
 .color-menu {
@@ -801,6 +810,12 @@ body.is-dark .color-menu-trigger,
 body.is-dark .asset-link-row input {
   border-color: rgba(133, 156, 149, 0.28);
   background: #111614;
+}
+
+body.is-dark fieldset {
+  border-color: rgba(74, 222, 128, 0.5);
+  background: rgba(74, 222, 128, 0.08);
+  box-shadow: inset 4px 0 0 rgba(74, 222, 128, 0.72);
 }
 
 body.is-dark input::placeholder,
