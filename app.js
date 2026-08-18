@@ -1518,7 +1518,7 @@ function themeForEventCategory(category) {
 
 function renderDayDialogSummary(dayPosts) {
   const platformsCount = new Set(dayPosts.map((post) => post.platform)).size;
-  const readyCount = dayPosts.filter((post) => ["Pronto", "Programmato", "Pubblicato"].includes(post.status)).length;
+  const readyCount = dayPosts.filter((post) => ["Revisionato", "Programmato"].includes(getPostWorkStatus(post))).length;
   const themesCount = new Set(dayPosts.map((post) => resolveThemeId(post.theme))).size;
   dayDialogSummary.innerHTML = "";
   [
@@ -1563,7 +1563,7 @@ function renderDayDialogList(dayPosts) {
     meta.textContent = [
       post.time || "Ora non impostata",
       post.platform,
-      post.status,
+      getPostWorkStatus(post),
       post.priority || "Media",
       formatThemeLabel(theme),
     ].filter(Boolean).join(" - ");
@@ -1766,7 +1766,7 @@ function formatPlatformLabel(platform) {
 }
 
 function formatStatusLabel(status) {
-  return `${statusIcons[status] || "•"} ${status || "Stato"}`;
+  return status || "Stato";
 }
 
 function renderListView() {
@@ -1874,9 +1874,10 @@ function createListRow(post) {
   const statusCell = document.createElement("div");
   statusCell.className = "list-pill-cell";
   const statusPill = document.createElement("span");
+  const workStatus = getPostWorkStatus(post);
   statusPill.className = "list-status-pill";
-  statusPill.dataset.status = post.status;
-  statusPill.textContent = formatStatusLabel(post.status);
+  statusPill.dataset.status = workStatus;
+  statusPill.textContent = formatStatusLabel(workStatus);
   statusCell.append(statusPill);
 
   const timeCell = document.createElement("div");
@@ -1900,7 +1901,7 @@ function openContentDetailDialog(post) {
     ["Orario", post.time || "-"],
     ["Piattaforma", formatPlatformLabel(post.platform)],
     ["Categoria", post.format || "-"],
-    ["Stato", formatStatusLabel(post.status)],
+    ["Stato", formatStatusLabel(getPostWorkStatus(post))],
     ["Priorità", post.priority || "Media"],
     ["Tema", [formatThemeLabel(theme), post.themeOther || ""].filter(Boolean).join(" - ") || "-"],
     ["Responsabile", post.owner || "Senza responsabile"],
@@ -1935,7 +1936,7 @@ function getSortedListPosts() {
   return getMonthPosts(filteredPosts(), state.visibleDate).sort((a, b) => {
     if (sortKey === "date") return `${a.date}${a.time || ""}`.localeCompare(`${b.date}${b.time || ""}`);
     if (sortKey === "platform") return `${a.platform}${a.date}`.localeCompare(`${b.platform}${b.date}`);
-    if (sortKey === "status") return `${a.status}${a.date}`.localeCompare(`${b.status}${b.date}`);
+    if (sortKey === "status") return `${getPostWorkStatus(a)}${a.date}`.localeCompare(`${getPostWorkStatus(b)}${b.date}`);
     if (sortKey === "priority") return `${priorityRank(a.priority)}${a.date}`.localeCompare(`${priorityRank(b.priority)}${b.date}`);
     if (sortKey === "owner") return `${a.owner || "zzzz"}${a.date}`.localeCompare(`${b.owner || "zzzz"}${b.date}`);
     return 0;
@@ -1956,7 +1957,7 @@ function groupListPosts(posts) {
 function getListGroupLabel(post, group) {
   if (group === "week") return formatWeekRange(startOfWeek(parseDateKey(post.date)));
   if (group === "platform") return post.platform;
-  if (group === "status") return post.status;
+  if (group === "status") return getPostWorkStatus(post);
   if (group === "theme") return getTheme(post.theme)?.name || "Senza tema";
   return "";
 }
@@ -1970,7 +1971,7 @@ function isIncompletePost(post) {
 }
 
 function isOverduePost(post) {
-  return parseDateKey(post.date) < startOfDay(new Date()) && post.status !== "Pubblicato";
+  return parseDateKey(post.date) < startOfDay(new Date()) && getPostWorkStatus(post) !== "Programmato";
 }
 
 function toggleSelectAllList() {
@@ -2018,6 +2019,7 @@ function applyBulkAction() {
     return normalizePost({
       ...post,
       status: status || post.status,
+      checklist: status ? checklistForWorkStatus(status, post.checklist) : post.checklist,
       owner: owner || post.owner,
       theme: theme || post.theme,
       history: [...(post.history || []), historyEntry("Modifica massiva da vista lista")],
@@ -2079,6 +2081,7 @@ function setSelectedListStatus(status) {
     return normalizePost({
       ...post,
       status,
+      checklist: checklistForWorkStatus(status, post.checklist),
       history: [...(post.history || []), historyEntry(`Stato impostato a ${status} da selezione multipla`)],
     });
   });
@@ -2138,9 +2141,8 @@ function closeListBulkMenu() {
 function handleListBulkMenuAction(event) {
   const action = event.target.closest("[data-bulk-menu-action]")?.dataset.bulkMenuAction;
   if (!action) return;
-  if (action === "ready") setSelectedListStatus("Pronto");
+  if (action === "ready") setSelectedListStatus("Revisionato");
   if (action === "scheduled") setSelectedListStatus("Programmato");
-  if (action === "published") setSelectedListStatus("Pubblicato");
   if (action === "select-visible") selectVisibleListPosts();
   if (action === "clear") clearListSelection();
   if (action === "delete") deleteSelectedListPosts();
@@ -2211,8 +2213,8 @@ function renderListCheckboxes() {
 function renderStats() {
   const monthPosts = getMonthPosts(state.posts);
   document.querySelector("#monthCount").textContent = monthPosts.length;
-  document.querySelector("#readyCount").textContent = monthPosts.filter((post) => ["Pronto", "Programmato"].includes(post.status)).length;
-  document.querySelector("#publishedCount").textContent = monthPosts.filter((post) => post.status === "Pubblicato").length;
+  document.querySelector("#readyCount").textContent = monthPosts.filter((post) => ["Revisionato", "Programmato"].includes(getPostWorkStatus(post))).length;
+  document.querySelector("#publishedCount").textContent = monthPosts.filter((post) => getPostWorkStatus(post) === "Programmato").length;
 }
 
 function renderPlatformStats() {
@@ -2239,8 +2241,8 @@ function renderStatsDialog() {
 }
 
 function renderStatsSummary(posts) {
-  const ready = posts.filter((post) => ["Pronto", "Programmato"].includes(post.status)).length;
-  const published = posts.filter((post) => post.status === "Pubblicato").length;
+  const ready = posts.filter((post) => ["Revisionato", "Programmato"].includes(getPostWorkStatus(post))).length;
+  const published = posts.filter((post) => getPostWorkStatus(post) === "Programmato").length;
   const missingAssets = posts.filter((post) => !post.assets && !post.assetLink).length;
   const completion = posts.length ? Math.round((posts.reduce((sum, post) => sum + checklistProgress(post), 0) / posts.length)) : 0;
   statsSummaryGrid.innerHTML = "";
@@ -2599,7 +2601,7 @@ function filteredPosts() {
     const searchable = [
       post.title,
       post.platform,
-      post.status,
+      getPostWorkStatus(post),
       post.format,
       post.goal,
       theme?.name || "",
@@ -2611,7 +2613,7 @@ function filteredPosts() {
     ].join(" ").toLowerCase();
     return (!query || searchable.includes(query))
       && (platformFilter.value === "all" || post.platform === platformFilter.value)
-      && (statusFilter.value === "all" || post.status === statusFilter.value)
+      && (statusFilter.value === "all" || getPostWorkStatus(post) === statusFilter.value)
       && (priorityFilter.value === "all" || post.priority === priorityFilter.value)
       && (themeFilter.value === "all" || resolveThemeId(post.theme) === themeFilter.value)
       && (!owner || String(post.owner || "").toLowerCase().includes(owner));
@@ -2632,7 +2634,7 @@ function openPostDialog(post = {}) {
   fields.time.value = normalized.time || defaultRecommendedTimes[normalized.platform || "Instagram"];
   fields.platform.value = normalized.platform || "Instagram";
   fields.format.value = normalized.format || "";
-  fields.status.value = normalized.status || "Idea";
+  fields.status.value = getPostWorkStatus(normalized);
   fields.approval.value = normalized.approval || "Bozza";
   fields.priority.value = normalized.priority || "Media";
   setSelectedColor(normalized.color || pastelColors[0].value);
@@ -2887,6 +2889,15 @@ function collectPostFromForm() {
   syncRichEditorsToFields();
   const assetLinks = collectAssetLinksFromForm();
   const themeData = resolveThemeFromForm();
+  const checklist = {
+    idea: fields.checkIdea.checked,
+    copy: fields.checkCopy.checked,
+    creative: fields.checkCreative.checked,
+    review: fields.checkReview.checked,
+    scheduled: fields.checkScheduled.checked,
+  };
+  const stage = checklistStageLabel({ checklist });
+  const status = stage === "Checklist: nessuno stato" ? "Idea" : stage;
   return normalizePost({
     id: fields.id.value || createId(),
     title: fields.title.value.trim(),
@@ -2894,7 +2905,7 @@ function collectPostFromForm() {
     time: fields.time.value,
     platform: fields.platform.value,
     format: fields.format.value.trim(),
-    status: fields.status.value,
+    status,
     approval: fields.approval.value,
     priority: fields.priority.value,
     color: fields.color.value,
@@ -2909,13 +2920,7 @@ function collectPostFromForm() {
     copy: fields.copy.value.trim(),
     notes: fields.notes.value.trim(),
     recurrence: fields.recurrence.value,
-    checklist: {
-      idea: fields.checkIdea.checked,
-      copy: fields.checkCopy.checked,
-      creative: fields.checkCreative.checked,
-      review: fields.checkReview.checked,
-      scheduled: fields.checkScheduled.checked,
-    },
+    checklist,
   });
 }
 
@@ -3110,7 +3115,7 @@ function downloadPostsCsv(posts, filename) {
       post.time,
       post.platform,
       post.format,
-      post.status,
+      getPostWorkStatus(post),
       post.approval,
       post.priority,
       post.color,
@@ -3715,6 +3720,25 @@ function sortPosts(a, b) {
 function checklistProgress(post) {
   const values = Object.values(post.checklist || {});
   return Math.round((values.filter(Boolean).length / values.length) * 100);
+}
+
+function getPostWorkStatus(post) {
+  const stage = checklistStageLabel(post);
+  if (stage !== "Checklist: nessuno stato") return stage;
+  return {
+    "Da scrivere": "Script",
+    Pronto: "Revisionato",
+    Programmato: "Programmato",
+    Pubblicato: "Programmato",
+  }[post.status] || "Idea";
+}
+
+function checklistForWorkStatus(status, currentChecklist = {}) {
+  const order = ["Idea", "Script", "Grafica", "Revisionato", "Programmato"];
+  const keys = ["idea", "copy", "creative", "review", "scheduled"];
+  const selectedIndex = order.indexOf(status);
+  if (selectedIndex < 0) return currentChecklist;
+  return Object.fromEntries(keys.map((key, index) => [key, index <= selectedIndex]));
 }
 
 function checklistStageLabel(post) {

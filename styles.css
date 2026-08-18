@@ -1771,15 +1771,16 @@ body.is-dark .primary-action {
   background: var(--surface-soft);
 }
 
-.list-status-pill[data-status="Pubblicato"] {
-  color: #146c43;
-  background: #d1fae5;
-}
-
-.list-status-pill[data-status="Programmato"],
-.list-status-pill[data-status="Pronto"] {
+.list-status-pill[data-status="Script"],
+.list-status-pill[data-status="Grafica"],
+.list-status-pill[data-status="Revisionato"] {
   color: var(--accent);
   background: var(--accent-soft);
+}
+
+.list-status-pill[data-status="Programmato"] {
+  color: #146c43;
+  background: #d1fae5;
 }
 
 .list-select {

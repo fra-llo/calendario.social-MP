@@ -86,10 +86,10 @@
             <select id="statusFilter">
               <option value="all">Tutti</option>
               <option value="Idea">Idea</option>
-              <option value="Da scrivere">Da scrivere</option>
-              <option value="Pronto">Pronto</option>
+              <option value="Script">Script</option>
+              <option value="Grafica">Grafica</option>
+              <option value="Revisionato">Revisionato</option>
               <option value="Programmato">Programmato</option>
-              <option value="Pubblicato">Pubblicato</option>
             </select>
           </label>
           <label>
@@ -237,10 +237,10 @@
             <select id="bulkStatusSelect">
               <option value="">Stato</option>
               <option>Idea</option>
-              <option>Da scrivere</option>
-              <option>Pronto</option>
+              <option>Script</option>
+              <option>Grafica</option>
+              <option>Revisionato</option>
               <option>Programmato</option>
-              <option>Pubblicato</option>
             </select>
             <input id="bulkOwnerInput" type="text" placeholder="Responsabile">
             <select id="bulkThemeSelect"></select>
@@ -255,9 +255,8 @@
           <button class="ghost-action" id="clearListSelectionButton" type="button">Deseleziona</button>
         </div>
         <div class="bulk-context-menu" id="listBulkContextMenu" hidden>
-          <button type="button" data-bulk-menu-action="ready">Segna come pronto</button>
+          <button type="button" data-bulk-menu-action="ready">Segna come revisionato</button>
           <button type="button" data-bulk-menu-action="scheduled">Segna come programmato</button>
-          <button type="button" data-bulk-menu-action="published">Segna come pubblicato</button>
           <button type="button" data-bulk-menu-action="select-visible">Seleziona visibili</button>
           <button type="button" data-bulk-menu-action="clear">Deseleziona tutto</button>
           <button class="danger-menu-action" type="button" data-bulk-menu-action="delete">Elimina selezionati</button>
@@ -532,10 +531,10 @@
             Stato
             <select id="postStatus" required>
               <option>Idea</option>
-              <option>Da scrivere</option>
-              <option>Pronto</option>
+              <option>Script</option>
+              <option>Grafica</option>
+              <option>Revisionato</option>
               <option>Programmato</option>
-              <option>Pubblicato</option>
             </select>
           </label>
           <label>
