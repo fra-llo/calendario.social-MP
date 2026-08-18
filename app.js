@@ -1096,7 +1096,7 @@ function renderMainView() {
   weekdays.hidden = state.viewMode === "day" || isListView;
   calendarGrid.hidden = isListView;
   listView.hidden = !isListView;
-  listToolbar.hidden = true;
+  listToolbar.hidden = !isListView || state.appMode !== "editorial";
   if (!isListView || state.appMode !== "editorial") {
     listBulkActionBar.hidden = true;
     closeListBulkMenu();
