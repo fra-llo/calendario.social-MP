@@ -647,7 +647,8 @@ textarea {
 }
 
 .mention-suggestions button:hover,
-.mention-suggestions button:focus-visible {
+.mention-suggestions button:focus-visible,
+.mention-suggestions button.is-active {
   background: var(--accent-soft);
 }
 

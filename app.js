@@ -341,6 +341,7 @@ let selectedContentDetail = null;
 let listSelectionDrag = null;
 let suppressListClick = false;
 let editingComments = [];
+let activeMentionIndex = 0;
 
 document.querySelector("#previousPeriod").addEventListener("click", () => changePeriod(-1));
 document.querySelector("#nextPeriod").addEventListener("click", () => changePeriod(1));
@@ -2977,6 +2978,19 @@ function saveEditingCommentsIfExisting() {
 }
 
 function handleCommentDraftKeydown(event) {
+  if (!mentionSuggestions.hidden && ["ArrowDown", "ArrowUp", "Tab"].includes(event.key)) {
+    event.preventDefault();
+    moveMentionSelection(event.key === "ArrowUp" ? -1 : 1);
+    return;
+  }
+  if (!mentionSuggestions.hidden && event.key === "Enter" && !event.shiftKey) {
+    const selected = mentionSuggestions.querySelector(".is-active");
+    if (selected) {
+      event.preventDefault();
+      selected.click();
+      return;
+    }
+  }
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendCommentFromComposer();
@@ -2987,7 +3001,7 @@ function handleCommentDraftKeydown(event) {
 
 function updateMentionSuggestions() {
   const query = currentMentionQuery();
-  if (!query) {
+  if (query === null) {
     closeMentionSuggestions();
     return;
   }
@@ -2999,6 +3013,7 @@ function updateMentionSuggestions() {
     return;
   }
   mentionSuggestions.innerHTML = "";
+  activeMentionIndex = 0;
   people.forEach((person) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -3006,7 +3021,23 @@ function updateMentionSuggestions() {
     button.addEventListener("click", () => insertMentionAtCursor(person.handle));
     mentionSuggestions.append(button);
   });
+  updateActiveMentionSuggestion();
   mentionSuggestions.hidden = false;
+}
+
+function moveMentionSelection(offset) {
+  const items = Array.from(mentionSuggestions.querySelectorAll("button"));
+  if (!items.length) return;
+  activeMentionIndex = (activeMentionIndex + offset + items.length) % items.length;
+  updateActiveMentionSuggestion();
+}
+
+function updateActiveMentionSuggestion() {
+  const items = Array.from(mentionSuggestions.querySelectorAll("button"));
+  items.forEach((button, index) => {
+    button.classList.toggle("is-active", index === activeMentionIndex);
+  });
+  items[activeMentionIndex]?.scrollIntoView({ block: "nearest" });
 }
 
 function currentMentionQuery() {
@@ -3014,7 +3045,7 @@ function currentMentionQuery() {
   const cursor = target.selectionStart ?? target.value.length;
   const beforeCursor = target.value.slice(0, cursor);
   const match = beforeCursor.match(/(^|\s)@([\p{L}\p{N}._-]*)$/u);
-  return match ? match[2] : "";
+  return match ? match[2] : null;
 }
 
 function insertMentionAtCursor(handle) {
@@ -3033,6 +3064,7 @@ function insertMentionAtCursor(handle) {
 function closeMentionSuggestions() {
   mentionSuggestions.hidden = true;
   mentionSuggestions.innerHTML = "";
+  activeMentionIndex = 0;
 }
 
 function getMentionPeople(post = {}) {
