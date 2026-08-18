@@ -1488,6 +1488,10 @@ body.is-dark .primary-action {
   gap: 8px;
 }
 
+.calendar-grid:not(.is-week-view):not(.is-day-view) {
+  gap: 6px;
+}
+
 .calendar-grid.is-week-view .day-cell {
   min-height: 520px;
 }
@@ -1510,6 +1514,12 @@ body.is-dark .primary-action {
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: 0 1px 0 rgba(31, 35, 40, 0.03);
+}
+
+.calendar-grid:not(.is-week-view):not(.is-day-view) .day-cell {
+  gap: 6px;
+  min-height: 124px;
+  padding: 8px;
 }
 
 .day-cell.is-muted {
@@ -1563,6 +1573,12 @@ body.is-dark .primary-action {
   font-weight: 900;
 }
 
+.calendar-grid:not(.is-week-view):not(.is-day-view) .day-count {
+  min-width: 18px;
+  height: 18px;
+  font-size: 0.66rem;
+}
+
 .day-cell.is-empty .day-count {
   opacity: 0.45;
 }
@@ -1582,6 +1598,12 @@ body.is-dark .primary-action {
   font-weight: 900;
 }
 
+.calendar-grid:not(.is-week-view):not(.is-day-view) .add-day {
+  width: 24px;
+  height: 24px;
+  font-size: 0.86rem;
+}
+
 .add-day:hover {
   transform: translateY(-1px);
 }
@@ -1597,6 +1619,10 @@ body.is-dark .primary-action {
   gap: 7px;
 }
 
+.calendar-grid:not(.is-week-view):not(.is-day-view) .post-list {
+  gap: 4px;
+}
+
 .more-posts {
   min-height: 30px;
   border: 1px dashed var(--line);
@@ -1605,6 +1631,14 @@ body.is-dark .primary-action {
   background: transparent;
   font-size: 0.78rem;
   font-weight: 900;
+}
+
+.calendar-grid:not(.is-week-view):not(.is-day-view) .more-posts {
+  min-height: 22px;
+  border-style: solid;
+  padding: 0 6px;
+  background: var(--surface-soft);
+  font-size: 0.7rem;
 }
 
 .more-posts:hover,
@@ -1628,6 +1662,23 @@ body.is-dark .primary-action {
 .post-chip:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-soft);
+}
+
+.calendar-grid:not(.is-week-view):not(.is-day-view) .post-chip {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 6px;
+  min-height: 28px;
+  border-left-width: 3px;
+  padding: 5px 6px;
+}
+
+.calendar-grid:not(.is-week-view):not(.is-day-view) .post-chip span {
+  display: none;
+}
+
+.calendar-grid:not(.is-week-view):not(.is-day-view) .post-chip small {
+  justify-self: end;
+  max-width: 70px;
 }
 
 .event-mode-label {

@@ -1194,14 +1194,14 @@ function createDayCell(date, todayKey) {
 
   const list = document.createElement("div");
   list.className = "post-list";
-  const visiblePosts = isMonthView ? dayPosts.slice(0, 3) : dayPosts;
+  const visiblePosts = isMonthView ? dayPosts.slice(0, 2) : dayPosts;
   visiblePosts.forEach((post) => list.append(createPostChip(post)));
 
   if (isMonthView && dayPosts.length > visiblePosts.length) {
     const more = document.createElement("button");
     more.className = "more-posts";
     more.type = "button";
-    more.textContent = `+ ${dayPosts.length - visiblePosts.length} altri`;
+    more.textContent = `+${dayPosts.length - visiblePosts.length} vedi tutti`;
     more.addEventListener("click", () => openDayDialog(dateKey));
     list.append(more);
   }
