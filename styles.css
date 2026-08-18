@@ -1841,10 +1841,11 @@ body.is-dark .primary-action {
   z-index: 90;
   display: grid;
   min-width: 230px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 6px;
+  padding: 5px;
   background: var(--surface);
   box-shadow: var(--shadow);
 }
@@ -1856,16 +1857,17 @@ body.is-dark .primary-action {
 .bulk-context-menu button {
   width: 100%;
   border: 0;
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 7px;
+  padding: 8px 11px;
   color: var(--ink);
   background: transparent;
   text-align: left;
   font-weight: 850;
+  line-height: 1.15;
 }
 
 .bulk-menu-heading {
-  padding: 8px 10px 4px;
+  padding: 7px 10px 3px;
   color: var(--muted);
   font-size: 0.7rem;
   font-weight: 900;
@@ -1874,7 +1876,7 @@ body.is-dark .primary-action {
 }
 
 .bulk-menu-heading:not(:first-child) {
-  margin-top: 4px;
+  margin-top: 3px;
   border-top: 1px solid var(--line);
 }
 

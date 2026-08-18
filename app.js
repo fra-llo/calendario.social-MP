@@ -2331,12 +2331,14 @@ function openListBulkMenuFromElement(element) {
 function openListBulkMenuAt(x, y) {
   if (!selectedListPosts.size) return;
   listBulkContextMenu.hidden = false;
+  listBulkContextMenu.style.maxHeight = `${Math.max(280, window.innerHeight - 48)}px`;
   const menuRect = listBulkContextMenu.getBoundingClientRect();
-  const left = Math.min(x, window.innerWidth - menuRect.width - 12);
-  const top = Math.min(y, window.innerHeight - menuRect.height - 12);
+  const viewportGap = 24;
+  const left = Math.min(x, window.innerWidth - menuRect.width - viewportGap);
+  const top = Math.min(y, window.innerHeight - menuRect.height - viewportGap);
   Object.assign(listBulkContextMenu.style, {
-    left: `${Math.max(12, left)}px`,
-    top: `${Math.max(12, top)}px`,
+    left: `${Math.max(viewportGap, left)}px`,
+    top: `${Math.max(viewportGap, top)}px`,
   });
 }
 
