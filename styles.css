@@ -325,7 +325,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 38px;
+  min-height: 42px;
   padding: 0 16px;
   color: var(--ink);
   font-size: 0.96rem;
@@ -2433,6 +2433,10 @@ dialog {
   box-shadow: var(--shadow);
 }
 
+#postDialog {
+  max-height: calc(100vh - 16px);
+}
+
 #settingsDialog {
   width: min(1120px, calc(100vw - 40px));
   max-width: calc(100vw - 40px);
@@ -2454,8 +2458,8 @@ form {
 }
 
 #postDialog form {
-  gap: 11px;
-  padding: 18px 22px;
+  gap: 13px;
+  padding: 20px 24px;
 }
 
 #postDialog label {
@@ -2465,17 +2469,17 @@ form {
 #postDialog input,
 #postDialog select,
 #postDialog textarea {
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: 9px;
+  padding-bottom: 9px;
 }
 
 #postDialog .form-row {
-  gap: 12px;
+  gap: 14px;
 }
 
 #postDialog .asset-links-field,
 #postDialog .rich-field {
-  gap: 6px;
+  gap: 8px;
 }
 
 #postDialog .asset-link-row {
@@ -2483,7 +2487,7 @@ form {
 }
 
 #postDialog fieldset {
-  padding: 10px 14px;
+  padding: 12px 14px;
 }
 
 #postDialog .fold-field > summary {
@@ -2646,7 +2650,7 @@ form footer > div {
   }
 
   #postDialog form {
-    gap: 10px;
+    gap: 11px;
     padding: 16px;
   }
 
