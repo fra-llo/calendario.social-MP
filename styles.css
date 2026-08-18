@@ -2146,6 +2146,7 @@ body.is-dark .primary-action {
 }
 
 .content-detail-panel {
+  position: relative;
   display: grid;
   gap: 14px;
   box-sizing: border-box;
@@ -2162,6 +2163,10 @@ body.is-dark .primary-action {
 }
 
 .content-detail-panel header {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 1;
   justify-content: flex-end;
   min-height: 0;
 }
@@ -2223,6 +2228,10 @@ body.is-dark .primary-action {
 
 .content-detail-panel section h3 {
   font-size: 1rem;
+}
+
+.content-detail-panel > section:first-of-type {
+  padding-right: 44px;
 }
 
 .content-detail-panel .content-detail-title {
