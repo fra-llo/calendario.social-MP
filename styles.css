@@ -1409,7 +1409,6 @@ body.is-dark .primary-action {
 }
 
 .filters-panel summary {
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
   padding-bottom: 2px;
 }
 
