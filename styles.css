@@ -1405,33 +1405,31 @@ body.is-dark .primary-action {
 
 .filters-panel[open] {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .filters-panel summary {
   border-bottom: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
-  padding-bottom: 8px;
+  padding-bottom: 2px;
 }
 
 .filters-panel label {
-  gap: 7px;
+  gap: 5px;
   color: color-mix(in srgb, var(--muted) 88%, var(--ink) 12%);
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   font-weight: 900;
   line-height: 1.1;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
 }
 
 .filters-panel input,
 .filters-panel select {
-  min-height: 39px;
-  border-color: color-mix(in srgb, var(--line) 88%, var(--ink) 12%);
+  min-height: 42px;
+  border-color: color-mix(in srgb, var(--line) 78%, var(--ink) 22%);
   border-radius: 9px;
-  padding: 8px 11px;
-  font-size: 0.88rem;
+  padding: 9px 11px;
+  font-size: 0.9rem;
   font-weight: 800;
-  box-shadow: inset 0 1px 0 rgba(31, 35, 40, 0.02);
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.03);
 }
 
 .filters-panel input::placeholder {
@@ -1444,13 +1442,8 @@ body.is-dark .primary-action {
   outline: 3px solid color-mix(in srgb, var(--accent-soft) 72%, transparent);
 }
 
-.filters-panel label:first-of-type {
-  padding-bottom: 3px;
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-}
-
 .filters-panel label + label {
-  margin-top: 0;
+  margin-top: 4px;
 }
 
 .view-switch {
