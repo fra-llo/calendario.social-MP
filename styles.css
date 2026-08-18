@@ -2147,18 +2147,37 @@ body.is-dark .primary-action {
 
 .content-detail-panel {
   display: grid;
-  gap: 16px;
+  gap: 14px;
   box-sizing: border-box;
   width: 100%;
   max-height: calc(100vh - 28px);
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 22px;
+  padding: 26px;
 }
 
 #contentDetailDialog {
-  width: min(760px, calc(100vw - 24px));
+  width: min(860px, calc(100vw - 24px));
   max-width: calc(100vw - 24px);
+}
+
+.content-detail-panel header {
+  align-items: flex-start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.content-detail-panel .eyebrow {
+  margin-bottom: 5px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.content-detail-panel h2 {
+  max-width: 680px;
+  font-size: clamp(1.65rem, 2.4vw, 2.15rem);
+  line-height: 1.05;
 }
 
 .day-detail-panel header,
@@ -2171,6 +2190,10 @@ body.is-dark .primary-action {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+}
+
+.content-detail-panel header {
+  align-items: flex-start;
 }
 
 .day-detail-panel h2,
@@ -2191,7 +2214,20 @@ body.is-dark .primary-action {
 
 .content-detail-panel section {
   display: grid;
-  gap: 8px;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--surface-soft) 12%);
+}
+
+.content-detail-panel section h3 {
+  font-size: 1rem;
+}
+
+.content-detail-panel footer {
+  justify-content: flex-start;
+  padding-top: 2px;
 }
 
 .event-detail-panel ul {
@@ -2225,34 +2261,43 @@ body.is-dark .primary-action {
 
 .content-detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
 }
 
 .content-detail-grid div {
   display: grid;
-  gap: 5px;
+  gap: 6px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 10px;
-  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: color-mix(in srgb, var(--surface-soft) 72%, var(--surface) 28%);
 }
 
 .content-detail-grid span {
   color: var(--muted);
-  font-size: 0.76rem;
-  font-weight: 850;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .content-detail-grid strong {
   color: var(--ink);
-  font-size: 0.92rem;
+  font-size: 1rem;
+  line-height: 1.2;
 }
 
 .content-detail-panel section p {
   white-space: pre-wrap;
   color: var(--muted);
-  line-height: 1.45;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.content-detail-panel .comments-list {
+  max-height: 180px;
+  overflow-y: auto;
 }
 
 .day-detail-summary {
@@ -2819,6 +2864,15 @@ form footer > div {
   .stats-layout,
   .content-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .content-detail-panel {
+    gap: 12px;
+    padding: 18px;
+  }
+
+  .content-detail-panel header {
+    gap: 10px;
   }
 
   .stats-panel {
