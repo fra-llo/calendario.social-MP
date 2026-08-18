@@ -401,6 +401,9 @@ fields.theme.addEventListener("change", updateOtherFieldVisibility);
 fields.commentDraft.addEventListener("input", updateMentionSuggestions);
 fields.commentDraft.addEventListener("keydown", handleCommentDraftKeydown);
 sendCommentButton.addEventListener("click", sendCommentFromComposer);
+[fields.checkIdea, fields.checkCopy, fields.checkCreative, fields.checkReview, fields.checkScheduled].forEach((input) => {
+  input.addEventListener("change", validateChecklistSelection);
+});
 document.addEventListener("selectionchange", rememberRichEditorSelection);
 document.querySelectorAll("[data-rich-toolbar]").forEach((toolbar) => {
   toolbar.addEventListener("pointerdown", rememberRichToolbarSelection, true);
@@ -2675,6 +2678,7 @@ function openPostDialog(post = {}) {
   fields.checkCreative.checked = Boolean(normalized.checklist.creative);
   fields.checkReview.checked = Boolean(normalized.checklist.review);
   fields.checkScheduled.checked = Boolean(normalized.checklist.scheduled);
+  validateChecklistSelection();
   updateOtherFieldVisibility();
   renderHistory(normalized.history);
   updateCopyCounter();
@@ -2880,6 +2884,10 @@ function normalizePostThemes() {
 
 function savePost(event) {
   event.preventDefault();
+  if (!validateChecklistSelection()) {
+    fields.checkIdea.reportValidity();
+    return;
+  }
   const post = collectPostFromForm();
   const existingIndex = state.posts.findIndex((item) => item.id === post.id);
   const action = existingIndex >= 0 ? "Modificato" : "Creato";
@@ -2941,6 +2949,13 @@ function collectPostFromForm() {
     recurrence: fields.recurrence.value,
     checklist,
   });
+}
+
+function validateChecklistSelection() {
+  const hasSelection = [fields.checkIdea, fields.checkCopy, fields.checkCreative, fields.checkReview, fields.checkScheduled]
+    .some((input) => input.checked);
+  fields.checkIdea.setCustomValidity(hasSelection ? "" : "Seleziona almeno uno stato della checklist.");
+  return hasSelection;
 }
 
 function sendCommentFromComposer() {
