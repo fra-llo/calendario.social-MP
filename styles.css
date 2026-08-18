@@ -2081,6 +2081,19 @@ body.is-dark .primary-action {
   pointer-events: none;
 }
 
+.selection-box[data-mode="add"] {
+  background: rgba(15, 133, 122, 0.18);
+}
+
+.selection-box[data-mode="remove"] {
+  border-color: var(--danger);
+  background: rgba(185, 28, 28, 0.12);
+}
+
+body.is-list-selecting {
+  user-select: none;
+}
+
 .history-box {
   border: 1px solid var(--line);
   border-radius: var(--radius);

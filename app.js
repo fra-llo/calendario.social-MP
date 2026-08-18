@@ -340,6 +340,7 @@ let selectedEvent = null;
 let selectedContentDetail = null;
 let listSelectionDrag = null;
 let suppressListClick = false;
+let lastSelectedListPostId = null;
 let editingComments = [];
 let activeMentionIndex = 0;
 
@@ -1930,11 +1931,7 @@ function createListRow(post) {
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.checked = selectedListPosts.has(post.id);
-  checkbox.addEventListener("change", () => {
-    if (checkbox.checked) selectedListPosts.add(post.id);
-    else selectedListPosts.delete(post.id);
-    updateListSelectionState(getSortedListPosts());
-  });
+  checkbox.addEventListener("click", (event) => handleListCheckboxClick(event, post.id, checkbox.checked));
   select.append(checkbox);
 
   const dateCell = document.createElement("div");
@@ -2197,8 +2194,44 @@ function selectVisibleListPosts() {
 
 function clearListSelection() {
   selectedListPosts.clear();
+  lastSelectedListPostId = null;
   closeListBulkMenu();
   renderListView();
+}
+
+function handleListCheckboxClick(event, postId, checked) {
+  event.stopPropagation();
+  if (event.shiftKey && lastSelectedListPostId) {
+    selectListRange(lastSelectedListPostId, postId, checked);
+  } else if (checked) {
+    selectedListPosts.add(postId);
+  } else {
+    selectedListPosts.delete(postId);
+  }
+  lastSelectedListPostId = postId;
+  renderListCheckboxes();
+  updateListSelectionState(getSortedListPosts());
+}
+
+function selectListRange(fromId, toId, shouldSelect) {
+  const ids = getVisibleListPostIds();
+  const fromIndex = ids.indexOf(fromId);
+  const toIndex = ids.indexOf(toId);
+  if (fromIndex === -1 || toIndex === -1) {
+    if (shouldSelect) selectedListPosts.add(toId);
+    else selectedListPosts.delete(toId);
+    return;
+  }
+  const start = Math.min(fromIndex, toIndex);
+  const end = Math.max(fromIndex, toIndex);
+  ids.slice(start, end + 1).forEach((id) => {
+    if (shouldSelect) selectedListPosts.add(id);
+    else selectedListPosts.delete(id);
+  });
+}
+
+function getVisibleListPostIds() {
+  return Array.from(listView.querySelectorAll(".list-item.is-table-row[data-id]")).map((row) => row.dataset.id);
 }
 
 function openListContextMenuFromRow(event) {
@@ -2249,6 +2282,8 @@ function handleListBulkMenuAction(event) {
 function startListSelectionDrag(event) {
   if (state.appMode !== "editorial" || state.viewMode !== "list" || event.button !== 0) return;
   if (event.target.closest("button, input, select, textarea, label, .list-table-header")) return;
+  closeListBulkMenu();
+  const mode = event.altKey ? "remove" : event.metaKey || event.ctrlKey || event.shiftKey ? "add" : "replace";
   const startX = event.clientX;
   const startY = event.clientY;
   listSelectionDrag = {
@@ -2256,15 +2291,20 @@ function startListSelectionDrag(event) {
     startY,
     box: document.createElement("div"),
     active: false,
+    mode,
+    initialSelection: new Set(selectedListPosts),
   };
   listSelectionDrag.box.className = "selection-box";
+  listSelectionDrag.box.dataset.mode = mode;
   document.body.append(listSelectionDrag.box);
+  document.body.classList.add("is-list-selecting");
   window.addEventListener("pointermove", updateListSelectionDrag);
   window.addEventListener("pointerup", finishListSelectionDrag, { once: true });
 }
 
 function updateListSelectionDrag(event) {
   if (!listSelectionDrag) return;
+  event.preventDefault();
   const left = Math.min(listSelectionDrag.startX, event.clientX);
   const top = Math.min(listSelectionDrag.startY, event.clientY);
   const width = Math.abs(event.clientX - listSelectionDrag.startX);
@@ -2278,13 +2318,34 @@ function updateListSelectionDrag(event) {
   });
   if (!listSelectionDrag.active) return;
   const selectionRect = listSelectionDrag.box.getBoundingClientRect();
+  const intersectingIds = new Set();
   listView.querySelectorAll(".list-item.is-table-row[data-id]").forEach((row) => {
     const id = row.dataset.id;
     if (!id) return;
-    if (rectsIntersect(selectionRect, row.getBoundingClientRect())) selectedListPosts.add(id);
+    if (rectsIntersect(selectionRect, row.getBoundingClientRect())) intersectingIds.add(id);
   });
+  applyDragSelection(intersectingIds);
   renderListCheckboxes();
   updateListSelectionState(getSortedListPosts());
+}
+
+function applyDragSelection(intersectingIds) {
+  if (!listSelectionDrag) return;
+  selectedListPosts.clear();
+  listSelectionDrag.initialSelection.forEach((id) => selectedListPosts.add(id));
+
+  if (listSelectionDrag.mode === "replace") {
+    selectedListPosts.clear();
+    intersectingIds.forEach((id) => selectedListPosts.add(id));
+    return;
+  }
+
+  if (listSelectionDrag.mode === "remove") {
+    intersectingIds.forEach((id) => selectedListPosts.delete(id));
+    return;
+  }
+
+  intersectingIds.forEach((id) => selectedListPosts.add(id));
 }
 
 function finishListSelectionDrag() {
@@ -2292,6 +2353,7 @@ function finishListSelectionDrag() {
   suppressListClick = listSelectionDrag.active;
   listSelectionDrag.box.remove();
   listSelectionDrag = null;
+  document.body.classList.remove("is-list-selecting");
   window.removeEventListener("pointermove", updateListSelectionDrag);
   if (suppressListClick) setTimeout(() => { suppressListClick = false; }, 0);
 }
