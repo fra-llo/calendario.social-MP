@@ -2443,6 +2443,42 @@ dialog {
   overflow-x: hidden;
 }
 
+#postDialog {
+  overflow: hidden;
+}
+
+#postDialog form {
+  max-height: calc(100vh - 28px);
+  overflow-y: auto;
+}
+
+#postDialog form > header,
+#postDialog form > footer {
+  position: sticky;
+  z-index: 30;
+  margin-right: -22px;
+  margin-left: -22px;
+  padding-right: 22px;
+  padding-left: 22px;
+  background: var(--surface);
+}
+
+#postDialog form > header {
+  top: -22px;
+  margin-top: -22px;
+  padding-top: 22px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+#postDialog form > footer {
+  bottom: -22px;
+  margin-bottom: -22px;
+  padding-top: 12px;
+  padding-bottom: 22px;
+  border-top: 1px solid var(--line);
+}
+
 dialog::backdrop {
   background: rgba(32, 33, 36, 0.45);
 }
@@ -2606,6 +2642,26 @@ form footer > div {
 
   #settingsDialog form {
     padding: 16px;
+  }
+
+  #postDialog form > header,
+  #postDialog form > footer {
+    margin-right: -18px;
+    margin-left: -18px;
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  #postDialog form > header {
+    top: -18px;
+    margin-top: -18px;
+    padding-top: 18px;
+  }
+
+  #postDialog form > footer {
+    bottom: -18px;
+    margin-bottom: -18px;
+    padding-bottom: 18px;
   }
 
   .sidebar,
