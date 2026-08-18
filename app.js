@@ -2053,11 +2053,7 @@ function getListGroupLabel(post, group) {
   if (group === "week") return formatWeekRange(startOfWeek(parseDateKey(post.date)));
   if (group === "platform") return post.platform;
   if (group === "status") return getPostWorkStatus(post);
-  if (group === "owner") return post.owner || "Senza responsabile";
-  if (group === "format") return post.format || "Senza categoria";
-  if (group === "priority") return post.priority || "Senza priorita";
   if (group === "theme") return getTheme(post.theme)?.name || "Senza tema";
-  if (group === "goal") return post.goal || "Senza obiettivo";
   return "";
 }
 
