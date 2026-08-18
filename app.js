@@ -1939,12 +1939,20 @@ function createListRow(post) {
 
   const dateCell = document.createElement("div");
   dateCell.className = "list-date-cell";
-  dateCell.textContent = formatShortDate(parseDateKey(post.date));
+  const rowDate = parseDateKey(post.date);
+  const dateValue = document.createElement("strong");
+  dateValue.className = "list-date-main";
+  dateValue.textContent = formatShortDate(rowDate);
+  const dateMeta = document.createElement("span");
+  dateMeta.className = "list-date-meta";
+  dateMeta.textContent = new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(rowDate);
+  dateCell.append(dateValue, dateMeta);
 
   const main = document.createElement("div");
   main.className = "list-title-cell";
   const title = document.createElement("h3");
   title.textContent = post.title;
+  title.title = post.title;
   const meta = document.createElement("p");
   meta.textContent = [post.owner || "Senza responsabile", formatPlatformLabel(post.platform), post.priority || "Media"].filter(Boolean).join(" - ");
   main.append(title, meta);

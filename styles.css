@@ -1770,7 +1770,7 @@ body.is-dark .primary-action {
 
 .list-view {
   display: grid;
-  gap: 10px;
+  gap: 6px;
 }
 
 .list-toolbar {
@@ -1883,17 +1883,17 @@ body.is-dark .primary-action {
 
 .list-table-header {
   display: grid;
-  grid-template-columns: 34px 92px minmax(190px, 1.7fr) minmax(110px, 0.75fr) 110px 120px 70px;
-  gap: 14px;
+  grid-template-columns: 34px minmax(96px, 0.55fr) minmax(260px, 2fr) minmax(130px, 0.8fr) minmax(105px, 0.62fr) minmax(128px, 0.7fr) 72px;
+  gap: 16px;
   align-items: center;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--line) 82%, var(--ink) 18%);
   border-radius: var(--radius) var(--radius) 0 0;
-  padding: 10px 14px;
+  padding: 11px 16px;
   color: var(--muted);
-  background: var(--surface-soft);
+  background: color-mix(in srgb, var(--surface-soft) 78%, var(--surface) 22%);
   font-size: 0.74rem;
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.035em;
   text-transform: uppercase;
 }
 
@@ -1911,6 +1911,7 @@ body.is-dark .primary-action {
 }
 
 .list-item:hover {
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent-soft) 8%);
   box-shadow: var(--shadow-soft);
 }
 
@@ -1928,10 +1929,14 @@ body.is-dark .primary-action {
 }
 
 .list-item.is-table-row {
-  grid-template-columns: 34px 92px minmax(190px, 1.7fr) minmax(110px, 0.75fr) 110px 120px 70px;
-  gap: 14px;
-  border-left-width: 4px;
-  border-radius: 0;
+  grid-template-columns: 34px minmax(96px, 0.55fr) minmax(260px, 2fr) minmax(130px, 0.8fr) minmax(105px, 0.62fr) minmax(128px, 0.7fr) 72px;
+  gap: 16px;
+  min-height: 72px;
+  border-color: color-mix(in srgb, var(--line) 88%, var(--ink) 12%);
+  border-left-width: 5px;
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .list-item.is-table-row.is-selected {
@@ -1950,8 +1955,31 @@ body.is-dark .primary-action {
   font-weight: 850;
 }
 
+.list-muted-cell {
+  overflow: hidden;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .list-date-cell {
+  display: grid;
+  gap: 3px;
   color: var(--ink);
+}
+
+.list-date-main {
+  font-size: 0.94rem;
+  line-height: 1.1;
+}
+
+.list-date-meta {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .list-title-cell {
@@ -1960,8 +1988,17 @@ body.is-dark .primary-action {
 
 .list-title-cell h3 {
   overflow: hidden;
+  color: var(--ink);
+  font-size: 1.02rem;
+  line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.list-title-cell p {
+  margin-top: 3px;
+  font-size: 0.86rem;
+  line-height: 1.25;
 }
 
 .list-pill-cell {
@@ -1975,8 +2012,11 @@ body.is-dark .primary-action {
   align-items: center;
   border-radius: 7px;
   padding: 5px 9px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 900;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
