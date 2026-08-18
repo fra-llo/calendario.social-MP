@@ -2261,38 +2261,35 @@ body.is-dark .primary-action {
 
 .content-detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 0;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--surface-soft) 62%, var(--surface) 38%);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 30px;
+  row-gap: 0;
+  padding: 4px 0;
 }
 
 .content-detail-grid div {
-  display: grid;
-  gap: 6px;
-  min-height: 66px;
-  border: 0;
-  border-right: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 42px;
   border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
-  padding: 12px 14px;
+  padding: 10px 0;
   background: transparent;
 }
 
 .content-detail-grid span {
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 900;
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.035em;
+  line-height: 1.2;
 }
 
 .content-detail-grid strong {
   color: var(--ink);
-  font-size: 1.02rem;
+  font-size: 0.98rem;
   line-height: 1.2;
+  text-align: right;
 }
 
 .content-detail-panel section p {
@@ -2874,8 +2871,14 @@ form footer > div {
   }
 
   .content-detail-grid div {
+    align-items: flex-start;
+    flex-direction: column;
     min-height: auto;
-    border-right: 0;
+    gap: 4px;
+  }
+
+  .content-detail-grid strong {
+    text-align: left;
   }
 
   .content-detail-panel {

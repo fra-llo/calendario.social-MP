@@ -1983,9 +1983,6 @@ function createListRow(post) {
 function openContentDetailDialog(post) {
   selectedContentDetail = post;
   const theme = getTheme(post.theme);
-  const assetSummary = assetLinksFromLegacy(post).map((asset) => (
-    asset.url ? `${asset.title || "Asset"}: ${asset.url}` : asset.title
-  )).filter(Boolean).join(" | ") || "-";
   contentDetailTitle.textContent = post.title || "Contenuto senza titolo";
   contentDetailGrid.innerHTML = "";
   [
@@ -1998,7 +1995,6 @@ function openContentDetailDialog(post) {
     ["Tema", [formatThemeLabel(theme), post.themeOther || ""].filter(Boolean).join(" - ") || "-"],
     ["Responsabile", post.owner || "Senza responsabile"],
     ["Obiettivo", post.goal || "-"],
-    ["Asset", assetSummary],
   ].forEach(([label, value]) => {
     const item = document.createElement("div");
     const labelNode = document.createElement("span");
