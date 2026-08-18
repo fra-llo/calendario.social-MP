@@ -457,7 +457,7 @@
           <p id="contentDetailNotes"></p>
         </section>
         <section>
-          <h3>Commenti interni</h3>
+          <h3>Chat</h3>
           <div class="comments-list" id="contentDetailComments"></div>
         </section>
         <footer>
@@ -705,18 +705,15 @@
           <div class="rich-editor" id="postNotesEditor" contenteditable="true" data-placeholder="Indicazioni, approvazioni, dubbi, cose da controllare..."></div>
         </section>
 
-        <section class="comments-field">
-          <div class="field-heading-row">
-            <span class="field-heading">Commenti interni</span>
-            <span class="form-note">Scrivi @ per menzionare una persona.</span>
-          </div>
+        <details class="comments-field">
+          <summary>Chat</summary>
           <div class="comments-list" id="postCommentsList"></div>
           <div class="chat-composer">
             <textarea id="postCommentDraft" rows="2" maxlength="600" placeholder="Scrivi un commento interno... usa @nome per menzionare"></textarea>
             <div class="mention-suggestions" id="mentionSuggestions" hidden></div>
             <button class="primary-action" id="sendCommentButton" type="button">Invia</button>
           </div>
-        </section>
+        </details>
 
         <details class="history-box" id="historyBox" hidden>
           <summary>Storico modifiche</summary>

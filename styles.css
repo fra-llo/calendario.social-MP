@@ -510,21 +510,52 @@ textarea {
 }
 
 .comments-field {
-  display: grid;
-  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: visible;
 }
 
-.field-heading-row {
+.comments-field summary {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  min-height: 42px;
+  padding: 0 12px;
+  color: var(--ink);
+  font-size: 0.96rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.comments-field summary::-webkit-details-marker {
+  display: none;
+}
+
+.comments-field summary::after {
+  content: "Apri";
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.comments-field[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.comments-field[open] summary::after {
+  content: "Chiudi";
+}
+
+.comments-field > .comments-list,
+.comments-field > .chat-composer {
+  margin: 10px 12px;
 }
 
 .comments-list {
   display: grid;
   gap: 8px;
-  max-height: 260px;
+  max-height: 220px;
   overflow: auto;
 }
 
