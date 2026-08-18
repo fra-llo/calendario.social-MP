@@ -1430,7 +1430,8 @@ function createPostChip(post) {
   chip.dataset.platform = post.platform;
   chip.dataset.priority = post.priority || "Media";
   applyPostColor(chip, post.color);
-  chip.addEventListener("click", () => openPostDialog(post));
+  chip.title = "Apri dettaglio contenuto";
+  chip.addEventListener("click", () => openContentDetailDialog(post));
   chip.addEventListener("dragstart", (event) => {
     event.dataTransfer.setData("text/plain", post.id);
   });
