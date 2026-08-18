@@ -618,8 +618,8 @@
           <label class="check-row"><input id="checkScheduled" type="checkbox"> Progr./Pubbl.</label>
         </fieldset>
 
-        <section class="rich-field script-field">
-          <span class="field-heading">Script</span>
+        <details class="rich-field script-field fold-field">
+          <summary>Script</summary>
           <details class="rich-tools">
             <summary>Strumenti di scrittura</summary>
             <div class="rich-toolbar rich-toolbar-word" data-rich-toolbar="postCopyEditor">
@@ -661,10 +661,10 @@
             <div class="rich-editor" id="postCopyEditor" contenteditable="true" data-placeholder="Testo del post, caption, hook..."></div>
             <small class="rich-counter" id="copyCounter">0 caratteri</small>
           </div>
-        </section>
+        </details>
 
-        <section class="rich-field">
-          Note interne
+        <details class="rich-field fold-field">
+          <summary>Note interne</summary>
           <details class="rich-tools">
             <summary>Strumenti di scrittura</summary>
             <div class="rich-toolbar rich-toolbar-word" data-rich-toolbar="postNotesEditor">
@@ -703,9 +703,9 @@
           </details>
           <textarea id="postNotes" hidden></textarea>
           <div class="rich-editor" id="postNotesEditor" contenteditable="true" data-placeholder="Indicazioni, approvazioni, dubbi, cose da controllare..."></div>
-        </section>
+        </details>
 
-        <details class="comments-field">
+        <details class="comments-field fold-field">
           <summary>Chat</summary>
           <div class="comments-list" id="postCommentsList"></div>
           <div class="chat-composer">
