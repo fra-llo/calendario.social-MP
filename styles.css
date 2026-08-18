@@ -2164,8 +2164,8 @@ body.is-dark .primary-action {
 
 .content-detail-panel header {
   position: absolute;
-  top: 14px;
-  right: 18px;
+  top: 12px;
+  right: 14px;
   z-index: 1;
   justify-content: flex-end;
   min-height: 0;
@@ -2231,7 +2231,7 @@ body.is-dark .primary-action {
 }
 
 .content-detail-panel > section:first-of-type {
-  padding-right: 44px;
+  margin-top: 18px;
 }
 
 .content-detail-panel .content-detail-title {
