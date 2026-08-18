@@ -1229,19 +1229,24 @@ function createTimedPostList(dayPosts) {
   list.className = "post-list timed-post-list";
   const withTime = dayPosts.filter((post) => isValidPostTime(post.time));
   const withoutTime = dayPosts.filter((post) => !isValidPostTime(post.time));
+  let previousMinutes = TIMELINE_START_MINUTES;
 
   if (withTime.length) {
-    groupTimedPosts(withTime).forEach(([hour, posts]) => {
+    groupTimedPosts(withTime).forEach(([time, posts]) => {
+      const minutes = Math.max(TIMELINE_START_MINUTES, Math.min(TIMELINE_END_MINUTES, timeToMinutes(time)));
+      const minutesFromPrevious = Math.max(0, minutes - previousMinutes);
       const slot = document.createElement("section");
       slot.className = "time-slot";
+      slot.style.setProperty("--time-gap", `${minutesFromPrevious * getTimelineMinuteScale()}px`);
       const label = document.createElement("span");
       label.className = "time-slot-label";
-      label.textContent = hour;
+      label.textContent = time;
       const items = document.createElement("div");
       items.className = "time-slot-items";
       posts.forEach((post) => items.append(createPostChip(post)));
       slot.append(label, items);
       list.append(slot);
+      previousMinutes = minutes;
     });
   }
 
@@ -1269,6 +1274,18 @@ function groupTimedPosts(posts) {
     return accumulator;
   }, {});
   return Object.entries(groups).sort(([first], [second]) => first.localeCompare(second));
+}
+
+const TIMELINE_START_MINUTES = 6 * 60;
+const TIMELINE_END_MINUTES = 24 * 60;
+
+function timeToMinutes(time) {
+  const [hours, minutes] = String(time || "0:0").split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function getTimelineMinuteScale() {
+  return state.viewMode === "day" ? 0.42 : 0.28;
 }
 
 function createEventDayCell(date, todayKey) {

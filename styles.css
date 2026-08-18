@@ -1598,30 +1598,26 @@ body.is-dark .primary-action {
 }
 
 .timed-post-list {
-  gap: 9px;
+  gap: 0;
+  padding-top: 0;
 }
 
 .time-slot {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 8px;
-  align-items: start;
-  border-top: 1px solid var(--line);
-  padding-top: 8px;
+  gap: 5px;
+  margin-top: var(--time-gap, 0);
 }
 
-.time-slot:first-child {
-  border-top: 0;
-  padding-top: 0;
+.time-slot + .time-slot {
+  border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  padding-top: 7px;
 }
 
 .time-slot-label {
-  position: sticky;
-  top: 0;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 900;
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .time-slot-items {
@@ -1631,7 +1627,7 @@ body.is-dark .primary-action {
 }
 
 .time-slot.is-unscheduled {
-  margin-top: 2px;
+  margin-top: 12px;
 }
 
 .time-slot.is-unscheduled .time-slot-label {
@@ -2824,10 +2820,6 @@ form footer > div {
 
   .day-detail-item {
     grid-template-columns: 1fr;
-  }
-
-  .time-slot {
-    grid-template-columns: 38px minmax(0, 1fr);
   }
 
   .theme-editor-row {
