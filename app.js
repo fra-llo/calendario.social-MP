@@ -1995,8 +1995,10 @@ function openContentDetailDialog(post) {
     ["Tema", [formatThemeLabel(theme), post.themeOther || ""].filter(Boolean).join(" - ") || "-"],
     ["Responsabile", post.owner || "Senza responsabile"],
     ["Obiettivo", post.goal || "-"],
-  ].forEach(([label, value]) => {
+  ].forEach(([label, value], index) => {
     const item = document.createElement("div");
+    item.className = "content-detail-field";
+    if (index < 3) item.classList.add("is-primary");
     const labelNode = document.createElement("span");
     labelNode.textContent = label;
     const valueNode = document.createElement("strong");

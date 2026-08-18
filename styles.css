@@ -2261,35 +2261,46 @@ body.is-dark .primary-action {
 
 .content-detail-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 30px;
-  row-gap: 0;
-  padding: 4px 0;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px 14px;
+  padding: 2px 0 4px;
 }
 
-.content-detail-grid div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 18px;
-  min-height: 42px;
+.content-detail-field {
+  display: grid;
+  grid-column: span 2;
+  gap: 5px;
+  min-height: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
-  padding: 10px 0;
+  padding: 8px 0 11px;
   background: transparent;
+}
+
+.content-detail-field.is-primary {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--surface-soft) 68%, var(--surface) 32%);
 }
 
 .content-detail-grid span {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 900;
-  line-height: 1.2;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .content-detail-grid strong {
   color: var(--ink);
-  font-size: 0.98rem;
+  font-size: 1rem;
   line-height: 1.2;
-  text-align: right;
+  text-align: left;
+}
+
+.content-detail-field.is-primary strong {
+  font-size: 1.12rem;
 }
 
 .content-detail-panel section p {
@@ -2870,15 +2881,9 @@ form footer > div {
     grid-template-columns: 1fr;
   }
 
-  .content-detail-grid div {
-    align-items: flex-start;
-    flex-direction: column;
+  .content-detail-field {
+    grid-column: 1;
     min-height: auto;
-    gap: 4px;
-  }
-
-  .content-detail-grid strong {
-    text-align: left;
   }
 
   .content-detail-panel {
