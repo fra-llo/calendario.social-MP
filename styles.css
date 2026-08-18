@@ -314,6 +314,7 @@ textarea {
 }
 
 .fold-field {
+  display: block;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -329,6 +330,7 @@ textarea {
   color: var(--ink);
   font-size: 0.96rem;
   font-weight: 900;
+  line-height: 1;
   cursor: pointer;
 }
 
