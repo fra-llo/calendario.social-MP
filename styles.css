@@ -1836,6 +1836,29 @@ body.is-dark .primary-action {
   font-weight: 900;
 }
 
+.bulk-action-bar .secondary-action,
+.bulk-action-bar .ghost-action {
+  border: 0;
+  border-radius: var(--radius);
+  min-height: 40px;
+  padding: 0 14px;
+  color: var(--ink);
+  background: var(--control);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.bulk-action-bar .secondary-action {
+  font-weight: 900;
+}
+
+.bulk-action-bar .secondary-action:hover,
+.bulk-action-bar .ghost-action:hover,
+.bulk-action-bar .secondary-action:focus-visible,
+.bulk-action-bar .ghost-action:focus-visible {
+  background: #e9e4d9;
+}
+
 .bulk-context-menu {
   position: fixed;
   z-index: 90;
