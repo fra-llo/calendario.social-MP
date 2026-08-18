@@ -2,6 +2,7 @@ const storageKey = "social-content-calendar-posts-v2";
 const legacyStorageKey = "social-content-calendar-posts";
 const settingsKey = "social-content-calendar-settings-v2";
 const manualEventsKey = "social-content-calendar-manual-events-v1";
+const listColumnsKey = "social-content-calendar-list-columns-v1";
 
 const platforms = ["Instagram", "TikTok", "Facebook", "LinkedIn", "YouTube", "X"];
 const platformIcons = {
@@ -68,6 +69,19 @@ const defaultTemplates = {
   "Post LinkedIn": { platform: "LinkedIn", format: "Post", goal: "Awareness", theme: "lavoro", assets: "Hook, insight, CTA", checklist: { idea: true, copy: true } },
   "Short YouTube": { platform: "YouTube", format: "Short", goal: "Engagement", theme: "persone", assets: "Video verticale, titolo, thumbnail", checklist: { idea: true } },
 };
+const listColumnDefinitions = [
+  { id: "date", label: "Data", width: "minmax(96px, 0.55fr)", required: true },
+  { id: "title", label: "Titolo", width: "minmax(260px, 2fr)", required: true },
+  { id: "theme", label: "Tema", width: "minmax(130px, 0.8fr)" },
+  { id: "format", label: "Formato", width: "minmax(105px, 0.62fr)" },
+  { id: "status", label: "Stato", width: "minmax(128px, 0.7fr)" },
+  { id: "time", label: "Orario", width: "72px" },
+  { id: "owner", label: "Responsabile", width: "minmax(130px, 0.8fr)" },
+  { id: "platform", label: "Piattaforma", width: "minmax(120px, 0.7fr)" },
+  { id: "priority", label: "Priorita", width: "minmax(90px, 0.5fr)" },
+  { id: "goal", label: "Obiettivo", width: "minmax(120px, 0.7fr)" },
+];
+const defaultListColumns = ["date", "title", "theme", "format", "status", "time"];
 const eventCategories = {
   festivita: { label: "Festività", icon: "◆", color: "#0b7a75" },
   istituzioni: { label: "Istituzioni", icon: "▣", color: "#2563eb" },
@@ -125,6 +139,7 @@ const state = {
   posts: loadPosts(),
   manualEvents: initialManualEvents.length ? initialManualEvents : initialSettings.manualEvents,
   settings: initialSettings,
+  listColumns: loadListColumns(),
 };
 
 const calendarGrid = document.querySelector("#calendarGrid");
@@ -139,6 +154,8 @@ const listBulkActionSummary = document.querySelector("#listBulkActionSummary");
 const listBulkActionsButton = document.querySelector("#listBulkActionsButton");
 const listBulkContextMenu = document.querySelector("#listBulkContextMenu");
 const clearListSelectionButton = document.querySelector("#clearListSelectionButton");
+const listColumnsButton = document.querySelector("#listColumnsButton");
+const listColumnsMenu = document.querySelector("#listColumnsMenu");
 const bulkStatusSelect = document.querySelector("#bulkStatusSelect");
 const bulkOwnerInput = document.querySelector("#bulkOwnerInput");
 const bulkThemeSelect = document.querySelector("#bulkThemeSelect");
@@ -357,6 +374,7 @@ toolbarNewEventButton.addEventListener("click", () => openManualEventDialog());
 editorialModeButton.addEventListener("click", () => setAppMode("editorial"));
 eventsModeButton.addEventListener("click", () => setAppMode("events"));
 filterToolbarButton.addEventListener("click", openFiltersPanel);
+listColumnsButton.addEventListener("click", toggleListColumnsMenu);
 resetFiltersButton.addEventListener("click", resetFilters);
 document.querySelector("#settingsButton").addEventListener("click", openSettingsDialog);
 document.querySelector("#statsButton").addEventListener("click", openStatsDialog);
@@ -451,9 +469,15 @@ document.addEventListener("click", (event) => {
   if (!listBulkContextMenu.hidden && !event.target.closest("#listBulkContextMenu, #listBulkActionsButton")) {
     closeListBulkMenu();
   }
+  if (!listColumnsMenu.hidden && !event.target.closest("#listColumnsMenu, #listColumnsButton")) {
+    closeListColumnsMenu();
+  }
 });
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeListBulkMenu();
+  if (event.key === "Escape") {
+    closeListBulkMenu();
+    closeListColumnsMenu();
+  }
 });
 
 document.querySelectorAll("[data-settings-tab-button]").forEach((button) => {
@@ -1097,6 +1121,8 @@ function renderMainView() {
   calendarGrid.hidden = isListView;
   listView.hidden = !isListView;
   listToolbar.hidden = true;
+  listColumnsButton.hidden = !isListView || state.appMode !== "editorial";
+  if (listColumnsButton.hidden) closeListColumnsMenu();
   if (!isListView || state.appMode !== "editorial") {
     listBulkActionBar.hidden = true;
     closeListBulkMenu();
@@ -1896,12 +1922,93 @@ function renderListView() {
 function createListHeader() {
   const header = document.createElement("div");
   header.className = "list-table-header";
-  ["", "Data", "Titolo", "Tema", "Formato", "Stato", "Orario"].forEach((label) => {
+  applyListColumnGrid(header);
+  ["", ...getVisibleListColumns().map((column) => column.label)].forEach((label) => {
     const cell = document.createElement("span");
     cell.textContent = label;
     header.append(cell);
   });
   return header;
+}
+
+function getVisibleListColumns() {
+  const selected = new Set(state.listColumns);
+  return listColumnDefinitions.filter((column) => column.required || selected.has(column.id));
+}
+
+function applyListColumnGrid(element) {
+  const template = ["34px", ...getVisibleListColumns().map((column) => column.width)].join(" ");
+  element.style.setProperty("--list-columns", template);
+}
+
+function toggleListColumnsMenu(event) {
+  event.stopPropagation();
+  if (!listColumnsMenu.hidden) {
+    closeListColumnsMenu();
+    return;
+  }
+  renderListColumnsMenu();
+  listColumnsMenu.hidden = false;
+  const rect = listColumnsButton.getBoundingClientRect();
+  const menuRect = listColumnsMenu.getBoundingClientRect();
+  const gap = 12;
+  const left = Math.min(rect.left, window.innerWidth - menuRect.width - gap);
+  Object.assign(listColumnsMenu.style, {
+    left: `${Math.max(gap, left)}px`,
+    top: `${Math.min(rect.bottom + 8, window.innerHeight - menuRect.height - gap)}px`,
+  });
+}
+
+function closeListColumnsMenu() {
+  listColumnsMenu.hidden = true;
+}
+
+function renderListColumnsMenu() {
+  listColumnsMenu.innerHTML = "";
+  const heading = document.createElement("strong");
+  heading.textContent = "Colonne visibili";
+  listColumnsMenu.append(heading);
+
+  listColumnDefinitions.forEach((column) => {
+    const row = document.createElement("label");
+    row.className = "columns-menu-option";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = column.required || state.listColumns.includes(column.id);
+    checkbox.disabled = Boolean(column.required);
+    checkbox.addEventListener("change", () => toggleListColumn(column.id, checkbox.checked));
+    const text = document.createElement("span");
+    text.textContent = column.label;
+    row.append(checkbox, text);
+    listColumnsMenu.append(row);
+  });
+
+  const reset = document.createElement("button");
+  reset.type = "button";
+  reset.textContent = "Ripristina colonne";
+  reset.addEventListener("click", resetListColumns);
+  listColumnsMenu.append(reset);
+}
+
+function toggleListColumn(columnId, visible) {
+  const column = listColumnDefinitions.find((item) => item.id === columnId);
+  if (!column || column.required) return;
+  const selected = new Set(state.listColumns);
+  if (visible) selected.add(columnId);
+  else selected.delete(columnId);
+  state.listColumns = listColumnDefinitions
+    .filter((item) => item.required || selected.has(item.id))
+    .map((item) => item.id);
+  persistListColumns();
+  renderListView();
+  renderListColumnsMenu();
+}
+
+function resetListColumns() {
+  state.listColumns = [...defaultListColumns];
+  persistListColumns();
+  renderListView();
+  renderListColumnsMenu();
 }
 
 function createListRow(post) {
@@ -1914,6 +2021,7 @@ function createListRow(post) {
   row.classList.toggle("is-overdue", isOverduePost(post));
   row.classList.toggle("is-selected", selectedListPosts.has(post.id));
   applyPostColor(row, post.color);
+  applyListColumnGrid(row);
   row.addEventListener("click", () => {
     if (suppressListClick) return;
     openContentDetailDialog(post);
@@ -1981,7 +2089,38 @@ function createListRow(post) {
   timeCell.className = "list-muted-cell";
   timeCell.textContent = post.time || "-";
 
-  row.append(select, dateCell, main, themeCell, formatCell, statusCell, timeCell);
+  const ownerCell = document.createElement("div");
+  ownerCell.className = "list-muted-cell";
+  ownerCell.textContent = post.owner || "Senza responsabile";
+  ownerCell.title = post.owner || "Senza responsabile";
+
+  const platformCell = document.createElement("div");
+  platformCell.className = "list-muted-cell";
+  platformCell.textContent = formatPlatformLabel(post.platform);
+
+  const priorityCell = document.createElement("div");
+  priorityCell.className = "list-muted-cell";
+  priorityCell.textContent = post.priority || "Media";
+
+  const goalCell = document.createElement("div");
+  goalCell.className = "list-muted-cell";
+  goalCell.textContent = post.goal || "-";
+  goalCell.title = post.goal || "-";
+
+  const cells = {
+    date: dateCell,
+    title: main,
+    theme: themeCell,
+    format: formatCell,
+    status: statusCell,
+    time: timeCell,
+    owner: ownerCell,
+    platform: platformCell,
+    priority: priorityCell,
+    goal: goalCell,
+  };
+
+  row.append(select, ...getVisibleListColumns().map((column) => cells[column.id]));
   return row;
 }
 
@@ -3669,6 +3808,21 @@ function loadPosts() {
 function persistPosts(syncCloud = false) {
   localStorage.setItem(storageKey, JSON.stringify(state.posts));
   if (syncCloud) syncAllCloudPosts();
+}
+
+function loadListColumns() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(listColumnsKey) || "[]");
+    const validColumns = new Set(listColumnDefinitions.map((column) => column.id));
+    const selected = saved.filter((columnId) => validColumns.has(columnId));
+    return selected.length ? selected : [...defaultListColumns];
+  } catch {
+    return [...defaultListColumns];
+  }
+}
+
+function persistListColumns() {
+  localStorage.setItem(listColumnsKey, JSON.stringify(state.listColumns));
 }
 
 function loadManualEvents() {

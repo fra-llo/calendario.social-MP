@@ -1954,6 +1954,70 @@ body.is-dark .primary-action {
   color: var(--danger);
 }
 
+.columns-menu {
+  position: fixed;
+  z-index: 92;
+  display: grid;
+  min-width: 220px;
+  max-width: min(280px, calc(100vw - 24px));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.columns-menu[hidden] {
+  display: none;
+}
+
+.columns-menu strong {
+  padding: 4px 6px 6px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.columns-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 7px;
+  padding: 7px 6px;
+  color: var(--ink);
+  font-weight: 800;
+  line-height: 1.15;
+  cursor: pointer;
+}
+
+.columns-menu-option:hover {
+  background: var(--surface-soft);
+}
+
+.columns-menu-option input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.columns-menu-option input:disabled {
+  opacity: 0.55;
+}
+
+.columns-menu button {
+  margin-top: 5px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  padding: 10px 6px 3px;
+  color: var(--accent);
+  background: transparent;
+  text-align: left;
+  font-weight: 900;
+}
+
 .list-group-heading {
   margin: 10px 0 0;
   border-top: 1px solid var(--line);
@@ -1964,7 +2028,7 @@ body.is-dark .primary-action {
 
 .list-table-header {
   display: grid;
-  grid-template-columns: 34px minmax(96px, 0.55fr) minmax(260px, 2fr) minmax(130px, 0.8fr) minmax(105px, 0.62fr) minmax(128px, 0.7fr) 72px;
+  grid-template-columns: var(--list-columns, 34px minmax(96px, 0.55fr) minmax(260px, 2fr) minmax(130px, 0.8fr) minmax(105px, 0.62fr) minmax(128px, 0.7fr) 72px);
   gap: 16px;
   align-items: center;
   border: 1px solid color-mix(in srgb, var(--line) 82%, var(--ink) 18%);
@@ -2010,7 +2074,7 @@ body.is-dark .primary-action {
 }
 
 .list-item.is-table-row {
-  grid-template-columns: 34px minmax(96px, 0.55fr) minmax(260px, 2fr) minmax(130px, 0.8fr) minmax(105px, 0.62fr) minmax(128px, 0.7fr) 72px;
+  grid-template-columns: var(--list-columns, 34px minmax(96px, 0.55fr) minmax(260px, 2fr) minmax(130px, 0.8fr) minmax(105px, 0.62fr) minmax(128px, 0.7fr) 72px);
   gap: 16px;
   min-height: 72px;
   border-color: color-mix(in srgb, var(--line) 88%, var(--ink) 12%);
