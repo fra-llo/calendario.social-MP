@@ -2262,8 +2262,8 @@ body.is-dark .primary-action {
 .content-detail-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px 14px;
-  padding: 2px 0 4px;
+  gap: 8px 16px;
+  padding-top: 2px;
 }
 
 .content-detail-field {
@@ -2274,6 +2274,11 @@ body.is-dark .primary-action {
   border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
   padding: 8px 0 11px;
   background: transparent;
+}
+
+.content-detail-field:nth-last-child(-n + 3) {
+  border-bottom: 0;
+  padding-bottom: 4px;
 }
 
 .content-detail-grid span {
