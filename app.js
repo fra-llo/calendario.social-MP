@@ -199,11 +199,17 @@ const trashDialog = document.querySelector("#trashDialog");
 const trashList = document.querySelector("#trashList");
 const statsDialog = document.querySelector("#statsDialog");
 const statsPeriodTitle = document.querySelector("#statsPeriodTitle");
+const statsPeriodType = document.querySelector("#statsPeriodType");
 const statsPeriodInput = document.querySelector("#statsPeriodInput");
+const exportStatsButton = document.querySelector("#exportStatsButton");
 const statsSummaryGrid = document.querySelector("#statsSummaryGrid");
+const statsComparisonGrid = document.querySelector("#statsComparisonGrid");
 const statsPlatformBars = document.querySelector("#statsPlatformBars");
+const statsFormatBars = document.querySelector("#statsFormatBars");
 const statsStatusBars = document.querySelector("#statsStatusBars");
 const themeBars = document.querySelector("#themeBars");
+const statsOwnerBars = document.querySelector("#statsOwnerBars");
+const statsTrend = document.querySelector("#statsTrend");
 const statsInsights = document.querySelector("#statsInsights");
 const copyCounter = document.querySelector("#copyCounter");
 const dayDialog = document.querySelector("#dayDialog");
@@ -351,6 +357,7 @@ let undoAction = null;
 let undoTimer = null;
 let resizingSidebar = false;
 let statsVisibleDate = new Date(state.visibleDate);
+let statsPeriodMode = "month";
 const selectedListPosts = new Set();
 const dismissedStatsInsights = new Set();
 let selectedEvent = null;
@@ -389,7 +396,9 @@ document.querySelector("#closeTrash").addEventListener("click", closeTrashDialog
 document.querySelector("#closeStats").addEventListener("click", closeStatsDialog);
 document.querySelector("#previousStatsPeriod").addEventListener("click", () => changeStatsPeriod(-1));
 document.querySelector("#nextStatsPeriod").addEventListener("click", () => changeStatsPeriod(1));
+statsPeriodType.addEventListener("change", setStatsPeriodType);
 statsPeriodInput.addEventListener("change", setStatsPeriodFromInput);
+exportStatsButton.addEventListener("click", exportStats);
 document.querySelector("#closeDayDialog").addEventListener("click", closeDayDialog);
 document.querySelector("#closeEventDialog").addEventListener("click", closeEventDialog);
 createPostFromEventButton.addEventListener("click", createPostFromSelectedEvent);
@@ -955,6 +964,7 @@ function closeTrashDialog() {
 function openStatsDialog() {
   closeHamburgerMenu();
   statsVisibleDate = new Date(state.visibleDate);
+  syncStatsPeriodControls();
   renderStatsDialog();
   if (!statsDialog.open) statsDialog.showModal();
 }
@@ -964,16 +974,57 @@ function closeStatsDialog() {
 }
 
 function changeStatsPeriod(delta) {
-  statsVisibleDate.setMonth(statsVisibleDate.getMonth() + delta);
+  if (statsPeriodMode === "week") {
+    statsVisibleDate.setDate(statsVisibleDate.getDate() + (delta * 7));
+  } else if (statsPeriodMode === "quarter") {
+    statsVisibleDate.setMonth(statsVisibleDate.getMonth() + (delta * 3));
+  } else if (statsPeriodMode === "year") {
+    statsVisibleDate.setFullYear(statsVisibleDate.getFullYear() + delta);
+  } else {
+    statsVisibleDate.setMonth(statsVisibleDate.getMonth() + delta);
+  }
+  renderStatsDialog();
+}
+
+function setStatsPeriodType() {
+  statsPeriodMode = statsPeriodType.value;
+  syncStatsPeriodControls();
   renderStatsDialog();
 }
 
 function setStatsPeriodFromInput() {
   if (!statsPeriodInput.value) return;
-  const [year, month] = statsPeriodInput.value.split("-").map(Number);
-  if (!year || !month) return;
-  statsVisibleDate = new Date(year, month - 1, 1);
+  if (statsPeriodMode === "week") {
+    const [year, week] = statsPeriodInput.value.split("-W").map(Number);
+    if (!year || !week) return;
+    statsVisibleDate = getDateFromIsoWeek(year, week);
+  } else if (statsPeriodMode === "year") {
+    const year = Number(statsPeriodInput.value);
+    if (!year) return;
+    statsVisibleDate = new Date(year, 0, 1);
+  } else {
+    const [year, month] = statsPeriodInput.value.split("-").map(Number);
+    if (!year || !month) return;
+    statsVisibleDate = new Date(year, month - 1, 1);
+  }
   renderStatsDialog();
+}
+
+function syncStatsPeriodControls() {
+  statsPeriodType.value = statsPeriodMode;
+  statsPeriodInput.removeAttribute("min");
+  statsPeriodInput.removeAttribute("max");
+  statsPeriodInput.removeAttribute("step");
+  if (statsPeriodMode === "week") {
+    statsPeriodInput.type = "week";
+  } else if (statsPeriodMode === "year") {
+    statsPeriodInput.type = "number";
+    statsPeriodInput.min = "2020";
+    statsPeriodInput.max = "2100";
+    statsPeriodInput.step = "1";
+  } else {
+    statsPeriodInput.type = "month";
+  }
 }
 
 function renderTrash() {
@@ -2610,35 +2661,120 @@ function renderPlatformStats() {
 }
 
 function renderStatsDialog() {
-  const monthPosts = getMonthPosts(state.posts, statsVisibleDate);
-  statsPeriodTitle.textContent = formatMonthLabel(statsVisibleDate);
-  statsPeriodInput.value = toMonthInput(statsVisibleDate);
-  renderStatsSummary(monthPosts);
-  renderStatsDistributionBars(statsPlatformBars, getPlatformStats(monthPosts), "target");
-  renderStatsDistributionBars(statsStatusBars, getStatusStats(monthPosts), "count");
-  renderThemeDistribution(monthPosts);
-  renderStatsInsights(monthPosts);
+  const period = getStatsPeriodRange(statsVisibleDate, statsPeriodMode);
+  const previousPeriod = getPreviousStatsPeriod(period);
+  const periodPosts = getPostsInRange(state.posts, period.start, period.end);
+  const previousPosts = getPostsInRange(state.posts, previousPeriod.start, previousPeriod.end);
+  statsPeriodTitle.textContent = period.label;
+  statsPeriodInput.value = getStatsPeriodInputValue(statsVisibleDate, statsPeriodMode);
+  renderStatsSummary(periodPosts);
+  renderStatsComparison(periodPosts, previousPosts);
+  renderStatsDistributionBars(statsPlatformBars, getPlatformStats(periodPosts), "target");
+  renderStatsDistributionBars(statsFormatBars, getFormatStats(periodPosts), "count");
+  renderStatsDistributionBars(statsStatusBars, getStatusStats(periodPosts), "count");
+  renderThemeDistribution(periodPosts);
+  renderOwnerPerformance(periodPosts);
+  renderStatsTrend(periodPosts, period);
+  renderStatsInsights(periodPosts);
+}
+
+function getStatsPeriodRange(referenceDate, mode) {
+  const date = startOfDay(referenceDate);
+  if (mode === "week") {
+    const start = startOfWeek(date);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return { start, end, label: formatWeekRange(start), unit: "day" };
+  }
+  if (mode === "quarter") {
+    const quarter = Math.floor(date.getMonth() / 3);
+    const start = new Date(date.getFullYear(), quarter * 3, 1);
+    const end = new Date(date.getFullYear(), quarter * 3 + 3, 0);
+    return { start, end, label: `Trimestre ${quarter + 1} ${date.getFullYear()}`, unit: "month" };
+  }
+  if (mode === "year") {
+    const start = new Date(date.getFullYear(), 0, 1);
+    const end = new Date(date.getFullYear(), 11, 31);
+    return { start, end, label: String(date.getFullYear()), unit: "month" };
+  }
+  const start = new Date(date.getFullYear(), date.getMonth(), 1);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  return { start, end, label: formatMonthLabel(date), unit: "week" };
+}
+
+function getPreviousStatsPeriod(period) {
+  const days = daysBetween(period.start, period.end) + 1;
+  const end = new Date(period.start);
+  end.setDate(period.start.getDate() - 1);
+  const start = new Date(end);
+  start.setDate(end.getDate() - days + 1);
+  return { start, end };
+}
+
+function getPostsInRange(posts, startDate, endDate) {
+  const start = startOfDay(startDate);
+  const end = startOfDay(endDate);
+  return posts.filter((post) => !post.deletedAt).filter((post) => {
+    const postDate = startOfDay(parseDateKey(post.date));
+    return postDate >= start && postDate <= end;
+  });
+}
+
+function getStatsPeriodInputValue(date, mode) {
+  if (mode === "week") return toWeekInput(date);
+  if (mode === "year") return String(date.getFullYear());
+  return toMonthInput(date);
 }
 
 function renderStatsSummary(posts) {
-  const ready = posts.filter((post) => ["Revisionato", "Programmato"].includes(getPostWorkStatus(post))).length;
-  const published = posts.filter((post) => getPostWorkStatus(post) === "Programmato").length;
-  const missingAssets = posts.filter((post) => !post.assets && !post.assetLink).length;
+  const scheduled = posts.filter((post) => getPostWorkStatus(post) === "Programmato").length;
+  const incomplete = posts.length - scheduled;
   const completion = posts.length ? Math.round((posts.reduce((sum, post) => sum + checklistProgress(post), 0) / posts.length)) : 0;
   statsSummaryGrid.innerHTML = "";
   [
     ["Contenuti", posts.length],
-    ["Pronti/programmati", ready],
-    ["Pubblicati", published],
+    ["Programmati", scheduled],
+    ["Non completati", incomplete],
     ["Checklist media", `${completion}%`],
-    ["Senza asset", missingAssets],
-    ["Giorni attivi", new Set(posts.map((post) => post.date)).size],
   ].forEach(([label, value]) => {
     const item = document.createElement("div");
     item.className = "stats-summary-item";
     item.innerHTML = `<strong>${value}</strong><span>${label}</span>`;
     statsSummaryGrid.append(item);
   });
+}
+
+function renderStatsComparison(currentPosts, previousPosts) {
+  const currentScheduled = currentPosts.filter((post) => getPostWorkStatus(post) === "Programmato").length;
+  const previousScheduled = previousPosts.filter((post) => getPostWorkStatus(post) === "Programmato").length;
+  const currentIncomplete = currentPosts.length - currentScheduled;
+  const previousIncomplete = previousPosts.length - previousScheduled;
+  const currentCompletion = getAverageCompletion(currentPosts);
+  const previousCompletion = getAverageCompletion(previousPosts);
+  statsComparisonGrid.innerHTML = "";
+  [
+    ["Contenuti", currentPosts.length, previousPosts.length],
+    ["Programmati", currentScheduled, previousScheduled],
+    ["Non completati", currentIncomplete, previousIncomplete],
+    ["Checklist media", `${currentCompletion}%`, `${previousCompletion}%`, currentCompletion - previousCompletion],
+  ].forEach(([label, current, previous, forcedDelta]) => {
+    const currentNumber = parseInt(current, 10) || 0;
+    const previousNumber = parseInt(previous, 10) || 0;
+    const delta = Number.isFinite(forcedDelta) ? forcedDelta : currentNumber - previousNumber;
+    const item = document.createElement("div");
+    item.className = "stats-comparison-item";
+    item.innerHTML = `
+      <span>${label}</span>
+      <strong>${current}</strong>
+      <small>Prima: ${previous}</small>
+      <em class="${delta >= 0 ? "positive" : "negative"}">${delta >= 0 ? "+" : ""}${delta}</em>
+    `;
+    statsComparisonGrid.append(item);
+  });
+}
+
+function getAverageCompletion(posts) {
+  return posts.length ? Math.round(posts.reduce((sum, post) => sum + checklistProgress(post), 0) / posts.length) : 0;
 }
 
 function getPlatformStats(posts) {
@@ -2668,6 +2804,20 @@ function getStatusStats(posts) {
   });
 }
 
+function getFormatStats(posts) {
+  const total = posts.length || 0;
+  const formats = [...new Set(posts.map((post) => post.format || post.category || "Senza formato"))].sort((a, b) => a.localeCompare(b));
+  return formats.map((format) => {
+    const count = posts.filter((post) => (post.format || post.category || "Senza formato") === format).length;
+    return {
+      label: format,
+      count,
+      target: total,
+      percentage: total ? Math.round((count / total) * 100) : 0,
+    };
+  });
+}
+
 function renderStatsDistributionBars(container, items, mode) {
   container.innerHTML = "";
   if (!items.some((item) => item.count > 0 || item.target > 0)) {
@@ -2688,6 +2838,100 @@ function renderStatsDistributionBars(container, items, mode) {
     `;
     container.append(row);
   });
+}
+
+function renderOwnerPerformance(posts) {
+  const groupedOwners = posts.reduce((groups, post) => {
+    const owner = post.owner?.trim() || "Senza responsabile";
+    groups[owner] = groups[owner] || [];
+    groups[owner].push(post);
+    return groups;
+  }, {});
+  const owners = Object.entries(groupedOwners).map(([owner, ownerPosts]) => {
+    const ready = ownerPosts.filter((post) => ["Revisionato", "Programmato"].includes(getPostWorkStatus(post))).length;
+    return {
+      label: owner || "Senza responsabile",
+      count: ownerPosts.length,
+      target: ready,
+      percentage: ownerPosts.length ? Math.round((ready / ownerPosts.length) * 100) : 0,
+    };
+  }).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+
+  statsOwnerBars.innerHTML = "";
+  if (!owners.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-day";
+    empty.textContent = "Nessun dato disponibile.";
+    statsOwnerBars.append(empty);
+    return;
+  }
+
+  owners.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "stats-bar-row";
+    row.innerHTML = `
+      <span title="${item.label}">${item.label}</span>
+      <span class="stats-meter"><span style="width: ${item.percentage}%"></span></span>
+      <strong>${item.count} / ${item.percentage}%</strong>
+    `;
+    statsOwnerBars.append(row);
+  });
+}
+
+function renderStatsTrend(posts, period) {
+  const buckets = getStatsTrendBuckets(period);
+  const max = Math.max(1, ...buckets.map((bucket) => bucket.count));
+  statsTrend.innerHTML = "";
+  buckets.forEach((bucket) => {
+    const item = document.createElement("div");
+    item.className = "stats-trend-item";
+    item.innerHTML = `
+      <span>${bucket.label}</span>
+      <strong>${bucket.count}</strong>
+      <em style="height: ${Math.max(8, Math.round((bucket.count / max) * 82))}px"></em>
+    `;
+    statsTrend.append(item);
+  });
+
+  posts.forEach((post) => {
+    const postDate = parseDateKey(post.date);
+    const bucket = buckets.find((item) => postDate >= item.start && postDate <= item.end);
+    if (bucket) bucket.count += 1;
+  });
+
+  const updatedMax = Math.max(1, ...buckets.map((bucket) => bucket.count));
+  Array.from(statsTrend.children).forEach((item, index) => {
+    item.querySelector("strong").textContent = buckets[index].count;
+    item.querySelector("em").style.height = `${Math.max(8, Math.round((buckets[index].count / updatedMax) * 82))}px`;
+  });
+}
+
+function getStatsTrendBuckets(period) {
+  const buckets = [];
+  if (period.unit === "day") {
+    for (let date = new Date(period.start); date <= period.end; date.setDate(date.getDate() + 1)) {
+      const start = new Date(date);
+      const end = new Date(date);
+      buckets.push({ start, end, label: new Intl.DateTimeFormat("it-IT", { weekday: "short", day: "numeric" }).format(date), count: 0 });
+    }
+    return buckets;
+  }
+  if (period.unit === "week") {
+    for (let date = new Date(period.start); date <= period.end; date.setDate(date.getDate() + 7)) {
+      const start = new Date(date);
+      const end = new Date(date);
+      end.setDate(start.getDate() + 6);
+      if (end > period.end) end.setTime(period.end.getTime());
+      buckets.push({ start, end, label: formatShortDate(start).slice(0, 5), count: 0 });
+    }
+    return buckets;
+  }
+  for (let date = new Date(period.start); date <= period.end; date.setMonth(date.getMonth() + 1)) {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    buckets.push({ start, end, label: new Intl.DateTimeFormat("it-IT", { month: "short" }).format(start), count: 0 });
+  }
+  return buckets;
 }
 
 function renderThemeDistribution(monthPosts = getMonthPosts(state.posts, statsDialog.open ? statsVisibleDate : state.visibleDate)) {
@@ -3707,6 +3951,51 @@ function exportFilteredCsv() {
   downloadPostsCsv(getSortedListPosts(), "contenuti-social-filtrati.csv");
 }
 
+function exportStats() {
+  const period = getStatsPeriodRange(statsVisibleDate, statsPeriodMode);
+  const previousPeriod = getPreviousStatsPeriod(period);
+  const posts = getPostsInRange(state.posts, period.start, period.end);
+  const previousPosts = getPostsInRange(state.posts, previousPeriod.start, previousPeriod.end);
+  const ownerRows = Object.entries(posts.reduce((groups, post) => {
+    const owner = post.owner?.trim() || "Senza responsabile";
+    groups[owner] = groups[owner] || [];
+    groups[owner].push(post);
+    return groups;
+  }, {})).map(([owner, ownerPosts]) => [
+    "responsabile",
+    owner,
+    ownerPosts.length,
+    ownerPosts.filter((post) => ["Revisionato", "Programmato"].includes(getPostWorkStatus(post))).length,
+  ]);
+  const themeRows = getThemesForDistribution(posts).map((theme) => [
+    "tema",
+    theme.name,
+    posts.filter((post) => getPostThemeKey(post) === theme.id).length,
+    "",
+  ]);
+  const trendRows = getStatsTrendBuckets(period).map((bucket) => {
+    const count = posts.filter((post) => {
+      const postDate = parseDateKey(post.date);
+      return postDate >= bucket.start && postDate <= bucket.end;
+    }).length;
+    return ["trend", bucket.label, count, ""];
+  });
+  const rows = [
+    ["sezione", "voce", "valore", "extra"],
+    ["periodo", period.label, posts.length, `${toDateKey(period.start)} / ${toDateKey(period.end)}`],
+    ["confronto", "periodo precedente", previousPosts.length, `${toDateKey(previousPeriod.start)} / ${toDateKey(previousPeriod.end)}`],
+    ["riepilogo", "checklist media", `${getAverageCompletion(posts)}%`, ""],
+    ...getPlatformStats(posts).map((item) => ["piattaforma", item.label, item.count, item.target]),
+    ...getFormatStats(posts).map((item) => ["tipologia", item.label, item.count, `${item.percentage}%`]),
+    ...getStatusStats(posts).map((item) => ["stato", item.label, item.count, `${item.percentage}%`]),
+    ...ownerRows,
+    ...themeRows,
+    ...trendRows,
+  ];
+  const filename = `statistiche-${statsPeriodMode}-${toDateKey(period.start)}-${toDateKey(period.end)}.csv`;
+  downloadFile(filename, rows.map((row) => row.map(csvEscape).join(",")).join("\n"), "text/csv");
+}
+
 function downloadPostsCsv(posts, filename) {
   const rows = [
     ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "theme", "themeOther", "tags", "assetLinks", "assetLink", "assets", "copy", "notes", "comments"],
@@ -4420,6 +4709,28 @@ function toMonthInput(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   return `${year}-${month}`;
+}
+
+function toWeekInput(date) {
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+  target.setDate(target.getDate() + 3 - ((target.getDay() + 6) % 7));
+  const weekYear = target.getFullYear();
+  const firstThursday = new Date(weekYear, 0, 4);
+  const week = 1 + Math.round(((target - firstThursday) / 86400000 - 3 + ((firstThursday.getDay() + 6) % 7)) / 7);
+  return `${weekYear}-W${String(week).padStart(2, "0")}`;
+}
+
+function getDateFromIsoWeek(year, week) {
+  const simple = new Date(year, 0, 1 + (week - 1) * 7);
+  const day = simple.getDay();
+  const isoWeekStart = new Date(simple);
+  if (day <= 4) {
+    isoWeekStart.setDate(simple.getDate() - simple.getDay() + 1);
+  } else {
+    isoWeekStart.setDate(simple.getDate() + 8 - simple.getDay());
+  }
+  return isoWeekStart;
 }
 
 function parseDateKey(dateKey) {

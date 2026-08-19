@@ -325,17 +325,34 @@
             <h2 id="statsPeriodTitle">Statistiche</h2>
           </div>
           <div class="stats-period-controls" aria-label="Periodo statistiche">
-            <button class="icon-button" id="previousStatsPeriod" type="button" aria-label="Periodo precedente">‹</button>
-            <input id="statsPeriodInput" type="month" aria-label="Mese statistiche">
-            <button class="icon-button" id="nextStatsPeriod" type="button" aria-label="Periodo successivo">›</button>
+            <div class="stats-period-selector">
+              <button class="icon-button" id="previousStatsPeriod" type="button" aria-label="Periodo precedente">‹</button>
+              <select id="statsPeriodType" aria-label="Tipo periodo statistiche">
+                <option value="week">Settimana</option>
+                <option value="month" selected>Mese</option>
+                <option value="quarter">Trimestre</option>
+                <option value="year">Anno</option>
+              </select>
+              <button class="icon-button" id="nextStatsPeriod" type="button" aria-label="Periodo successivo">›</button>
+            </div>
+            <input id="statsPeriodInput" type="month" aria-label="Periodo statistiche">
+            <button class="secondary-action compact-action" id="exportStatsButton" type="button">Esporta</button>
           </div>
           <button class="ghost-button" id="closeStats" type="button" aria-label="Chiudi">x</button>
         </header>
         <div class="stats-summary-grid" id="statsSummaryGrid"></div>
         <div class="stats-layout">
+          <section class="stats-card stats-comparison-card">
+            <h3>Confronto periodo precedente</h3>
+            <div class="stats-comparison-grid" id="statsComparisonGrid"></div>
+          </section>
           <section class="stats-card">
             <h3>Piattaforme</h3>
             <div class="stats-bars" id="statsPlatformBars"></div>
+          </section>
+          <section class="stats-card">
+            <h3>Tipologia contenuti</h3>
+            <div class="stats-bars" id="statsFormatBars"></div>
           </section>
           <section class="stats-card">
             <h3>Stati</h3>
@@ -344,6 +361,14 @@
           <section class="stats-card theme-distribution">
             <h3>Distribuzione temi</h3>
             <div class="theme-bars" id="themeBars"></div>
+          </section>
+          <section class="stats-card">
+            <h3>Performance per responsabile</h3>
+            <div class="stats-bars" id="statsOwnerBars"></div>
+          </section>
+          <section class="stats-card">
+            <h3>Trend nel tempo</h3>
+            <div class="stats-trend" id="statsTrend"></div>
           </section>
           <details class="stats-card stats-insights-card">
             <summary>Criticità</summary>
