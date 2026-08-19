@@ -193,6 +193,10 @@ const authBanner = document.querySelector("#authBanner");
 const authStatus = document.querySelector("#authStatus");
 const hamburgerButton = document.querySelector("#hamburgerButton");
 const hamburgerPanel = document.querySelector("#hamburgerPanel");
+const notificationsButton = document.querySelector("#notificationsButton");
+const notificationsBadge = document.querySelector("#notificationsBadge");
+const notificationsDialog = document.querySelector("#notificationsDialog");
+const notificationsList = document.querySelector("#notificationsList");
 const undoToast = document.querySelector("#undoToast");
 const undoMessage = document.querySelector("#undoMessage");
 const trashDialog = document.querySelector("#trashDialog");
@@ -238,9 +242,12 @@ const currentUserUid = document.querySelector("#currentUserUid");
 const accessNote = document.querySelector("#accessNote");
 const adminAccessControls = document.querySelector("#adminAccessControls");
 const memberUidInput = document.querySelector("#memberUidInput");
+const memberEmailInput = document.querySelector("#memberEmailInput");
 const memberNameInput = document.querySelector("#memberNameInput");
 const memberRoleInput = document.querySelector("#memberRoleInput");
 const memberList = document.querySelector("#memberList");
+const inviteList = document.querySelector("#inviteList");
+const invitesDetails = document.querySelector("#invitesDetails");
 const visibleFieldSettings = {
   time: document.querySelector("#showTimeSetting"),
   platform: document.querySelector("#showPlatformSetting"),
@@ -345,10 +352,14 @@ const cloud = {
   user: null,
   member: null,
   members: [],
+  invites: [],
+  notifications: [],
   workspaceId: window.firebaseWorkspaceId || "default",
   postsUnsubscribe: null,
   settingsUnsubscribe: null,
   membersUnsubscribe: null,
+  invitesUnsubscribe: null,
+  notificationsUnsubscribe: null,
   migrationDone: false,
   lastBackupDate: "",
 };
@@ -385,6 +396,7 @@ listColumnsButton.addEventListener("click", toggleListColumnsMenu);
 resetFiltersButton.addEventListener("click", resetFilters);
 document.querySelector("#settingsButton").addEventListener("click", openSettingsDialog);
 document.querySelector("#statsButton").addEventListener("click", openStatsDialog);
+notificationsButton.addEventListener("click", openNotificationsDialog);
 document.querySelector("#trashButton").addEventListener("click", openTrashDialog);
 sidebarResizer.addEventListener("pointerdown", startSidebarResize);
 sidebarReopen.addEventListener("click", reopenSidebar);
@@ -393,6 +405,8 @@ periodButton.addEventListener("click", openDatePicker);
 document.querySelector("#closeDatePicker").addEventListener("click", closeDatePicker);
 document.querySelector("#cancelDatePicker").addEventListener("click", closeDatePicker);
 document.querySelector("#closeTrash").addEventListener("click", closeTrashDialog);
+document.querySelector("#closeNotifications").addEventListener("click", closeNotificationsDialog);
+document.querySelector("#markAllNotificationsRead").addEventListener("click", markAllNotificationsRead);
 document.querySelector("#closeStats").addEventListener("click", closeStatsDialog);
 document.querySelector("#previousStatsPeriod").addEventListener("click", () => changeStatsPeriod(-1));
 document.querySelector("#nextStatsPeriod").addEventListener("click", () => changeStatsPeriod(1));
@@ -574,6 +588,7 @@ function applyAppMode() {
   toolbarNewEventButton.hidden = !isEventsMode;
   filterBadge.hidden = isEventsMode || !getActiveFilterCount();
   if (isEventsMode) resetFiltersButton.hidden = true;
+  applyPermissionState();
 }
 
 function initCloud() {
@@ -609,8 +624,12 @@ function handleAuthState(user) {
   cloud.user = user;
   cloud.member = null;
   cloud.members = [];
+  cloud.invites = [];
+  cloud.notifications = [];
   loginButton.hidden = Boolean(user);
   logoutButton.hidden = !user;
+  notificationsButton.hidden = !user;
+  updateNotificationsBadge();
   currentUserUid.textContent = user?.uid || "Non connesso";
 
   if (!user) {
@@ -621,17 +640,25 @@ function handleAuthState(user) {
   }
 
   closeLoginDialog();
-  setAppLocked(false);
+  setAppLocked(true);
   setAuthStatus(`Connesso: ${user.email} - verifica accessi`, "cloud");
   ensureMembership().then((member) => {
     cloud.member = member;
     setAuthStatus(`Connesso: ${user.email} (${member.role})`, "cloud");
+    applyPermissionState();
+    setAppLocked(false);
     subscribeCloudData();
     subscribeMembers();
+    subscribeInvites();
+    subscribeNotifications();
   }).catch((error) => {
     unsubscribeCloud();
+    notificationsButton.hidden = true;
+    cloud.notifications = [];
+    updateNotificationsBadge();
     setAppLocked(true);
     setAuthStatus("Accesso non autorizzato. Chiedi a un admin di aggiungerti.", "error");
+    applyPermissionState();
     accessNote.textContent = error.message;
   });
 }
@@ -644,27 +671,67 @@ function membersCollection() {
   return workspaceDocument().collection("members");
 }
 
+function invitesCollection() {
+  return workspaceDocument().collection("invites");
+}
+
+function notificationsCollection() {
+  return workspaceDocument().collection("notifications");
+}
+
 function ensureMembership() {
   const memberRef = membersCollection().doc(cloud.user.uid);
   return memberRef.get().then((memberSnapshot) => {
     if (memberSnapshot.exists) return memberSnapshot.data();
-    return workspaceDocument().get().then((workspaceSnapshot) => {
-      if (workspaceSnapshot.exists) throw new Error("Il tuo UID non e presente nella lista accessi.");
-      const firstAdmin = {
-        uid: cloud.user.uid,
-        email: cloud.user.email || "",
-        name: cloud.user.displayName || "",
-        role: "admin",
-        createdAt: new Date().toISOString(),
-      };
-      const batch = cloud.db.batch();
-      batch.set(workspaceDocument(), {
-        createdAt: new Date().toISOString(),
-        createdBy: cloud.user.uid,
-      }, { merge: true });
-      batch.set(memberRef, firstAdmin);
-      return batch.commit().then(() => firstAdmin);
+    return acceptEmailInviteIfAvailable().then((invitedMember) => {
+      if (invitedMember) return invitedMember;
+      return workspaceDocument().get().then((workspaceSnapshot) => {
+        if (workspaceSnapshot.exists) throw new Error("Il tuo UID non e presente nella lista accessi.");
+        const firstAdmin = {
+          uid: cloud.user.uid,
+          email: cloud.user.email || "",
+          name: cloud.user.displayName || "",
+          role: "admin",
+          createdAt: new Date().toISOString(),
+        };
+        const batch = cloud.db.batch();
+        batch.set(workspaceDocument(), {
+          createdAt: new Date().toISOString(),
+          createdBy: cloud.user.uid,
+        }, { merge: true });
+        batch.set(memberRef, firstAdmin);
+        return batch.commit().then(() => firstAdmin);
+      });
     });
+  });
+}
+
+function acceptEmailInviteIfAvailable() {
+  const email = normalizeEmail(cloud.user?.email);
+  if (!email) return Promise.resolve(null);
+  const inviteRef = invitesCollection().doc(email);
+  return inviteRef.get().then((inviteSnapshot) => {
+    if (!inviteSnapshot.exists) return null;
+    const invite = inviteSnapshot.data();
+    if (invite.acceptedAt) return null;
+    const member = {
+      uid: cloud.user.uid,
+      email: cloud.user.email || email,
+      name: invite.name || cloud.user.displayName || "",
+      role: invite.role || "editor",
+      invitedBy: invite.createdBy || "",
+      invitedAt: invite.createdAt || "",
+      createdAt: new Date().toISOString(),
+      createdBy: cloud.user.uid,
+    };
+    const batch = cloud.db.batch();
+    batch.set(membersCollection().doc(cloud.user.uid), stripUndefined(member), { merge: true });
+    batch.set(inviteRef, {
+      acceptedAt: new Date().toISOString(),
+      acceptedBy: cloud.user.uid,
+      acceptedEmail: cloud.user.email || email,
+    }, { merge: true });
+    return batch.commit().then(() => member);
   });
 }
 
@@ -705,9 +772,13 @@ function unsubscribeCloud() {
   if (cloud.postsUnsubscribe) cloud.postsUnsubscribe();
   if (cloud.settingsUnsubscribe) cloud.settingsUnsubscribe();
   if (cloud.membersUnsubscribe) cloud.membersUnsubscribe();
+  if (cloud.invitesUnsubscribe) cloud.invitesUnsubscribe();
+  if (cloud.notificationsUnsubscribe) cloud.notificationsUnsubscribe();
   cloud.postsUnsubscribe = null;
   cloud.settingsUnsubscribe = null;
   cloud.membersUnsubscribe = null;
+  cloud.invitesUnsubscribe = null;
+  cloud.notificationsUnsubscribe = null;
 }
 
 function openLoginDialog() {
@@ -775,6 +846,21 @@ function cloudActive() {
   return Boolean(cloud.enabled && cloud.user && cloud.db);
 }
 
+function canEditWorkspace() {
+  return !cloud.enabled || (cloudActive() && cloud.member?.role !== "viewer");
+}
+
+function applyPermissionState() {
+  const editable = canEditWorkspace();
+  document.body.classList.toggle("is-viewer", cloud.enabled && cloud.member?.role === "viewer");
+  document.querySelectorAll("[data-edit-action]").forEach((element) => {
+    element.classList.toggle("is-permission-hidden", !editable);
+  });
+  document.querySelectorAll("[data-edit-disable]").forEach((element) => {
+    element.disabled = !editable;
+  });
+}
+
 function applySidebarWidth() {
   const storedWidth = Number(localStorage.getItem("social-content-calendar-sidebar-width"));
   if (storedWidth === 0) {
@@ -839,17 +925,17 @@ function settingsDocument() {
 }
 
 function saveCloudPost(post) {
-  if (!cloudActive()) return;
+  if (!cloudActive() || !canEditWorkspace()) return;
   postsCollection().doc(post.id).set(stripUndefined(post), { merge: true });
 }
 
 function deleteCloudPost(id) {
-  if (!cloudActive()) return;
+  if (!cloudActive() || !canEditWorkspace()) return;
   postsCollection().doc(id).delete();
 }
 
 function saveCloudSettings() {
-  if (!cloudActive()) return;
+  if (!cloudActive() || !canEditWorkspace()) return;
   settingsDocument().set(stripUndefined(state.settings), { merge: true });
 }
 
@@ -886,7 +972,7 @@ function syncAllCloudPosts() {
 }
 
 function replaceCloudPosts() {
-  if (!cloudActive()) return;
+  if (!cloudActive() || !canEditWorkspace()) return;
   postsCollection().get().then((snapshot) => {
     const batch = cloud.db.batch();
     snapshot.docs.forEach((doc) => batch.delete(doc.ref));
@@ -903,18 +989,49 @@ function subscribeMembers() {
   });
 }
 
+function subscribeInvites() {
+  if (!cloudActive() || cloud.member?.role !== "admin") return;
+  if (cloud.invitesUnsubscribe) cloud.invitesUnsubscribe();
+  cloud.invitesUnsubscribe = invitesCollection().onSnapshot((snapshot) => {
+    cloud.invites = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+    renderInvites();
+  });
+}
+
+function subscribeNotifications() {
+  if (!cloudActive()) return;
+  if (cloud.notificationsUnsubscribe) cloud.notificationsUnsubscribe();
+  cloud.notificationsUnsubscribe = notificationsCollection()
+    .where("recipientUid", "==", cloud.user.uid)
+    .onSnapshot((snapshot) => {
+      cloud.notifications = snapshot.docs
+        .map((doc) => ({ ...doc.data(), id: doc.id }))
+        .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+        .slice(0, 40);
+      updateNotificationsBadge();
+      if (notificationsDialog.open) renderNotifications();
+    });
+}
+
 function renderMembers() {
   memberList.innerHTML = "";
   currentUserUid.textContent = cloud.user?.uid || "Non connesso";
   const isAdmin = cloud.member?.role === "admin";
+  const isViewer = cloud.member?.role === "viewer";
   accessNote.textContent = cloud.user
-    ? isAdmin ? "Sei admin: puoi aggiungere utenti tramite UID." : "Sei editor: puoi vedere la lista, ma non modificarla."
+    ? isAdmin
+      ? "Sei admin: puoi aggiungere utenti tramite UID oppure invitarli tramite email."
+      : isViewer
+        ? "Sei viewer: puoi visualizzare il calendario, ma non modificarlo."
+        : "Sei editor: puoi vedere la lista, ma non gestire gli accessi."
     : "Accedi per gestire la lista utenti.";
   adminAccessControls.hidden = !isAdmin;
   memberUidInput.disabled = !isAdmin;
+  memberEmailInput.disabled = !isAdmin;
   memberNameInput.disabled = !isAdmin;
   memberRoleInput.disabled = !isAdmin;
   document.querySelector("#addMemberButton").disabled = !isAdmin;
+  invitesDetails.hidden = !isAdmin;
 
   if (!cloud.members.length) {
     const empty = document.createElement("p");
@@ -949,6 +1066,45 @@ function renderMembers() {
     }
     memberList.append(row);
   });
+  renderInvites();
+}
+
+function renderInvites() {
+  if (!inviteList || cloud.member?.role !== "admin") return;
+  inviteList.innerHTML = "";
+  if (!cloud.invites.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-day";
+    empty.textContent = "Nessun invito via email.";
+    inviteList.append(empty);
+    return;
+  }
+
+  cloud.invites.forEach((invite) => {
+    const row = document.createElement("div");
+    row.className = "member-row";
+    const info = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = invite.name || invite.email || invite.id;
+    const meta = document.createElement("small");
+    meta.textContent = [
+      invite.role || "editor",
+      invite.email || invite.id,
+      invite.acceptedAt ? `accettato ${formatDateTime(invite.acceptedAt)}` : "in attesa",
+    ].filter(Boolean).join(" - ");
+    info.append(title, meta);
+    row.append(info);
+
+    const actions = document.createElement("div");
+    const remove = document.createElement("button");
+    remove.className = "danger-action";
+    remove.type = "button";
+    remove.textContent = "Rimuovi";
+    remove.addEventListener("click", () => removeInvite(invite.id));
+    actions.append(remove);
+    row.append(actions);
+    inviteList.append(row);
+  });
 }
 
 function openTrashDialog() {
@@ -971,6 +1127,100 @@ function openStatsDialog() {
 
 function closeStatsDialog() {
   statsDialog.close();
+}
+
+function openNotificationsDialog() {
+  closeHamburgerMenu();
+  renderNotifications();
+  notificationsDialog.showModal();
+}
+
+function closeNotificationsDialog() {
+  notificationsDialog.close();
+}
+
+function updateNotificationsBadge() {
+  const unread = cloud.notifications.filter((notification) => !notification.readAt).length;
+  notificationsBadge.hidden = !unread;
+  notificationsBadge.textContent = String(unread);
+}
+
+function renderNotifications() {
+  notificationsList.innerHTML = "";
+  if (!cloudActive()) {
+    const empty = document.createElement("p");
+    empty.className = "empty-day";
+    empty.textContent = "Accedi per vedere le notifiche.";
+    notificationsList.append(empty);
+    return;
+  }
+  if (!cloud.notifications.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-day";
+    empty.textContent = "Nessuna notifica.";
+    notificationsList.append(empty);
+    return;
+  }
+
+  cloud.notifications.forEach((notification) => {
+    const item = document.createElement("article");
+    item.className = "notification-item";
+    item.classList.toggle("is-unread", !notification.readAt);
+    item.tabIndex = 0;
+
+    const text = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = notification.title || "Notifica";
+    const body = document.createElement("p");
+    body.textContent = notification.message || "";
+    const meta = document.createElement("small");
+    meta.textContent = [notification.actorName, formatDateTime(notification.createdAt)].filter(Boolean).join(" - ");
+    text.append(title, body, meta);
+
+    const actions = document.createElement("div");
+    const read = document.createElement("button");
+    read.className = "secondary-action";
+    read.type = "button";
+    read.textContent = notification.readAt ? "Letta" : "Segna letta";
+    read.disabled = Boolean(notification.readAt);
+    read.addEventListener("click", (event) => {
+      event.stopPropagation();
+      markNotificationRead(notification.id);
+    });
+    actions.append(read);
+
+    item.append(text, actions);
+    item.addEventListener("click", () => openNotificationTarget(notification));
+    item.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") openNotificationTarget(notification);
+    });
+    notificationsList.append(item);
+  });
+}
+
+function openNotificationTarget(notification) {
+  if (notification.postId) {
+    const post = state.posts.find((item) => item.id === notification.postId);
+    if (post) {
+      markNotificationRead(notification.id);
+      closeNotificationsDialog();
+      openContentDetailDialog(post);
+    }
+  }
+}
+
+function markNotificationRead(notificationId) {
+  if (!cloudActive() || !notificationId) return;
+  notificationsCollection().doc(notificationId).set({ readAt: new Date().toISOString() }, { merge: true });
+}
+
+function markAllNotificationsRead() {
+  if (!cloudActive() || !cloud.notifications.some((notification) => !notification.readAt)) return;
+  const batch = cloud.db.batch();
+  cloud.notifications.filter((notification) => !notification.readAt).forEach((notification) => {
+    batch.set(notificationsCollection().doc(notification.id), { readAt: new Date().toISOString() }, { merge: true });
+  });
+  batch.commit();
 }
 
 function changeStatsPeriod(delta) {
@@ -1071,6 +1321,7 @@ function renderTrash() {
 }
 
 function restorePost(id) {
+  if (!canEditWorkspace()) return;
   const post = state.posts.find((item) => item.id === id);
   if (!post) return;
   post.deletedAt = "";
@@ -1083,6 +1334,7 @@ function restorePost(id) {
 }
 
 function permanentlyDeletePost(id) {
+  if (!canEditWorkspace()) return;
   state.posts = state.posts.filter((post) => post.id !== id);
   persistPosts();
   deleteCloudPost(id);
@@ -1134,16 +1386,30 @@ function closeHamburgerMenu() {
 function addMember() {
   if (!cloudActive() || cloud.member?.role !== "admin") return;
   const uid = memberUidInput.value.trim();
+  const email = normalizeEmail(memberEmailInput.value);
   const name = memberNameInput.value.trim();
-  if (!uid) return;
-  membersCollection().doc(uid).set({
-    uid,
+  if (!uid && !email) {
+    accessNote.textContent = "Inserisci un UID oppure una email da invitare.";
+    return;
+  }
+  const payload = {
     name,
     role: memberRoleInput.value,
     updatedAt: new Date().toISOString(),
     createdBy: cloud.user.uid,
-  }, { merge: true }).then(() => {
+  };
+  const save = uid
+    ? membersCollection().doc(uid).set({ ...payload, uid, email }, { merge: true })
+    : invitesCollection().doc(email).set({
+      ...payload,
+      email,
+      createdAt: new Date().toISOString(),
+      acceptedAt: "",
+      acceptedBy: "",
+    }, { merge: true });
+  save.then(() => {
     memberUidInput.value = "";
+    memberEmailInput.value = "";
     memberNameInput.value = "";
   }).catch((error) => {
     accessNote.textContent = error.message;
@@ -1153,6 +1419,13 @@ function addMember() {
 function removeMember(uid) {
   if (!cloudActive() || cloud.member?.role !== "admin" || uid === cloud.user.uid) return;
   membersCollection().doc(uid).delete().catch((error) => {
+    accessNote.textContent = error.message;
+  });
+}
+
+function removeInvite(inviteId) {
+  if (!cloudActive() || cloud.member?.role !== "admin") return;
+  invitesCollection().doc(inviteId).delete().catch((error) => {
     accessNote.textContent = error.message;
   });
 }
@@ -1174,7 +1447,7 @@ function renderMainView() {
   listToolbar.hidden = true;
   listColumnsButton.hidden = !isListView || state.appMode !== "editorial";
   if (listColumnsButton.hidden) closeListColumnsMenu();
-  if (!isListView || state.appMode !== "editorial") {
+  if (!isListView || state.appMode !== "editorial" || !canEditWorkspace()) {
     listBulkActionBar.hidden = true;
     closeListBulkMenu();
   }
@@ -1240,8 +1513,10 @@ function createDayCell(date, todayKey) {
   if (dateKey === todayKey) cell.classList.add("is-today");
   if (dayPosts.length === 0) cell.classList.add("is-empty");
   if (dayPosts.length >= state.settings.warningRules.maxPostsPerDay) cell.classList.add("is-heavy");
-  cell.addEventListener("dragover", allowDrop);
-  cell.addEventListener("drop", dropPostOnDay);
+  if (canEditWorkspace()) {
+    cell.addEventListener("dragover", allowDrop);
+    cell.addEventListener("drop", dropPostOnDay);
+  }
 
   const top = document.createElement("div");
   top.className = "day-top";
@@ -1257,6 +1532,7 @@ function createDayCell(date, todayKey) {
   addButton.className = "add-day";
   addButton.type = "button";
   addButton.textContent = "+";
+  addButton.hidden = !canEditWorkspace();
   addButton.setAttribute("aria-label", `Aggiungi contenuto per ${formatDateForLabel(date)}`);
   addButton.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -1503,7 +1779,7 @@ function createPostChip(post) {
   const chip = document.createElement("button");
   chip.className = "post-chip";
   chip.type = "button";
-  chip.draggable = true;
+  chip.draggable = canEditWorkspace();
   chip.dataset.id = post.id;
   chip.dataset.platform = post.platform;
   chip.dataset.priority = post.priority || "Media";
@@ -1511,6 +1787,10 @@ function createPostChip(post) {
   chip.title = "Apri dettaglio contenuto";
   chip.addEventListener("click", () => openContentDetailDialog(post));
   chip.addEventListener("dragstart", (event) => {
+    if (!canEditWorkspace()) {
+      event.preventDefault();
+      return;
+    }
     event.dataTransfer.setData("text/plain", post.id);
   });
 
@@ -1536,6 +1816,7 @@ function openDayDialog(dateKey) {
     .sort(sortPosts);
   dayDialogTitle.textContent = formatFullDate(date);
   addDayDialogPost.dataset.date = dateKey;
+  addDayDialogPost.hidden = !canEditWorkspace();
   renderDayDialogSummary(dayPosts);
   renderDayDialogList(dayPosts);
   if (!dayDialog.open) dayDialog.showModal();
@@ -1579,6 +1860,7 @@ function closeEventDialog() {
 }
 
 function createPostFromSelectedEvent() {
+  if (!canEditWorkspace()) return;
   if (!selectedEvent) return;
   const category = eventCategories[selectedEvent.category];
   closeEventDialog();
@@ -1604,6 +1886,7 @@ function createPostFromSelectedEvent() {
 }
 
 function openManualEventDialog(event = {}) {
+  if (!canEditWorkspace()) return;
   const draft = {
     id: "",
     title: "",
@@ -1635,6 +1918,7 @@ function closeManualEventDialog() {
 
 function saveManualEvent(event) {
   event.preventDefault();
+  if (!canEditWorkspace()) return;
   const manualEvent = normalizeManualEvent({
     id: manualEventFields.id.value || createId(),
     title: manualEventFields.title.value.trim(),
@@ -1657,6 +1941,7 @@ function saveManualEvent(event) {
 }
 
 function deleteSelectedManualEvent() {
+  if (!canEditWorkspace()) return;
   if (!selectedEvent?.manual) return;
   state.manualEvents = state.manualEvents.filter((event) => event.id !== selectedEvent.id);
   persistManualEvents();
@@ -1666,6 +1951,7 @@ function deleteSelectedManualEvent() {
 }
 
 function editSelectedManualEvent() {
+  if (!canEditWorkspace()) return;
   if (!selectedEvent) return;
   const eventToEdit = selectedEvent;
   closeEventDialog();
@@ -2203,6 +2489,7 @@ function openContentDetailDialog(post) {
   contentDetailCopy.innerHTML = sanitizeRichHtml(post.copy) || "Nessuno script inserito.";
   contentDetailNotes.innerHTML = sanitizeRichHtml(post.notes) || "Nessuna nota interna.";
   renderCommentsList(contentDetailComments, post.comments || [], { emptyText: "Nessun commento interno." });
+  unlockContentEditButton.hidden = !canEditWorkspace();
   if (!contentDetailDialog.open) contentDetailDialog.showModal();
 }
 
@@ -2294,6 +2581,7 @@ function populateBulkThemeSelect() {
 }
 
 function applyBulkAction() {
+  if (!canEditWorkspace()) return;
   const ids = Array.from(selectedListPosts);
   if (!ids.length) return;
   const status = bulkStatusSelect.value;
@@ -2319,6 +2607,7 @@ function applyBulkAction() {
 }
 
 function updateSelectedListPosts(updater, historyText) {
+  if (!canEditWorkspace()) return [];
   const ids = Array.from(selectedListPosts);
   if (!ids.length) return [];
   const changedPosts = [];
@@ -2341,6 +2630,7 @@ function updateSelectedListPosts(updater, historyText) {
 }
 
 function deleteSelectedListPosts() {
+  if (!canEditWorkspace()) return;
   const ids = Array.from(selectedListPosts);
   if (!ids.length) return;
   const now = new Date().toISOString();
@@ -2418,6 +2708,7 @@ function promptSelectedListDate() {
 }
 
 function duplicateSelectedListPosts() {
+  if (!canEditWorkspace()) return;
   const ids = Array.from(selectedListPosts);
   if (!ids.length) return;
   const copies = activePosts()
@@ -2500,7 +2791,7 @@ function getVisibleListPostIds() {
 }
 
 function openListContextMenuFromRow(event) {
-  if (state.appMode !== "editorial" || state.viewMode !== "list") return;
+  if (state.appMode !== "editorial" || state.viewMode !== "list" || !canEditWorkspace()) return;
   const row = event.target.closest(".list-item.is-table-row[data-id]");
   if (!row) return;
   event.preventDefault();
@@ -2514,12 +2805,13 @@ function openListContextMenuFromRow(event) {
 }
 
 function openListBulkMenuFromElement(element) {
+  if (!canEditWorkspace()) return;
   const rect = element.getBoundingClientRect();
   openListBulkMenuAt(rect.left, rect.bottom + 8);
 }
 
 function openListBulkMenuAt(x, y) {
-  if (!selectedListPosts.size) return;
+  if (!selectedListPosts.size || !canEditWorkspace()) return;
   listBulkContextMenu.hidden = false;
   listBulkContextMenu.style.maxHeight = `${Math.max(280, window.innerHeight - 48)}px`;
   const menuRect = listBulkContextMenu.getBoundingClientRect();
@@ -2537,6 +2829,7 @@ function closeListBulkMenu() {
 }
 
 function handleListBulkMenuAction(event) {
+  if (!canEditWorkspace()) return;
   const action = event.target.closest("[data-bulk-menu-action]")?.dataset.bulkMenuAction;
   if (!action) return;
   if (action.startsWith("status:")) setSelectedListStatus(action.slice("status:".length));
@@ -3245,6 +3538,7 @@ function filteredPosts() {
 }
 
 function openPostDialog(post = {}) {
+  if (!canEditWorkspace()) return;
   const normalized = normalizePost(post);
   const isExisting = Boolean(post.id);
   document.querySelector("#dialogTitle").textContent = isExisting ? "Modifica contenuto" : "Nuovo contenuto";
@@ -3360,6 +3654,7 @@ function renderTargetSettings() {
 
 function saveSettings(event) {
   event.preventDefault();
+  if (!canEditWorkspace()) return;
   const monthlyTargets = {};
   targetSettings.querySelectorAll("input[data-platform]").forEach((input) => {
     monthlyTargets[input.dataset.platform] = Number(input.value) || 0;
@@ -3472,6 +3767,7 @@ function collectThemesFromEditor() {
 }
 
 function resetSettings() {
+  if (!canEditWorkspace()) return;
   state.settings = getDefaultSettings();
   normalizePostThemes();
   state.viewMode = state.settings.defaultView;
@@ -3491,12 +3787,14 @@ function normalizePostThemes() {
 
 function savePost(event) {
   event.preventDefault();
+  if (!canEditWorkspace()) return;
   if (!validateChecklistSelection()) {
     fields.checkIdea.reportValidity();
     return;
   }
   const post = collectPostFromForm();
   const existingIndex = state.posts.findIndex((item) => item.id === post.id);
+  const previousPost = existingIndex >= 0 ? state.posts[existingIndex] : null;
   const action = existingIndex >= 0 ? "Modificato" : "Creato";
 
   if (existingIndex >= 0) {
@@ -3513,6 +3811,7 @@ function savePost(event) {
   if (cloudActive()) {
     if (post.recurrence === "none" || existingIndex >= 0) saveCloudPost(post);
     else syncAllCloudPosts();
+    if (previousPost) notifyOwnerAboutExternalEdit(previousPost, post);
   }
   closePostDialog();
   render();
@@ -3566,6 +3865,7 @@ function validateChecklistSelection() {
 }
 
 function sendCommentFromComposer() {
+  if (!canEditWorkspace()) return;
   const draft = fields.commentDraft.value.trim();
   if (!draft) return;
   const comment = normalizeComment({
@@ -3582,6 +3882,7 @@ function sendCommentFromComposer() {
   fields.commentDraft.value = "";
   closeMentionSuggestions();
   renderCommentsList(postCommentsList, editingComments, { emptyText: "Nessun commento interno." });
+  notifyMentionedMembers(comment, fields.id.value);
   saveEditingCommentsIfExisting();
 }
 
@@ -3691,16 +3992,16 @@ function closeMentionSuggestions() {
 
 function getMentionPeople(post = {}) {
   const people = [];
-  const addPerson = (label, fallback = "") => {
+  const addPerson = (label, fallback = "", uid = "") => {
     const name = String(label || fallback || "").trim();
     if (!name) return;
     const handle = mentionHandle(name);
     if (!handle || people.some((person) => person.handle === handle)) return;
-    people.push({ handle, label: name });
+    people.push({ handle, label: name, uid });
   };
-  addPerson(cloud.user?.displayName, cloud.user?.email);
+  addPerson(cloud.user?.displayName, cloud.user?.email, cloud.user?.uid || "");
   addPerson(post.owner);
-  cloud.members.forEach((member) => addPerson(member.name || member.email, member.uid));
+  cloud.members.forEach((member) => addPerson(member.name || member.email, member.uid, member.uid));
   return people;
 }
 
@@ -3718,8 +4019,73 @@ function mentionHandle(value) {
     .slice(0, 40);
 }
 
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
 function extractMentions(text) {
   return Array.from(new Set((String(text).match(/@[\p{L}\p{N}._-]+/gu) || []).map((mention) => mention.slice(1))));
+}
+
+function notifyMentionedMembers(comment, postId) {
+  if (!cloudActive() || !postId) return;
+  const post = state.posts.find((item) => item.id === postId);
+  const recipients = resolveMentionRecipients(comment.mentions || []);
+  recipients
+    .filter((member) => member.uid && member.uid !== cloud.user.uid)
+    .forEach((member) => createNotification({
+      recipientUid: member.uid,
+      type: "mention",
+      postId,
+      title: "Menzione in chat",
+      message: `${getCurrentMemberName()} ti ha menzionato in "${post?.title || "un contenuto"}".`,
+    }));
+}
+
+function notifyOwnerAboutExternalEdit(previousPost, updatedPost) {
+  if (!cloudActive() || !updatedPost?.id) return;
+  const owner = getMemberByOwnerName(updatedPost.owner || previousPost.owner);
+  if (!owner?.uid || owner.uid === cloud.user.uid) return;
+  createNotification({
+    recipientUid: owner.uid,
+    type: "content_updated",
+    postId: updatedPost.id,
+    title: "Contenuto modificato",
+    message: `${getCurrentMemberName()} ha modificato "${updatedPost.title || "un tuo contenuto"}".`,
+  });
+}
+
+function resolveMentionRecipients(mentions) {
+  const people = getMentionPeople({ owner: fields.owner.value });
+  return Array.from(new Set(mentions)).map((mention) => {
+    const handle = mentionHandle(mention).toLowerCase();
+    const person = people.find((item) => item.handle.toLowerCase() === handle);
+    return person?.uid ? cloud.members.find((member) => member.uid === person.uid) : null;
+  }).filter(Boolean);
+}
+
+function getMemberByOwnerName(owner) {
+  const normalizedOwner = String(owner || "").trim().toLowerCase();
+  if (!normalizedOwner) return null;
+  return cloud.members.find((member) => (
+    String(member.name || "").trim().toLowerCase() === normalizedOwner
+    || String(member.email || "").trim().toLowerCase() === normalizedOwner
+  ));
+}
+
+function createNotification(notification) {
+  if (!cloudActive() || !notification.recipientUid) return;
+  notificationsCollection().add(stripUndefined({
+    ...notification,
+    workspaceId: cloud.workspaceId,
+    actorUid: cloud.user.uid,
+    actorEmail: cloud.user.email || "",
+    actorName: getCurrentMemberName(),
+    createdAt: new Date().toISOString(),
+    readAt: "",
+  })).catch((error) => {
+    console.warn("Notifica non salvata", error);
+  });
 }
 
 function renderCommentsList(container, comments, options = {}) {
@@ -3799,6 +4165,7 @@ function createThemeFromName(name, color) {
 }
 
 function deleteCurrentPost() {
+  if (!canEditWorkspace()) return;
   const id = fields.id.value;
   if (!id) return;
   const post = state.posts.find((item) => item.id === id);
@@ -3814,12 +4181,14 @@ function deleteCurrentPost() {
 }
 
 function duplicateCurrentPost() {
+  if (!canEditWorkspace()) return;
   if (!fields.id.value) return;
   duplicatePost(fields.id.value);
   closePostDialog();
 }
 
 function duplicatePost(id) {
+  if (!canEditWorkspace()) return;
   const source = activePosts().find((post) => post.id === id);
   if (!source) return;
   const nextDate = parseDateKey(source.date);
@@ -3884,6 +4253,7 @@ function allowDrop(event) {
 
 function dropPostOnDay(event) {
   event.preventDefault();
+  if (!canEditWorkspace()) return;
   const id = event.dataTransfer.getData("text/plain");
   const post = activePosts().find((item) => item.id === id);
   if (!post) return;
@@ -4027,6 +4397,7 @@ function downloadPostsCsv(posts, filename) {
 }
 
 function importCsv(event) {
+  if (!canEditWorkspace()) return;
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -4052,6 +4423,7 @@ function exportBackup() {
 }
 
 function restoreBackup(event) {
+  if (!canEditWorkspace()) return;
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();

@@ -18,6 +18,10 @@ service cloud.firestore {
       return isMember(workspaceId) && get(memberDoc(workspaceId)).data.role == "admin";
     }
 
+    function canWriteWorkspace(workspaceId) {
+      return isMember(workspaceId) && get(memberDoc(workspaceId)).data.role != "viewer";
+    }
+
     function workspaceDoc(workspaceId) {
       return /databases/$(database)/documents/workspaces/$(workspaceId);
     }
@@ -37,19 +41,49 @@ service cloud.firestore {
           && request.auth.uid == memberId
           && !exists(workspaceDoc(workspaceId))
           && request.resource.data.role == "admin";
+        allow create: if signedIn()
+          && request.auth.uid == memberId
+          && exists(/databases/$(database)/documents/workspaces/$(workspaceId)/invites/$(request.auth.token.email))
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.role == get(/databases/$(database)/documents/workspaces/$(workspaceId)/invites/$(request.auth.token.email)).data.role;
         allow create, update, delete: if isAdmin(workspaceId);
       }
 
+      match /invites/{inviteId} {
+        allow get: if isAdmin(workspaceId) || (signedIn() && inviteId == request.auth.token.email);
+        allow list: if isAdmin(workspaceId);
+        allow create, delete: if isAdmin(workspaceId);
+        allow update: if isAdmin(workspaceId)
+          || (signedIn()
+            && inviteId == request.auth.token.email
+            && request.resource.data.acceptedBy == request.auth.uid);
+      }
+
+      match /notifications/{notificationId} {
+        allow get, list: if isMember(workspaceId)
+          && resource.data.recipientUid == request.auth.uid;
+        allow create: if canWriteWorkspace(workspaceId)
+          && request.resource.data.actorUid == request.auth.uid;
+        allow update: if isMember(workspaceId)
+          && resource.data.recipientUid == request.auth.uid
+          && request.resource.data.recipientUid == resource.data.recipientUid;
+        allow delete: if isMember(workspaceId)
+          && resource.data.recipientUid == request.auth.uid;
+      }
+
       match /posts/{postId} {
-        allow read, write: if isMember(workspaceId);
+        allow read: if isMember(workspaceId);
+        allow write: if canWriteWorkspace(workspaceId);
       }
 
       match /settings/{settingId} {
-        allow read, write: if isMember(workspaceId);
+        allow read: if isMember(workspaceId);
+        allow write: if canWriteWorkspace(workspaceId);
       }
 
       match /backups/{backupId} {
-        allow read, write: if isMember(workspaceId);
+        allow read: if isMember(workspaceId);
+        allow write: if canWriteWorkspace(workspaceId);
       }
     }
   }

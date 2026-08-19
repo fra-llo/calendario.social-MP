@@ -32,6 +32,11 @@
               <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-5"/><path d="M12 16V8"/><path d="M16 16v-3"/></svg>
               Statistiche
             </button>
+            <button class="menu-item" id="notificationsButton" type="button" hidden>
+              <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+              <span>Notifiche</span>
+              <span class="menu-badge" id="notificationsBadge" hidden>0</span>
+            </button>
             <button class="menu-item" id="printButton" type="button">
               <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5"/><path d="M7 18H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M7 14h10v6H7Z"/></svg>
               Stampa
@@ -61,7 +66,7 @@
           <button id="eventsModeButton" type="button" aria-pressed="false">Eventi</button>
         </div>
 
-        <button class="primary-action" id="newPostButton" type="button" hidden>+ Nuovo contenuto</button>
+        <button class="primary-action" id="newPostButton" type="button" hidden data-edit-action>+ Nuovo contenuto</button>
 
         <details class="panel collapsible-panel filters-panel" data-editorial-panel>
           <summary>Ricerca e filtri</summary>
@@ -179,14 +184,14 @@
             <button class="secondary-action compact-action" id="todayButton" type="button" title="Torna a oggi">Oggi</button>
           </div>
           <div class="toolbar-actions">
-            <button class="primary-action compact-action" id="toolbarNewPostButton" type="button" title="Nuovo contenuto" data-editorial-action>+ Nuovo</button>
+            <button class="primary-action compact-action" id="toolbarNewPostButton" type="button" title="Nuovo contenuto" data-editorial-action data-edit-action>+ Nuovo</button>
             <button class="secondary-action compact-action filter-action" id="filterToolbarButton" type="button" title="Apri ricerca e filtri" data-editorial-action>
               Filtri <span id="filterBadge" hidden>0</span>
             </button>
             <button class="secondary-action compact-action columns-action" id="listColumnsButton" type="button" title="Scegli colonne" hidden>Colonne</button>
             <button class="secondary-action compact-action" id="resetFiltersButton" type="button" hidden data-editorial-action>Reset filtri</button>
             <span class="event-mode-label" id="eventModeLabel" hidden>Ricorrenze automatiche</span>
-            <button class="primary-action compact-action" id="toolbarNewEventButton" type="button" hidden>+ Evento</button>
+            <button class="primary-action compact-action" id="toolbarNewEventButton" type="button" hidden data-edit-action>+ Evento</button>
             <div class="view-switch" aria-label="Tipo vista">
               <button id="monthViewButton" type="button" aria-pressed="true" title="Vista mese">Mese</button>
               <button id="weekViewButton" type="button" aria-pressed="false" title="Vista settimana">Settimana</button>
@@ -317,6 +322,22 @@
       </section>
     </dialog>
 
+    <dialog id="notificationsDialog">
+      <section class="notifications-panel">
+        <header>
+          <div>
+            <p class="eyebrow">Collaborazione</p>
+            <h2>Notifiche</h2>
+          </div>
+          <button class="ghost-button" id="closeNotifications" type="button" aria-label="Chiudi">x</button>
+        </header>
+        <div class="notification-actions">
+          <button class="secondary-action" id="markAllNotificationsRead" type="button">Segna tutte come lette</button>
+        </div>
+        <div class="notifications-list" id="notificationsList"></div>
+      </section>
+    </dialog>
+
     <dialog id="statsDialog">
       <section class="stats-panel">
         <header>
@@ -390,7 +411,7 @@
         <div class="day-detail-summary" id="dayDialogSummary"></div>
         <div class="day-detail-list" id="dayDialogList"></div>
         <footer>
-          <button class="primary-action" id="addDayDialogPost" type="button">+ Nuovo contenuto</button>
+          <button class="primary-action" id="addDayDialogPost" type="button" data-edit-action>+ Nuovo contenuto</button>
         </footer>
       </section>
     </dialog>
@@ -415,9 +436,9 @@
           <p id="eventHashtags"></p>
         </section>
         <footer>
-          <button class="danger-action" id="deleteManualEvent" type="button" hidden>Elimina evento</button>
-          <button class="secondary-action" id="editManualEvent" type="button" hidden>Modifica evento</button>
-          <button class="primary-action" id="createPostFromEvent" type="button">Crea contenuto da evento</button>
+          <button class="danger-action" id="deleteManualEvent" type="button" hidden data-edit-action>Elimina evento</button>
+          <button class="secondary-action" id="editManualEvent" type="button" hidden data-edit-action>Modifica evento</button>
+          <button class="primary-action" id="createPostFromEvent" type="button" data-edit-action>Crea contenuto da evento</button>
         </footer>
       </section>
     </dialog>
@@ -505,7 +526,7 @@
           <div class="comments-list" id="contentDetailComments"></div>
         </section>
         <footer>
-          <button class="primary-action" id="unlockContentEdit" type="button">Sblocca modifica</button>
+          <button class="primary-action" id="unlockContentEdit" type="button" data-edit-action>Sblocca modifica</button>
         </footer>
       </section>
     </dialog>
@@ -895,27 +916,36 @@
           </div>
           <div class="admin-access-controls" id="adminAccessControls">
             <div class="access-add-row">
-              <label>
+              <label class="access-field-uid">
                 UID utente da aggiungere
                 <input id="memberUidInput" type="text" placeholder="UID Firebase dell'utente">
               </label>
-              <label>
+              <label class="access-field-email">
+                Email invito
+                <input id="memberEmailInput" type="email" placeholder="nome@email.it">
+              </label>
+              <label class="access-field-name">
                 Nome utente
                 <input id="memberNameInput" type="text" maxlength="80" placeholder="Es. Nicole">
               </label>
-              <label>
+              <label class="access-field-role">
                 Ruolo
                 <select id="memberRoleInput">
                   <option value="editor">Editor</option>
+                  <option value="viewer">Viewer</option>
                   <option value="admin">Admin</option>
                 </select>
               </label>
-              <button class="secondary-action" id="addMemberButton" type="button">Aggiungi utente</button>
+              <button class="secondary-action access-add-button" id="addMemberButton" type="button">Aggiungi utente</button>
             </div>
           </div>
           <details class="members-details">
             <summary>Utenti autorizzati</summary>
             <div class="member-list" id="memberList"></div>
+          </details>
+          <details class="members-details" id="invitesDetails" hidden>
+            <summary>Inviti via email</summary>
+            <div class="member-list" id="inviteList"></div>
           </details>
         </section>
 
