@@ -76,6 +76,11 @@ service cloud.firestore {
         allow write: if canWriteWorkspace(workspaceId);
       }
 
+      match /creatorIdeas/{ideaId} {
+        allow read: if isMember(workspaceId);
+        allow write: if canWriteWorkspace(workspaceId);
+      }
+
       match /settings/{settingId} {
         allow read: if isMember(workspaceId);
         allow write: if canWriteWorkspace(workspaceId);
