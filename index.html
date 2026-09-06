@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Calendario contenuti MP</title>
-    <link rel="stylesheet" href="styles.css?v=creator-approval-inline-2">
+    <link rel="stylesheet" href="styles.css?v=backup-cloud-1">
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -979,6 +979,7 @@
           <div class="settings-grid">
             <button class="secondary-action" id="exportCsvButton" type="button">Esporta CSV</button>
             <button class="secondary-action" id="backupButton" type="button">Backup JSON</button>
+            <button class="secondary-action" id="cloudBackupButton" type="button">Backup cloud ora</button>
             <label class="file-button">
               Importa CSV
               <input id="importCsvInput" type="file" accept=".csv,text/csv">
@@ -988,6 +989,8 @@
               <input id="restoreInput" type="file" accept=".json,application/json">
             </label>
           </div>
+          <div class="backup-status" id="backupStatus">Accedi per vedere i backup cloud.</div>
+          <div class="backup-list" id="backupList"></div>
         </section>
 
         <section class="settings-section" data-settings-tab="access">
@@ -1073,6 +1076,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <script src="app.js?v=creator-approval-inline-2"></script>
+    <script src="app.js?v=backup-cloud-1"></script>
   </body>
 </html>

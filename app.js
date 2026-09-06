@@ -258,6 +258,9 @@ const goalsSetting = document.querySelector("#goalsSetting");
 const themesSetting = document.querySelector("#themesSetting");
 const themeEditor = document.querySelector("#themeEditor");
 const templatesSetting = document.querySelector("#templatesSetting");
+const cloudBackupButton = document.querySelector("#cloudBackupButton");
+const backupStatus = document.querySelector("#backupStatus");
+const backupList = document.querySelector("#backupList");
 const currentUserUid = document.querySelector("#currentUserUid");
 const accessNote = document.querySelector("#accessNote");
 const adminAccessControls = document.querySelector("#adminAccessControls");
@@ -374,6 +377,7 @@ const cloud = {
   members: [],
   invites: [],
   notifications: [],
+  backups: [],
   workspaceId: window.firebaseWorkspaceId || "default",
   postsUnsubscribe: null,
   settingsUnsubscribe: null,
@@ -381,6 +385,7 @@ const cloud = {
   invitesUnsubscribe: null,
   notificationsUnsubscribe: null,
   creatorIdeasUnsubscribe: null,
+  backupsUnsubscribe: null,
   migrationDone: false,
   lastBackupDate: "",
 };
@@ -494,6 +499,7 @@ addAssetLinkButton.addEventListener("click", () => addAssetLinkRow());
 document.querySelector("#exportCsvButton").addEventListener("click", exportCsv);
 document.querySelector("#exportFilteredCsvButton").addEventListener("click", exportFilteredCsv);
 document.querySelector("#backupButton").addEventListener("click", exportBackup);
+cloudBackupButton.addEventListener("click", createManualCloudBackup);
 document.querySelector("#importCsvInput").addEventListener("change", importCsv);
 document.querySelector("#restoreInput").addEventListener("change", restoreBackup);
 loginButton.addEventListener("click", openLoginDialog);
@@ -809,6 +815,7 @@ function subscribeCloudData() {
   });
 
   subscribeCreatorIdeas();
+  subscribeBackups();
 }
 
 function unsubscribeCloud() {
@@ -818,12 +825,16 @@ function unsubscribeCloud() {
   if (cloud.invitesUnsubscribe) cloud.invitesUnsubscribe();
   if (cloud.notificationsUnsubscribe) cloud.notificationsUnsubscribe();
   if (cloud.creatorIdeasUnsubscribe) cloud.creatorIdeasUnsubscribe();
+  if (cloud.backupsUnsubscribe) cloud.backupsUnsubscribe();
   cloud.postsUnsubscribe = null;
   cloud.settingsUnsubscribe = null;
   cloud.membersUnsubscribe = null;
   cloud.invitesUnsubscribe = null;
   cloud.notificationsUnsubscribe = null;
   cloud.creatorIdeasUnsubscribe = null;
+  cloud.backupsUnsubscribe = null;
+  cloud.backups = [];
+  renderBackupList();
 }
 
 function openLoginDialog() {
@@ -1008,22 +1019,62 @@ function backupsCollection() {
 }
 
 function createDailyBackup() {
-  if (!cloudActive()) return;
+  if (!cloudActive() || !canEditWorkspace()) return;
   const backupDate = toDateKey(new Date());
   if (cloud.lastBackupDate === backupDate) return;
   cloud.lastBackupDate = backupDate;
   const backupRef = backupsCollection().doc(backupDate);
   backupRef.get().then((snapshot) => {
     if (snapshot.exists) return;
-    return backupRef.set(stripUndefined({
-      createdAt: new Date().toISOString(),
-      createdBy: cloud.user.uid,
-      posts: state.posts,
-      creatorIdeas: state.creatorIdeas,
-      settings: state.settings,
-      postCount: state.posts.length,
-    }));
+    return backupRef.set(stripUndefined(createBackupPayload("automatico-giornaliero")));
   });
+}
+
+function createBackupPayload(type = "manuale") {
+  return {
+    version: 2,
+    type,
+    workspaceId: cloud.workspaceId,
+    exportedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    createdBy: cloud.user?.uid || "",
+    createdByEmail: cloud.user?.email || "",
+    posts: state.posts,
+    manualEvents: state.manualEvents,
+    creatorIdeas: state.creatorIdeas,
+    settings: state.settings,
+    members: cloud.members,
+    invites: cloud.invites,
+    notifications: cloud.notifications,
+    counts: {
+      posts: state.posts.length,
+      manualEvents: state.manualEvents.length,
+      creatorIdeas: state.creatorIdeas.length,
+      members: cloud.members.length,
+      invites: cloud.invites.length,
+      notifications: cloud.notifications.length,
+    },
+  };
+}
+
+async function createManualCloudBackup() {
+  if (!cloudActive() || !canEditWorkspace()) {
+    alert("Accedi come Editor o Admin per creare un backup cloud.");
+    return;
+  }
+  const backupId = `manuale-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+  cloudBackupButton.disabled = true;
+  backupStatus.textContent = "Creazione backup cloud in corso...";
+  try {
+    await backupsCollection().doc(backupId).set(stripUndefined(createBackupPayload("manuale")));
+    backupStatus.textContent = "Backup cloud creato.";
+  } catch (error) {
+    console.error("Errore creazione backup cloud", error);
+    backupStatus.textContent = "Backup cloud non riuscito.";
+    alert("Non riesco a creare il backup cloud. Controlla permessi e rules Firestore.");
+  } finally {
+    cloudBackupButton.disabled = false;
+  }
 }
 
 function syncAllCloudPosts() {
@@ -1053,6 +1104,21 @@ function replaceCloudPosts() {
     state.posts.forEach((post) => batch.set(postsCollection().doc(post.id), stripUndefined(post)));
     return batch.commit();
   }).then(saveCloudSettings);
+}
+
+async function replaceCloudOperationalData() {
+  if (!cloudActive() || !canEditWorkspace()) return;
+  const [postsSnapshot, ideasSnapshot] = await Promise.all([
+    postsCollection().get(),
+    creatorIdeasCollection().get(),
+  ]);
+  const batch = cloud.db.batch();
+  postsSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
+  ideasSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
+  state.posts.forEach((post) => batch.set(postsCollection().doc(post.id), stripUndefined(post)));
+  state.creatorIdeas.forEach((idea) => batch.set(creatorIdeasCollection().doc(idea.id), stripUndefined(idea)));
+  batch.set(settingsDocument(), stripUndefined(state.settings), { merge: true });
+  await batch.commit();
 }
 
 function subscribeMembers() {
@@ -1103,6 +1169,78 @@ function subscribeCreatorIdeas() {
     persistCreatorIdeas(false);
     if (creatorIdeasDialog.open) renderCreatorIdeas();
   });
+}
+
+function subscribeBackups() {
+  if (!cloudActive()) {
+    cloud.backups = [];
+    renderBackupList();
+    return;
+  }
+  if (cloud.backupsUnsubscribe) cloud.backupsUnsubscribe();
+  cloud.backupsUnsubscribe = backupsCollection().orderBy("createdAt", "desc").limit(30).onSnapshot((snapshot) => {
+    cloud.backups = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    renderBackupList();
+  }, (error) => {
+    console.error("Errore caricamento backup", error);
+    backupStatus.textContent = "Non riesco a caricare la lista backup.";
+  });
+}
+
+function renderBackupList() {
+  if (!backupList || !backupStatus) return;
+  backupList.innerHTML = "";
+  cloudBackupButton.disabled = !cloudActive() || !canEditWorkspace();
+  if (!cloudActive()) {
+    backupStatus.textContent = "Accedi per vedere i backup cloud.";
+    return;
+  }
+  if (!cloud.backups.length) {
+    backupStatus.textContent = "Nessun backup cloud disponibile.";
+    return;
+  }
+  const latest = cloud.backups[0];
+  backupStatus.textContent = `Ultimo backup: ${formatDateTime(latest.createdAt || latest.exportedAt)} - ${latest.type || "manuale"}.`;
+  cloud.backups.forEach((backup) => backupList.append(createBackupListItem(backup)));
+}
+
+function createBackupListItem(backup) {
+  const item = document.createElement("article");
+  item.className = "backup-list-item";
+
+  const meta = document.createElement("div");
+  const title = document.createElement("strong");
+  title.textContent = backup.id;
+  const details = document.createElement("span");
+  const counts = backup.counts || {};
+  details.textContent = [
+    formatDateTime(backup.createdAt || backup.exportedAt),
+    backup.type || "manuale",
+    `${counts.posts ?? backup.postCount ?? 0} contenuti`,
+    `${counts.creatorIdeas ?? 0} idee`,
+  ].filter(Boolean).join(" - ");
+  meta.append(title, details);
+
+  const actions = document.createElement("div");
+  actions.className = "backup-list-actions";
+  const download = document.createElement("button");
+  download.className = "secondary-action";
+  download.type = "button";
+  download.textContent = "Scarica";
+  download.addEventListener("click", () => downloadCloudBackup(backup.id));
+  const restore = document.createElement("button");
+  restore.className = "secondary-action";
+  restore.type = "button";
+  restore.textContent = "Ripristina";
+  restore.disabled = !canEditWorkspace();
+  restore.addEventListener("click", () => restoreCloudBackup(backup.id));
+  actions.append(download, restore);
+
+  item.append(meta, actions);
+  return item;
 }
 
 function renderMembers() {
@@ -4898,14 +5036,41 @@ function importCsv(event) {
 }
 
 function exportBackup() {
-  const backup = {
-    exportedAt: new Date().toISOString(),
-    posts: state.posts,
-    manualEvents: state.manualEvents,
-    creatorIdeas: state.creatorIdeas,
-    settings: state.settings,
-  };
+  const backup = createBackupPayload("download-json");
   downloadFile("backup-calendario-social.json", JSON.stringify(backup, null, 2), "application/json");
+}
+
+async function downloadCloudBackup(backupId) {
+  if (!cloudActive()) return;
+  try {
+    const snapshot = await backupsCollection().doc(backupId).get();
+    if (!snapshot.exists) {
+      alert("Backup non trovato.");
+      return;
+    }
+    const backup = { id: snapshot.id, ...snapshot.data() };
+    downloadFile(`backup-calendario-social-${backupId}.json`, JSON.stringify(backup, null, 2), "application/json");
+  } catch (error) {
+    console.error("Errore download backup", error);
+    alert("Non riesco a scaricare il backup.");
+  }
+}
+
+async function restoreCloudBackup(backupId) {
+  if (!cloudActive() || !canEditWorkspace()) return;
+  if (!confirm(`Ripristinare il backup "${backupId}"? I dati operativi attuali verranno sostituiti.`)) return;
+  try {
+    const snapshot = await backupsCollection().doc(backupId).get();
+    if (!snapshot.exists) {
+      alert("Backup non trovato.");
+      return;
+    }
+    await applyBackupData(snapshot.data());
+    backupStatus.textContent = "Backup ripristinato.";
+  } catch (error) {
+    console.error("Errore ripristino backup cloud", error);
+    alert("Non riesco a ripristinare il backup cloud.");
+  }
 }
 
 function restoreBackup(event) {
@@ -4913,27 +5078,31 @@ function restoreBackup(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
       const backup = JSON.parse(String(reader.result));
-      state.posts = Array.isArray(backup.posts) ? backup.posts.map(normalizePost) : [];
-      state.manualEvents = Array.isArray(backup.manualEvents) ? backup.manualEvents.map(normalizeManualEvent).filter(Boolean) : [];
-      state.creatorIdeas = Array.isArray(backup.creatorIdeas) ? backup.creatorIdeas.map(normalizeCreatorIdea).filter(Boolean) : [];
-      state.settings = normalizeSettings({ ...state.settings, ...(backup.settings || {}) });
-      state.viewMode = state.settings.defaultView;
-      persistPosts();
-      persistManualEvents();
-      persistCreatorIdeas();
-      persistSettings();
-      applySettings();
-      if (cloudActive()) replaceCloudPosts();
-      render();
+      await applyBackupData(backup);
     } catch {
       alert("Backup non valido.");
     }
     event.target.value = "";
   };
   reader.readAsText(file);
+}
+
+async function applyBackupData(backup) {
+  state.posts = Array.isArray(backup.posts) ? backup.posts.map(normalizePost) : [];
+  state.manualEvents = Array.isArray(backup.manualEvents) ? backup.manualEvents.map(normalizeManualEvent).filter(Boolean) : [];
+  state.creatorIdeas = Array.isArray(backup.creatorIdeas) ? backup.creatorIdeas.map(normalizeCreatorIdea).filter(Boolean) : [];
+  state.settings = normalizeSettings({ ...state.settings, ...(backup.settings || {}), manualEvents: state.manualEvents });
+  state.viewMode = state.settings.defaultView;
+  persistPosts(false);
+  persistManualEvents(false);
+  persistCreatorIdeas(false);
+  persistSettings(false);
+  applySettings();
+  if (cloudActive()) await replaceCloudOperationalData();
+  render();
 }
 
 function applySettings() {

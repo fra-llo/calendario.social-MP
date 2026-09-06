@@ -3226,6 +3226,57 @@ body.is-list-selecting {
   gap: 12px;
 }
 
+.backup-status {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.backup-list {
+  display: grid;
+  gap: 10px;
+}
+
+.backup-list-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: var(--surface);
+}
+
+.backup-list-item > div:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.backup-list-item strong,
+.backup-list-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.backup-list-item span {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.backup-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .theme-editor {
   display: grid;
   gap: 9px;
@@ -3543,6 +3594,15 @@ form footer > div {
   }
 
   .toolbar-actions {
+    justify-content: flex-start;
+  }
+
+  .backup-list-item {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .backup-list-actions {
     justify-content: flex-start;
   }
 
