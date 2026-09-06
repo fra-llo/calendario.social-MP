@@ -166,6 +166,7 @@ const appShell = document.querySelector(".app-shell");
 const authGate = document.querySelector("#authGate");
 const sidebarResizer = document.querySelector("#sidebarResizer");
 const sidebarReopen = document.querySelector("#sidebarReopen");
+const sidebarMobileClose = document.querySelector("#sidebarMobileClose");
 const sidebarEyebrow = document.querySelector("#sidebarEyebrow");
 const sidebarTitle = document.querySelector("#sidebarTitle");
 const periodLabel = document.querySelector("#periodLabel");
@@ -429,6 +430,7 @@ notificationsButton.addEventListener("click", openNotificationsDialog);
 document.querySelector("#trashButton").addEventListener("click", openTrashDialog);
 sidebarResizer.addEventListener("pointerdown", startSidebarResize);
 sidebarReopen.addEventListener("click", reopenSidebar);
+sidebarMobileClose.addEventListener("click", collapseSidebar);
 hamburgerButton.addEventListener("click", toggleHamburgerMenu);
 periodButton.addEventListener("click", openDatePicker);
 document.querySelector("#closeDatePicker").addEventListener("click", closeDatePicker);
@@ -919,6 +921,10 @@ function applyPermissionState() {
 
 function applySidebarWidth() {
   const storedWidth = Number(localStorage.getItem("social-content-calendar-sidebar-width"));
+  if (window.matchMedia("(max-width: 760px)").matches) {
+    collapseSidebar();
+    return;
+  }
   if (storedWidth === 0) {
     collapseSidebar();
     return;

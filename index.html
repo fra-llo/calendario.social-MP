@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Calendario contenuti MP</title>
-    <link rel="stylesheet" href="styles.css?v=backup-cloud-1">
+    <link rel="stylesheet" href="styles.css?v=mobile-sidebar-space-1">
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -60,9 +60,12 @@
 
     <main class="app-shell">
       <aside class="sidebar">
-        <div>
-          <p class="eyebrow" id="sidebarEyebrow">Planner editoriale</p>
-          <h1 id="sidebarTitle">Calendario contenuti MP</h1>
+        <div class="sidebar-heading">
+          <div>
+            <p class="eyebrow" id="sidebarEyebrow">Planner editoriale</p>
+            <h1 id="sidebarTitle">Calendario contenuti MP</h1>
+          </div>
+          <button class="sidebar-mobile-close" id="sidebarMobileClose" type="button" aria-label="Chiudi barra laterale">×</button>
         </div>
 
         <div class="mode-switch" aria-label="Modalita calendario">
@@ -1076,6 +1079,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <script src="app.js?v=backup-cloud-1"></script>
+    <script src="app.js?v=mobile-sidebar-close-1"></script>
   </body>
 </html>
