@@ -201,15 +201,16 @@ const notificationsDialog = document.querySelector("#notificationsDialog");
 const notificationsList = document.querySelector("#notificationsList");
 const creatorIdeasDialog = document.querySelector("#creatorIdeasDialog");
 const creatorList = document.querySelector("#creatorList");
-const creatorCount = document.querySelector("#creatorCount");
-const creatorNameInput = document.querySelector("#creatorNameInput");
+const creatorMenuButton = document.querySelector("#creatorMenuButton");
+const creatorMenu = document.querySelector("#creatorMenu");
 const selectedCreatorTitle = document.querySelector("#selectedCreatorTitle");
 const creatorIdeaForm = document.querySelector("#creatorIdeaForm");
 const creatorIdeaId = document.querySelector("#creatorIdeaId");
 const creatorIdeaTitle = document.querySelector("#creatorIdeaTitle");
 const creatorIdeaDevelopment = document.querySelector("#creatorIdeaDevelopment");
-const creatorIdeaDeveloped = document.querySelector("#creatorIdeaDeveloped");
+const creatorIdeaPending = document.querySelector("#creatorIdeaPending");
 const creatorIdeaApproved = document.querySelector("#creatorIdeaApproved");
+const creatorIdeaRejected = document.querySelector("#creatorIdeaRejected");
 const creatorIdeaDetail = document.querySelector("#creatorIdeaDetail");
 const creatorIdeaDetailTitle = document.querySelector("#creatorIdeaDetailTitle");
 const creatorIdeaDetailTheme = document.querySelector("#creatorIdeaDetailTheme");
@@ -431,11 +432,15 @@ document.querySelector("#closeTrash").addEventListener("click", closeTrashDialog
 document.querySelector("#closeNotifications").addEventListener("click", closeNotificationsDialog);
 document.querySelector("#markAllNotificationsRead").addEventListener("click", markAllNotificationsRead);
 document.querySelector("#closeCreatorIdeas").addEventListener("click", closeCreatorIdeasDialog);
+creatorMenuButton.addEventListener("click", toggleCreatorMenu);
 document.querySelector("#addCreatorButton").addEventListener("click", addCreator);
-document.querySelector("#removeCreatorButton").addEventListener("click", removeSelectedCreator);
+document.querySelector("#removeCreatorFromMenuButton").addEventListener("click", removeSelectedCreator);
 document.querySelector("#addCreatorIdeaButton").addEventListener("click", () => openCreatorIdeaForm());
 document.querySelector("#cancelCreatorIdea").addEventListener("click", closeCreatorIdeaForm);
 document.querySelector("#saveCreatorIdea").addEventListener("click", saveCreatorIdeaFromForm);
+creatorIdeaPending.addEventListener("change", () => syncCreatorApprovalInputs("pending"));
+creatorIdeaApproved.addEventListener("change", () => syncCreatorApprovalInputs("approved"));
+creatorIdeaRejected.addEventListener("change", () => syncCreatorApprovalInputs("rejected"));
 document.querySelector("#closeCreatorIdeaDetail").addEventListener("click", closeCreatorIdeaDetail);
 document.querySelector("#unlockCreatorIdeaEdit").addEventListener("click", unlockCreatorIdeaEdit);
 document.querySelector("#closeStats").addEventListener("click", closeStatsDialog);
@@ -526,11 +531,15 @@ document.addEventListener("click", (event) => {
   if (!listColumnsMenu.hidden && !event.target.closest("#listColumnsMenu, #listColumnsButton")) {
     closeListColumnsMenu();
   }
+  if (!creatorMenu.hidden && !event.target.closest("#creatorMenu, #creatorMenuButton")) {
+    closeCreatorMenu();
+  }
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeListBulkMenu();
     closeListColumnsMenu();
+    closeCreatorMenu();
   }
 });
 
@@ -975,18 +984,23 @@ function deleteCloudPost(id) {
 }
 
 function saveCloudSettings() {
-  if (!cloudActive() || !canEditWorkspace()) return;
-  settingsDocument().set(stripUndefined(state.settings), { merge: true });
+  if (!cloudActive() || !canEditWorkspace()) return Promise.resolve();
+  return settingsDocument().set(stripUndefined(state.settings), { merge: true });
 }
 
 function saveCloudCreatorIdea(idea) {
-  if (!cloudActive() || !canEditWorkspace()) return;
-  creatorIdeasCollection().doc(idea.id).set(stripUndefined(idea), { merge: true });
+  if (!cloudActive() || !canEditWorkspace()) return Promise.resolve();
+  return creatorIdeasCollection().doc(idea.id).set(stripUndefined(idea), { merge: true });
 }
 
 function deleteCloudCreatorIdea(id) {
-  if (!cloudActive() || !canEditWorkspace()) return;
-  creatorIdeasCollection().doc(id).delete();
+  if (!cloudActive() || !canEditWorkspace()) return Promise.resolve();
+  return creatorIdeasCollection().doc(id).delete();
+}
+
+function showCreatorSyncError(error) {
+  console.error("Errore sincronizzazione idee creator", error);
+  alert("Non riesco a salvare la modifica su Firebase. Controlla di avere permessi Editor/Admin e che le rules Firestore includano creatorIdeas.");
 }
 
 function backupsCollection() {
@@ -1225,6 +1239,7 @@ function openCreatorIdeasDialog() {
 }
 
 function closeCreatorIdeasDialog() {
+  closeCreatorMenu();
   creatorIdeasDialog.close();
 }
 
@@ -1246,7 +1261,6 @@ function renderCreatorIdeas() {
     selectedCreatorName = creators[0] || "";
   }
 
-  creatorCount.textContent = String(creators.length);
   creatorList.innerHTML = "";
   if (!creators.length) {
     const empty = document.createElement("p");
@@ -1263,6 +1277,7 @@ function renderCreatorIdeas() {
     button.textContent = creator;
     button.addEventListener("click", () => {
       selectedCreatorName = creator;
+      closeCreatorMenu();
       closeCreatorIdeaDetail();
       closeCreatorIdeaForm();
       renderCreatorIdeas();
@@ -1272,9 +1287,9 @@ function renderCreatorIdeas() {
 
   selectedCreatorTitle.textContent = selectedCreatorName || "Seleziona un creator";
   document.querySelector("#addCreatorIdeaButton").disabled = !selectedCreatorName || !canEditWorkspace();
-  creatorNameInput.disabled = !canEditWorkspace();
+  creatorMenuButton.disabled = !canEditWorkspace();
   document.querySelector("#addCreatorButton").disabled = !canEditWorkspace();
-  document.querySelector("#removeCreatorButton").disabled = !selectedCreatorName || !canEditWorkspace();
+  document.querySelector("#removeCreatorFromMenuButton").disabled = !selectedCreatorName || !canEditWorkspace();
   renderCreatorIdeaList();
 }
 
@@ -1329,7 +1344,7 @@ function renderCreatorIdeaList() {
 
     const checks = document.createElement("div");
     checks.className = "creator-idea-checks";
-    checks.append(createCreatorIdeaToggle(idea, "approved", "Approvazione"));
+    checks.append(createCreatorIdeaApprovalToggles(idea));
 
     const actions = document.createElement("div");
     actions.className = "creator-idea-actions";
@@ -1369,9 +1384,44 @@ function createCreatorIdeaToggle(idea, key, labelText) {
   return label;
 }
 
+function createCreatorIdeaApprovalToggles(idea) {
+  const group = document.createElement("div");
+  group.className = "creator-approval-group";
+  group.append(
+    createCreatorIdeaApprovalToggle(idea, "pending", "In sospeso"),
+    createCreatorIdeaApprovalToggle(idea, "approved", "Approvato"),
+    createCreatorIdeaApprovalToggle(idea, "rejected", "Non approvato")
+  );
+  return group;
+}
+
+function createCreatorIdeaApprovalToggle(idea, status, labelText) {
+  const label = document.createElement("label");
+  label.className = `creator-toggle creator-toggle-${status}`;
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.setAttribute("aria-label", labelText);
+  input.checked = getCreatorIdeaApprovalStatus(idea) === status;
+  input.disabled = !canEditWorkspace();
+  input.addEventListener("change", () => {
+    const nextStatus = input.checked ? status : "pending";
+    updateCreatorIdea({
+      ...idea,
+      approvalStatus: nextStatus,
+      approved: nextStatus === "approved",
+      updatedAt: new Date().toISOString(),
+    });
+  });
+  const span = document.createElement("span");
+  span.textContent = labelText;
+  label.append(input, span);
+  return label;
+}
+
 function addCreator() {
   if (!canEditWorkspace()) return;
-  const name = creatorNameInput.value.trim();
+  closeCreatorMenu();
+  const name = prompt("Nome creator")?.trim();
   if (!name) return;
   const current = state.settings.contentCreators || [];
   if (!current.some((item) => item.toLowerCase() === name.toLowerCase())) {
@@ -1379,27 +1429,41 @@ function addCreator() {
     persistSettings();
   }
   selectedCreatorName = name;
-  creatorNameInput.value = "";
   renderCreatorIdeas();
 }
 
-function removeSelectedCreator() {
+async function removeSelectedCreator() {
   if (!canEditWorkspace() || !selectedCreatorName) return;
+  closeCreatorMenu();
   const ideasToRemove = state.creatorIdeas.filter((idea) => idea.creator === selectedCreatorName);
   const message = ideasToRemove.length
     ? `Rimuovere "${selectedCreatorName}" e ${ideasToRemove.length} idee collegate?`
     : `Rimuovere "${selectedCreatorName}" dalla lista creator?`;
   if (!confirm(message)) return;
   const removedCreator = selectedCreatorName;
-  state.settings = normalizeSettings({
+  const previousSettings = state.settings;
+  const previousIdeas = [...state.creatorIdeas];
+  const nextSettings = normalizeSettings({
     ...state.settings,
     contentCreators: (state.settings.contentCreators || []).filter((name) => name !== removedCreator),
   });
-  state.creatorIdeas = state.creatorIdeas.filter((idea) => idea.creator !== removedCreator);
-  persistSettings();
-  persistCreatorIdeas(false);
-  if (cloudActive()) {
-    ideasToRemove.forEach((idea) => deleteCloudCreatorIdea(idea.id));
+  const nextIdeas = state.creatorIdeas.filter((idea) => idea.creator !== removedCreator);
+
+  try {
+    if (cloudActive()) {
+      const batch = cloud.db.batch();
+      batch.set(settingsDocument(), stripUndefined(nextSettings), { merge: true });
+      ideasToRemove.forEach((idea) => batch.delete(creatorIdeasCollection().doc(idea.id)));
+      await batch.commit();
+    }
+    state.settings = nextSettings;
+    state.creatorIdeas = nextIdeas;
+    persistSettings(false);
+    persistCreatorIdeas(false);
+  } catch (error) {
+    state.settings = previousSettings;
+    state.creatorIdeas = previousIdeas;
+    showCreatorSyncError(error);
   }
   selectedCreatorName = getCreatorNames()[0] || "";
   closeCreatorIdeaForm();
@@ -1412,8 +1476,7 @@ function openCreatorIdeaForm(idea = null) {
   creatorIdeaId.value = idea?.id || "";
   creatorIdeaTitle.value = idea?.title || "";
   creatorIdeaDevelopment.value = idea?.development || "";
-  creatorIdeaDeveloped.checked = Boolean(idea?.developed);
-  creatorIdeaApproved.checked = Boolean(idea?.approved);
+  setCreatorApprovalInputs(getCreatorIdeaApprovalStatus(idea));
   creatorIdeaForm.hidden = false;
   renderCreatorIdeaList();
   creatorIdeaTitle.focus();
@@ -1424,9 +1487,50 @@ function closeCreatorIdeaForm() {
   creatorIdeaId.value = "";
   creatorIdeaTitle.value = "";
   creatorIdeaDevelopment.value = "";
-  creatorIdeaDeveloped.checked = false;
+  creatorIdeaPending.checked = false;
   creatorIdeaApproved.checked = false;
+  creatorIdeaRejected.checked = false;
   renderCreatorIdeaList();
+}
+
+function getCreatorIdeaApprovalStatus(idea) {
+  if (idea?.approvalStatus === "approved" || idea?.approved) return "approved";
+  if (idea?.approvalStatus === "rejected") return "rejected";
+  return "pending";
+}
+
+function setCreatorApprovalInputs(status) {
+  const normalizedStatus = ["approved", "rejected"].includes(status) ? status : "pending";
+  creatorIdeaPending.checked = normalizedStatus === "pending";
+  creatorIdeaApproved.checked = normalizedStatus === "approved";
+  creatorIdeaRejected.checked = normalizedStatus === "rejected";
+}
+
+function syncCreatorApprovalInputs(changedStatus) {
+  if (changedStatus === "pending" && creatorIdeaPending.checked) {
+    creatorIdeaApproved.checked = false;
+    creatorIdeaRejected.checked = false;
+    return;
+  }
+  if (changedStatus === "approved" && creatorIdeaApproved.checked) {
+    creatorIdeaPending.checked = false;
+    creatorIdeaRejected.checked = false;
+    return;
+  }
+  if (changedStatus === "rejected" && creatorIdeaRejected.checked) {
+    creatorIdeaPending.checked = false;
+    creatorIdeaApproved.checked = false;
+    return;
+  }
+  if (!creatorIdeaPending.checked && !creatorIdeaApproved.checked && !creatorIdeaRejected.checked) {
+    setCreatorApprovalInputs("pending");
+  }
+}
+
+function getCreatorApprovalLabel(status) {
+  if (status === "approved") return "Approvato";
+  if (status === "rejected") return "Non approvato";
+  return "In sospeso";
 }
 
 function openCreatorIdeaDetail(idea) {
@@ -1437,8 +1541,8 @@ function openCreatorIdeaDetail(idea) {
   creatorIdeaDetailTitle.textContent = normalized.title || "Idea senza titolo";
   creatorIdeaDetailTheme.textContent = normalized.title || "-";
   creatorIdeaDetailDevelopment.textContent = normalized.development || "Nessuna idea di svolgimento inserita.";
-  creatorIdeaDetailApproved.textContent = normalized.approved ? "Approvata" : "Non approvata";
-  creatorIdeaDetailApproved.classList.toggle("is-done", normalized.approved);
+  creatorIdeaDetailApproved.textContent = getCreatorApprovalLabel(normalized.approvalStatus);
+  creatorIdeaDetailApproved.classList.toggle("is-done", normalized.approvalStatus === "approved");
   document.querySelector("#unlockCreatorIdeaEdit").hidden = !canEditWorkspace();
   creatorIdeaDetail.hidden = false;
   renderCreatorIdeaList();
@@ -1465,13 +1569,14 @@ function saveCreatorIdeaFromForm() {
   if (!title && !development) return;
   const existing = state.creatorIdeas.find((idea) => idea.id === creatorIdeaId.value);
   const now = new Date().toISOString();
+  const approvalStatus = creatorIdeaApproved.checked ? "approved" : creatorIdeaRejected.checked ? "rejected" : "pending";
   updateCreatorIdea({
     id: existing?.id || createId(),
     creator: selectedCreatorName,
     title,
     development,
-    developed: creatorIdeaDeveloped.checked,
-    approved: creatorIdeaApproved.checked,
+    approvalStatus,
+    approved: approvalStatus === "approved",
     createdAt: existing?.createdAt || now,
     createdBy: existing?.createdBy || cloud.user?.uid || "",
     updatedAt: now,
@@ -1491,12 +1596,19 @@ function updateCreatorIdea(idea) {
   renderCreatorIdeas();
 }
 
-function deleteCreatorIdea(id) {
+async function deleteCreatorIdea(id) {
   if (!canEditWorkspace()) return;
-  state.creatorIdeas = state.creatorIdeas.filter((idea) => idea.id !== id);
-  persistCreatorIdeas(false);
-  deleteCloudCreatorIdea(id);
-  renderCreatorIdeas();
+  const previousIdeas = [...state.creatorIdeas];
+  try {
+    await deleteCloudCreatorIdea(id);
+    state.creatorIdeas = state.creatorIdeas.filter((idea) => idea.id !== id);
+    persistCreatorIdeas(false);
+    renderCreatorIdeas();
+  } catch (error) {
+    state.creatorIdeas = previousIdeas;
+    showCreatorSyncError(error);
+    renderCreatorIdeas();
+  }
 }
 
 function updateNotificationsBadge() {
@@ -1741,6 +1853,19 @@ function closeHamburgerMenu() {
   hamburgerPanel.classList.remove("is-open");
   hamburgerPanel.hidden = true;
   hamburgerButton.setAttribute("aria-expanded", "false");
+}
+
+function toggleCreatorMenu(event) {
+  event.stopPropagation();
+  const isOpen = creatorMenu.classList.toggle("is-open");
+  creatorMenu.hidden = !isOpen;
+  creatorMenuButton.setAttribute("aria-expanded", String(isOpen));
+}
+
+function closeCreatorMenu() {
+  creatorMenu.classList.remove("is-open");
+  creatorMenu.hidden = true;
+  creatorMenuButton.setAttribute("aria-expanded", "false");
 }
 
 function addMember() {
@@ -5268,13 +5393,18 @@ function normalizeCreatorIdea(idea) {
   const title = String(idea?.title || "").trim();
   const development = String(idea?.development || idea?.description || "").trim();
   if (!creator && !title && !development) return null;
+  const approvalStatus = idea?.approvalStatus === "approved" || idea?.approved
+    ? "approved"
+    : idea?.approvalStatus === "rejected"
+      ? "rejected"
+      : "pending";
   return {
     id: idea.id || createId(),
     creator,
     title,
     development,
-    developed: Boolean(idea.developed),
-    approved: Boolean(idea.approved),
+    approvalStatus,
+    approved: approvalStatus === "approved",
     createdAt: idea.createdAt || new Date().toISOString(),
     createdBy: idea.createdBy || "",
     updatedAt: idea.updatedAt || idea.createdAt || new Date().toISOString(),

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Calendario contenuti MP</title>
-    <link rel="stylesheet" href="styles.css?v=creator-ideas-readonly-2">
+    <link rel="stylesheet" href="styles.css?v=creator-approval-inline-2">
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -24,6 +24,10 @@
         <div class="hamburger-menu">
           <button class="icon-button hamburger-button" id="hamburgerButton" type="button" aria-label="Apri menu" aria-expanded="false">☰</button>
           <div class="hamburger-panel" id="hamburgerPanel" hidden>
+            <button class="menu-item" id="creatorIdeasButton" type="button">
+              <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16"/><path d="M4 12h10"/><path d="M4 19h16"/><path d="M17 9l3 3-3 3"/></svg>
+              Idee creator
+            </button>
             <button class="menu-item" id="settingsButton" type="button">
               <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.09 1.65V21a2 2 0 0 1-4 0v-.1A1.8 1.8 0 0 0 8.8 19.25a1.8 1.8 0 0 0-1.98.36l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.8 1.8 0 0 0 4.35 15a1.8 1.8 0 0 0-1.65-1.09H2.6a2 2 0 0 1 0-4h.1A1.8 1.8 0 0 0 4.35 8.8a1.8 1.8 0 0 0-.36-1.98l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.8 1.8 0 0 0 8.8 4.35a1.8 1.8 0 0 0 1.09-1.65V2.6a2 2 0 0 1 4 0v.1a1.8 1.8 0 0 0 1.09 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.8 1.8 0 0 0-.36 1.98 1.8 1.8 0 0 0 1.65 1.09h.1a2 2 0 0 1 0 4h-.1A1.8 1.8 0 0 0 19.4 15Z"/></svg>
               Impostazioni
@@ -31,10 +35,6 @@
             <button class="menu-item" id="statsButton" type="button">
               <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-5"/><path d="M12 16V8"/><path d="M16 16v-3"/></svg>
               Statistiche
-            </button>
-            <button class="menu-item" id="creatorIdeasButton" type="button">
-              <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16"/><path d="M4 12h10"/><path d="M4 19h16"/><path d="M17 9l3 3-3 3"/></svg>
-              Idee creator
             </button>
             <button class="menu-item" id="notificationsButton" type="button" hidden>
               <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
@@ -355,13 +355,15 @@
           <aside class="creator-sidebar">
             <div class="creator-sidebar-head">
               <h3>Creator</h3>
-              <span id="creatorCount">0</span>
+              <div class="creator-menu-wrap" data-edit-action>
+                <button class="icon-button creator-menu-button" id="creatorMenuButton" type="button" aria-label="Opzioni creator" aria-expanded="false">•••</button>
+                <div class="creator-menu" id="creatorMenu" hidden>
+                  <button type="button" id="addCreatorButton">Aggiungi creator</button>
+                  <button type="button" id="removeCreatorFromMenuButton">Rimuovi creator</button>
+                </div>
+              </div>
             </div>
             <div class="creator-list" id="creatorList"></div>
-            <div class="creator-add" data-edit-action>
-              <input id="creatorNameInput" type="text" maxlength="80" placeholder="Nome creator">
-              <button class="secondary-action" id="addCreatorButton" type="button">Aggiungi</button>
-            </div>
           </aside>
           <section class="creator-board">
             <div class="creator-board-head">
@@ -370,7 +372,6 @@
                 <h3 id="selectedCreatorTitle">Seleziona un creator</h3>
               </div>
               <div class="creator-board-actions" data-edit-action>
-                <button class="secondary-action" id="removeCreatorButton" type="button">Rimuovi creator</button>
                 <button class="primary-action" id="addCreatorIdeaButton" type="button">+ Nuova idea</button>
               </div>
             </div>
@@ -385,8 +386,9 @@
                 <textarea id="creatorIdeaDevelopment" rows="4" placeholder="Descrivi lo sviluppo dell'idea..."></textarea>
               </label>
               <div class="creator-check-row">
-                <label class="check-row"><input id="creatorIdeaDeveloped" type="checkbox"> Sviluppo completato</label>
-                <label class="check-row"><input id="creatorIdeaApproved" type="checkbox"> Approvata</label>
+                <label class="check-row"><input id="creatorIdeaPending" type="checkbox"> In sospeso</label>
+                <label class="check-row"><input id="creatorIdeaApproved" type="checkbox"> Approvato</label>
+                <label class="check-row"><input id="creatorIdeaRejected" type="checkbox"> Non approvato</label>
               </div>
               <div class="creator-form-actions">
                 <button class="secondary-action" id="cancelCreatorIdea" type="button">Annulla</button>
@@ -1071,6 +1073,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <script src="app.js?v=creator-ideas-readonly-2"></script>
+    <script src="app.js?v=creator-approval-inline-2"></script>
   </body>
 </html>
