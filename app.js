@@ -37,7 +37,7 @@ const defaultMonthlyTargets = {
   YouTube: 4,
   X: 8,
 };
-const defaultFormats = ["Reel", "Carosello", "Story", "Short", "Post", "Live", "Video"];
+const defaultFormats = ["Carosello", "Reel", "Post flash", "Intervista", "Story", "Post Adv", "Reel Adv"];
 const defaultGoals = ["Awareness", "Vendita", "Community", "Educazione", "Engagement"];
 const defaultThemes = [
   { id: "ambiente", name: "Ambiente", icon: "🌿", color: "#16a34a" },
@@ -4180,7 +4180,7 @@ function openPostDialog(post = {}) {
   fields.date.value = normalized.date || toDateKey(new Date());
   fields.time.value = normalized.time || defaultRecommendedTimes[normalized.platform || "Instagram"];
   fields.platform.value = normalized.platform || "Instagram";
-  fields.format.value = normalized.format || "";
+  populateFormatOptions(normalized.format || "");
   fields.status.value = getPostWorkStatus(normalized);
   fields.approval.value = normalized.approval || "Bozza";
   fields.priority.value = normalized.priority || "Media";
@@ -4281,9 +4281,10 @@ function renderTargetSettings() {
   });
 }
 
-function saveSettings(event) {
+async function saveSettings(event) {
   event.preventDefault();
   if (!canEditWorkspace()) return;
+  const submitButton = settingsForm.querySelector('button[type="submit"]');
   const monthlyTargets = {};
   targetSettings.querySelectorAll("input[data-platform]").forEach((input) => {
     monthlyTargets[input.dataset.platform] = Number(input.value) || 0;
@@ -4310,11 +4311,19 @@ function saveSettings(event) {
   });
   normalizePostThemes();
   state.viewMode = state.settings.defaultView;
-  persistSettings();
-  persistPosts(cloudActive());
-  applySettings();
-  closeSettingsDialog();
-  render();
+  if (submitButton) submitButton.disabled = true;
+  try {
+    await persistSettings();
+    persistPosts(cloudActive());
+    applySettings();
+    closeSettingsDialog();
+    render();
+  } catch (error) {
+    console.error("Errore salvataggio impostazioni", error);
+    alert("Non riesco a salvare le impostazioni su Firebase. Controlla permessi e connessione.");
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
 }
 
 function setSettingsTab(tab) {
@@ -5188,7 +5197,8 @@ function loadSettings() {
 
 function persistSettings(syncCloud = true) {
   localStorage.setItem(settingsKey, JSON.stringify(state.settings));
-  if (syncCloud) saveCloudSettings();
+  if (syncCloud) return saveCloudSettings();
+  return Promise.resolve();
 }
 
 function getDefaultSettings() {
@@ -5226,7 +5236,7 @@ function normalizeSettings(settings) {
     monthlyTargets: { ...defaults.monthlyTargets, ...(settings.monthlyTargets || {}) },
     warningRules: { ...defaults.warningRules, ...(settings.warningRules || {}) },
     visibleFields: sanitizeVisibleFields({ ...defaults.visibleFields, ...(settings.visibleFields || {}) }),
-    formats: Array.isArray(settings.formats) && settings.formats.length ? settings.formats : defaults.formats,
+    formats: normalizeFormats(settings.formats, defaults.formats),
     goals: Array.isArray(settings.goals) && settings.goals.length ? settings.goals : defaults.goals,
     themes: normalizeThemes(settings.themes || defaults.themes),
     templates: settings.templates && Object.keys(settings.templates).length ? settings.templates : defaults.templates,
@@ -5283,15 +5293,27 @@ function populateGoalSelect() {
   updateOtherFieldVisibility();
 }
 
-function populateFormatOptions() {
-  const datalist = document.querySelector("#formatOptions");
-  if (!datalist) return;
-  datalist.innerHTML = "";
+function populateFormatOptions(selectedValue = fields.format.value) {
+  fields.format.innerHTML = "";
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "Nessuna";
+  fields.format.append(none);
   state.settings.formats.forEach((format) => {
     const option = document.createElement("option");
     option.value = format;
-    datalist.append(option);
+    option.textContent = format;
+    fields.format.append(option);
   });
+  fields.format.value = state.settings.formats.includes(selectedValue) ? selectedValue : "";
+}
+
+function normalizeFormats(formats, fallback = defaultFormats) {
+  const items = Array.isArray(formats)
+    ? Array.from(new Set(formats.map((format) => String(format || "").trim()).filter(Boolean)))
+    : [];
+  if (!items.length) return [...fallback];
+  return items;
 }
 
 function populateThemeSelects() {
