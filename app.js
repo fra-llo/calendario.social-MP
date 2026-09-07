@@ -2981,6 +2981,7 @@ function createListRow(post) {
   const row = document.createElement("article");
   row.className = "list-item is-table-row";
   row.dataset.platform = post.platform;
+  row.dataset.priority = post.priority || "Media";
   row.dataset.id = post.id;
   row.tabIndex = 0;
   row.classList.toggle("is-incomplete", isIncompletePost(post));
