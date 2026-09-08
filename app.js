@@ -1702,7 +1702,12 @@ function openCreatorIdeaDetail(idea) {
   creatorIdeaDetailApproved.textContent = getCreatorApprovalLabel(normalized.approvalStatus);
   creatorIdeaDetailApproved.classList.toggle("is-done", normalized.approvalStatus === "approved");
   creatorIdeaCommentDraft.value = "";
-  renderCommentsList(creatorIdeaCommentsList, normalized.comments || [], { emptyText: "Nessun commento." });
+  renderCommentsList(creatorIdeaCommentsList, normalized.comments || [], {
+    emptyText: "Nessun commento.",
+    canManageComment: canManageCreatorIdeaComment,
+    onEditComment: editCreatorIdeaComment,
+    onDeleteComment: deleteCreatorIdeaComment,
+  });
   document.querySelector("#unlockCreatorIdeaEdit").hidden = !canEditWorkspace();
   creatorIdeaDetail.hidden = false;
   renderCreatorIdeaList();
@@ -1782,6 +1787,56 @@ function addCreatorIdeaComment() {
   updateCreatorIdea(updatedIdea);
   openCreatorIdeaDetail(updatedIdea);
   notifyCreatorIdeaComment(updatedIdea, comment);
+}
+
+function canManageCreatorIdeaComment(comment) {
+  return canEditWorkspace() && Boolean(comment?.authorUid) && comment.authorUid === cloud.user?.uid;
+}
+
+function editCreatorIdeaComment(commentId) {
+  if (!canEditWorkspace() || !selectedCreatorIdeaId || !commentId) return;
+  const idea = state.creatorIdeas.find((item) => item.id === selectedCreatorIdeaId);
+  if (!idea) return;
+  const comment = (idea.comments || []).find((item) => item.id === commentId);
+  if (!canManageCreatorIdeaComment(comment)) return;
+  const nextText = prompt("Modifica commento", comment.text || "");
+  if (nextText === null) return;
+  const text = nextText.trim();
+  if (!text) return;
+  const updatedIdea = normalizeCreatorIdea({
+    ...idea,
+    comments: (idea.comments || []).map((item) => item.id === commentId
+      ? {
+        ...item,
+        text,
+        mentions: extractMentions(text),
+        editedAt: new Date().toISOString(),
+      }
+      : item),
+    updatedAt: new Date().toISOString(),
+    updatedBy: cloud.user?.uid || "",
+  });
+  if (!updatedIdea) return;
+  updateCreatorIdea(updatedIdea);
+  openCreatorIdeaDetail(updatedIdea);
+}
+
+function deleteCreatorIdeaComment(commentId) {
+  if (!canEditWorkspace() || !selectedCreatorIdeaId || !commentId) return;
+  const idea = state.creatorIdeas.find((item) => item.id === selectedCreatorIdeaId);
+  if (!idea) return;
+  const comment = (idea.comments || []).find((item) => item.id === commentId);
+  if (!canManageCreatorIdeaComment(comment)) return;
+  if (!confirm("Eliminare questo commento?")) return;
+  const updatedIdea = normalizeCreatorIdea({
+    ...idea,
+    comments: (idea.comments || []).filter((item) => item.id !== commentId),
+    updatedAt: new Date().toISOString(),
+    updatedBy: cloud.user?.uid || "",
+  });
+  if (!updatedIdea) return;
+  updateCreatorIdea(updatedIdea);
+  openCreatorIdeaDetail(updatedIdea);
 }
 
 async function deleteCreatorIdea(id) {
@@ -4805,18 +4860,37 @@ function renderCommentsList(container, comments, options = {}) {
   comments
     .slice()
     .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
-    .forEach((comment) => container.append(createCommentItem(comment)));
+    .forEach((comment) => container.append(createCommentItem(comment, options)));
 }
 
-function createCommentItem(comment) {
+function createCommentItem(comment, options = {}) {
   const item = document.createElement("article");
   item.className = "comment-item";
   const header = document.createElement("header");
+  const meta = document.createElement("div");
+  meta.className = "comment-meta";
   const author = document.createElement("strong");
   author.textContent = comment.authorName || comment.authorEmail || "Utente";
   const date = document.createElement("span");
-  date.textContent = formatDateTime(comment.createdAt);
-  header.append(author, date);
+  date.textContent = [formatDateTime(comment.createdAt), comment.editedAt ? "modificato" : ""].filter(Boolean).join(" - ");
+  meta.append(author, date);
+  header.append(meta);
+  if (options.canManageComment?.(comment)) {
+    const actions = document.createElement("div");
+    actions.className = "comment-actions";
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "comment-action";
+    edit.textContent = "Modifica";
+    edit.addEventListener("click", () => options.onEditComment?.(comment.id));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "comment-action is-danger";
+    remove.textContent = "Elimina";
+    remove.addEventListener("click", () => options.onDeleteComment?.(comment.id));
+    actions.append(edit, remove);
+    header.append(actions);
+  }
   const text = document.createElement("p");
   text.append(...commentTextNodes(comment.text || ""));
   item.append(header, text);
@@ -5649,6 +5723,7 @@ function normalizeComment(comment) {
     authorEmail: comment.authorEmail || "",
     authorName: comment.authorName || comment.authorEmail || "Utente",
     createdAt: comment.createdAt || new Date().toISOString(),
+    editedAt: comment.editedAt || "",
   };
 }
 
