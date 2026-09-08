@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Calendario contenuti MP</title>
-    <link rel="stylesheet" href="styles.css?v=priority-border-3">
+    <link rel="stylesheet" href="styles.css?v=creator-idea-comments-1">
   </head>
   <body>
     <section class="auth-gate" id="authGate" hidden>
@@ -413,6 +413,14 @@
               </div>
               <div class="creator-detail-status">
                 <span id="creatorIdeaDetailApproved">Non approvata</span>
+              </div>
+              <div class="creator-detail-section creator-detail-chat">
+                <span>Commenti</span>
+                <div class="comments-list" id="creatorIdeaCommentsList"></div>
+                <div class="comment-composer" data-edit-action>
+                  <textarea id="creatorIdeaCommentDraft" rows="2" maxlength="600" placeholder="Scrivi un commento..."></textarea>
+                  <button class="primary-action" id="sendCreatorIdeaComment" type="button">Invia</button>
+                </div>
               </div>
               <div class="creator-form-actions">
                 <button class="secondary-action" id="closeCreatorIdeaDetail" type="button">Chiudi</button>
@@ -1079,6 +1087,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <script src="app.js?v=priority-border-3"></script>
+    <script src="app.js?v=creator-idea-comments-1"></script>
   </body>
 </html>

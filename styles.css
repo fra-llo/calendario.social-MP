@@ -1427,6 +1427,55 @@ body.is-dark .primary-action {
   white-space: nowrap;
 }
 
+.creator-idea-main {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.creator-comment-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  max-width: 100%;
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 0.74rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.creator-detail-chat {
+  gap: 10px;
+}
+
+.creator-detail-chat .comments-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.creator-detail-chat .comment-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: stretch;
+  position: relative;
+}
+
+.creator-detail-chat .comment-composer textarea {
+  min-height: 58px;
+  resize: vertical;
+}
+
+.creator-detail-chat .comment-composer .primary-action {
+  align-self: stretch;
+  min-height: 58px;
+  padding-inline: 20px;
+}
+
 .creator-toggle {
   display: inline-flex;
   align-items: center;
@@ -4185,6 +4234,15 @@ form footer > div {
     width: 100%;
     min-height: 38px;
     padding: 0 10px;
+  }
+
+  .creator-detail-chat .comment-composer {
+    grid-template-columns: 1fr;
+  }
+
+  .creator-detail-chat .comment-composer .primary-action {
+    width: 100%;
+    min-height: 44px;
   }
 
   .creator-menu {

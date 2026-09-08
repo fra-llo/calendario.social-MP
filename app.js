@@ -217,6 +217,9 @@ const creatorIdeaDetailTitle = document.querySelector("#creatorIdeaDetailTitle")
 const creatorIdeaDetailTheme = document.querySelector("#creatorIdeaDetailTheme");
 const creatorIdeaDetailDevelopment = document.querySelector("#creatorIdeaDetailDevelopment");
 const creatorIdeaDetailApproved = document.querySelector("#creatorIdeaDetailApproved");
+const creatorIdeaCommentsList = document.querySelector("#creatorIdeaCommentsList");
+const creatorIdeaCommentDraft = document.querySelector("#creatorIdeaCommentDraft");
+const sendCreatorIdeaComment = document.querySelector("#sendCreatorIdeaComment");
 const creatorIdeaList = document.querySelector("#creatorIdeaList");
 const undoToast = document.querySelector("#undoToast");
 const undoMessage = document.querySelector("#undoMessage");
@@ -450,6 +453,10 @@ creatorIdeaApproved.addEventListener("change", () => syncCreatorApprovalInputs("
 creatorIdeaRejected.addEventListener("change", () => syncCreatorApprovalInputs("rejected"));
 document.querySelector("#closeCreatorIdeaDetail").addEventListener("click", closeCreatorIdeaDetail);
 document.querySelector("#unlockCreatorIdeaEdit").addEventListener("click", unlockCreatorIdeaEdit);
+sendCreatorIdeaComment.addEventListener("click", addCreatorIdeaComment);
+creatorIdeaCommentDraft.addEventListener("keydown", (event) => {
+  if ((event.metaKey || event.ctrlKey) && event.key === "Enter") addCreatorIdeaComment();
+});
 document.querySelector("#closeStats").addEventListener("click", closeStatsDialog);
 document.querySelector("#previousStatsPeriod").addEventListener("click", () => changeStatsPeriod(-1));
 document.querySelector("#nextStatsPeriod").addEventListener("click", () => changeStatsPeriod(1));
@@ -1482,9 +1489,16 @@ function renderCreatorIdeaList() {
     });
 
     const main = document.createElement("div");
+    main.className = "creator-idea-main";
     const title = document.createElement("strong");
     title.textContent = idea.title || "Idea senza titolo";
     main.append(title);
+    if ((idea.comments || []).length) {
+      const commentBadge = document.createElement("span");
+      commentBadge.className = "creator-comment-badge";
+      commentBadge.textContent = idea.comments.length === 1 ? "1 commento" : `${idea.comments.length} commenti`;
+      main.append(commentBadge);
+    }
 
     const checks = document.createElement("div");
     checks.className = "creator-idea-checks";
@@ -1687,6 +1701,8 @@ function openCreatorIdeaDetail(idea) {
   creatorIdeaDetailDevelopment.textContent = normalized.development || "Nessuna idea di svolgimento inserita.";
   creatorIdeaDetailApproved.textContent = getCreatorApprovalLabel(normalized.approvalStatus);
   creatorIdeaDetailApproved.classList.toggle("is-done", normalized.approvalStatus === "approved");
+  creatorIdeaCommentDraft.value = "";
+  renderCommentsList(creatorIdeaCommentsList, normalized.comments || [], { emptyText: "Nessun commento." });
   document.querySelector("#unlockCreatorIdeaEdit").hidden = !canEditWorkspace();
   creatorIdeaDetail.hidden = false;
   renderCreatorIdeaList();
@@ -1721,6 +1737,7 @@ function saveCreatorIdeaFromForm() {
     development,
     approvalStatus,
     approved: approvalStatus === "approved",
+    comments: existing?.comments || [],
     createdAt: existing?.createdAt || now,
     createdBy: existing?.createdBy || cloud.user?.uid || "",
     updatedAt: now,
@@ -1736,8 +1753,35 @@ function updateCreatorIdea(idea) {
   if (index >= 0) state.creatorIdeas[index] = normalized;
   else state.creatorIdeas.unshift(normalized);
   persistCreatorIdeas(false);
-  saveCloudCreatorIdea(normalized);
+  saveCloudCreatorIdea(normalized).catch(showCreatorSyncError);
   renderCreatorIdeas();
+}
+
+function addCreatorIdeaComment() {
+  if (!canEditWorkspace() || !selectedCreatorIdeaId) return;
+  const text = creatorIdeaCommentDraft.value.trim();
+  if (!text) return;
+  const idea = state.creatorIdeas.find((item) => item.id === selectedCreatorIdeaId);
+  if (!idea) return;
+  const comment = normalizeComment({
+    text,
+    mentions: extractMentions(text),
+    authorUid: cloud.user?.uid || "",
+    authorEmail: cloud.user?.email || "",
+    authorName: getCurrentMemberName(),
+  });
+  if (!comment) return;
+  const updatedIdea = normalizeCreatorIdea({
+    ...idea,
+    comments: [...(idea.comments || []), comment],
+    updatedAt: new Date().toISOString(),
+    updatedBy: cloud.user?.uid || "",
+  });
+  if (!updatedIdea) return;
+  creatorIdeaCommentDraft.value = "";
+  updateCreatorIdea(updatedIdea);
+  openCreatorIdeaDetail(updatedIdea);
+  notifyCreatorIdeaComment(updatedIdea, comment);
 }
 
 async function deleteCreatorIdea(id) {
@@ -1821,6 +1865,17 @@ function openNotificationTarget(notification) {
       markNotificationRead(notification.id);
       closeNotificationsDialog();
       openContentDetailDialog(post);
+    }
+  }
+  if (notification.creatorIdeaId) {
+    const idea = state.creatorIdeas.find((item) => item.id === notification.creatorIdeaId);
+    if (idea) {
+      markNotificationRead(notification.id);
+      closeNotificationsDialog();
+      selectedCreatorName = idea.creator;
+      renderCreatorIdeas();
+      if (!creatorIdeasDialog.open) creatorIdeasDialog.showModal();
+      openCreatorIdeaDetail(idea);
     }
   }
 }
@@ -4694,6 +4749,17 @@ function notifyOwnerAboutExternalEdit(previousPost, updatedPost) {
   });
 }
 
+function notifyCreatorIdeaComment(idea, comment) {
+  if (!cloudActive() || !idea?.id || !idea.createdBy || idea.createdBy === cloud.user.uid) return;
+  createNotification({
+    recipientUid: idea.createdBy,
+    type: "creator_idea_comment",
+    creatorIdeaId: idea.id,
+    title: "Commento su idea creator",
+    message: `${getCurrentMemberName()} ha commentato "${idea.title || "una tua idea"}".`,
+  });
+}
+
 function resolveMentionRecipients(mentions) {
   const people = getMentionPeople({ owner: fields.owner.value });
   return Array.from(new Set(mentions)).map((mention) => {
@@ -5603,6 +5669,7 @@ function normalizeCreatorIdea(idea) {
     development,
     approvalStatus,
     approved: approvalStatus === "approved",
+    comments: Array.isArray(idea.comments) ? idea.comments.map(normalizeComment).filter(Boolean) : [],
     createdAt: idea.createdAt || new Date().toISOString(),
     createdBy: idea.createdBy || "",
     updatedAt: idea.updatedAt || idea.createdAt || new Date().toISOString(),
