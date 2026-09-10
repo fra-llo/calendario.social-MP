@@ -3084,7 +3084,7 @@ body.is-list-selecting {
   max-width: calc(100vw - 24px);
 }
 
-.content-detail-panel header {
+.content-detail-panel > header {
   position: absolute;
   top: 12px;
   right: 14px;
@@ -3110,7 +3110,7 @@ body.is-list-selecting {
 .day-detail-panel footer,
 .event-detail-panel header,
 .event-detail-panel footer,
-.content-detail-panel header,
+.content-detail-panel > header,
 .content-detail-panel footer {
   display: flex;
   align-items: center;
@@ -3118,7 +3118,7 @@ body.is-list-selecting {
   gap: 14px;
 }
 
-.content-detail-panel header {
+.content-detail-panel > header {
   align-items: flex-start;
   justify-content: flex-end;
 }
@@ -4307,7 +4307,7 @@ form footer > div {
     padding: 18px;
   }
 
-  .content-detail-panel header {
+  .content-detail-panel > header {
     gap: 10px;
   }
 
