@@ -78,6 +78,7 @@ const listColumnDefinitions = [
   { id: "status", label: "Stato", width: "minmax(128px, 0.7fr)" },
   { id: "time", label: "Orario", width: "72px" },
   { id: "owner", label: "Responsabile", width: "minmax(130px, 0.8fr)" },
+  { id: "designer", label: "Grafico", width: "minmax(120px, 0.7fr)" },
   { id: "platform", label: "Piattaforma", width: "minmax(120px, 0.7fr)" },
   { id: "priority", label: "Priorita", width: "minmax(90px, 0.5fr)" },
   { id: "goal", label: "Obiettivo", width: "minmax(120px, 0.7fr)" },
@@ -345,6 +346,7 @@ const fields = {
   priority: document.querySelector("#postPriority"),
   color: document.querySelector("#postColor"),
   owner: document.querySelector("#postOwner"),
+  designer: document.querySelector("#postDesigner"),
   goal: document.querySelector("#postGoal"),
   goalOther: document.querySelector("#postGoalOther"),
   theme: document.querySelector("#postTheme"),
@@ -2952,7 +2954,7 @@ function getPostChipMeta(post) {
     fieldsToShow.platform ? formatPlatformLabel(post.platform) : "",
     formatThemeLabel(theme),
     fieldsToShow.priority ? post.priority || "Media" : "",
-    fieldsToShow.owner && post.owner ? post.owner : "",
+    fieldsToShow.owner && post.owner ? formatOwnerWithDesignerInitials(post) : "",
   ].filter(Boolean).join(" - ");
 }
 
@@ -2962,6 +2964,22 @@ function formatPlatformLabel(platform) {
 
 function formatStatusLabel(status) {
   return status || "Stato";
+}
+
+function formatOwnerWithDesignerInitials(post) {
+  const owner = String(post.owner || "").trim();
+  const designerInitials = getPersonInitials(post.designer);
+  return designerInitials ? `${owner} [${designerInitials}]` : owner;
+}
+
+function getPersonInitials(value) {
+  const parts = String(value || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!parts.length) return "";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] || ""}${parts[parts.length - 1][0] || ""}`.toUpperCase();
 }
 
 function renderListView() {
@@ -3136,7 +3154,7 @@ function createListRow(post) {
   title.textContent = post.title;
   title.title = post.title;
   const meta = document.createElement("p");
-  meta.textContent = [post.owner || "Senza responsabile", formatPlatformLabel(post.platform), post.priority || "Media"].filter(Boolean).join(" - ");
+  meta.textContent = [post.owner ? formatOwnerWithDesignerInitials(post) : "Senza responsabile", formatPlatformLabel(post.platform), post.priority || "Media"].filter(Boolean).join(" - ");
   main.append(title, meta);
 
   const theme = getTheme(post.theme);
@@ -3171,6 +3189,11 @@ function createListRow(post) {
   ownerCell.textContent = post.owner || "Senza responsabile";
   ownerCell.title = post.owner || "Senza responsabile";
 
+  const designerCell = document.createElement("div");
+  designerCell.className = "list-muted-cell";
+  designerCell.textContent = post.designer || "-";
+  designerCell.title = post.designer || "-";
+
   const platformCell = document.createElement("div");
   platformCell.className = "list-muted-cell";
   platformCell.textContent = formatPlatformLabel(post.platform);
@@ -3192,6 +3215,7 @@ function createListRow(post) {
     status: statusCell,
     time: timeCell,
     owner: ownerCell,
+    designer: designerCell,
     platform: platformCell,
     priority: priorityCell,
     goal: goalCell,
@@ -3213,6 +3237,7 @@ function openContentDetailDialog(post) {
     ["Categoria", post.format || "-"],
     ["Stato", formatStatusLabel(getPostWorkStatus(post))],
     ["Responsabile", post.owner || "Senza responsabile"],
+    ["Grafico", post.designer || "-"],
     ["Priorità", post.priority || "Media"],
     ["Tema", [formatThemeLabel(theme), post.themeOther || ""].filter(Boolean).join(" - ") || "-"],
     ["Obiettivo", post.goal || "-"],
@@ -4263,6 +4288,7 @@ function filteredPosts() {
       post.goal,
       theme?.name || "",
       post.owner,
+      post.designer,
       post.tags,
       post.assets,
       post.copy,
@@ -4297,6 +4323,7 @@ function openPostDialog(post = {}) {
   fields.priority.value = normalized.priority || "Media";
   setSelectedColor(normalized.color || pastelColors[0].value);
   fields.owner.value = normalized.owner || "";
+  fields.designer.value = normalized.designer || "";
   const hasKnownGoal = !normalized.goal || state.settings.goals.includes(normalized.goal);
   fields.goal.value = hasKnownGoal ? normalized.goal || "" : "__other";
   fields.goalOther.value = hasKnownGoal ? "" : normalized.goal || "";
@@ -4591,6 +4618,7 @@ function collectPostFromForm() {
     priority: fields.priority.value,
     color: fields.color.value,
     owner: fields.owner.value.trim(),
+    designer: fields.designer.value.trim(),
     goal: fields.goal.value === "__other" ? fields.goalOther.value.trim() : fields.goal.value,
     theme: themeData.theme,
     themeOther: themeData.themeOther,
@@ -5147,7 +5175,7 @@ function exportStats() {
 
 function downloadPostsCsv(posts, filename) {
   const rows = [
-    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "goal", "theme", "themeOther", "tags", "assetLinks", "assetLink", "assets", "copy", "notes", "comments"],
+    ["id", "title", "date", "time", "platform", "format", "status", "approval", "priority", "color", "owner", "designer", "goal", "theme", "themeOther", "tags", "assetLinks", "assetLink", "assets", "copy", "notes", "comments"],
     ...posts.map((post) => [
       post.id,
       post.title,
@@ -5160,6 +5188,7 @@ function downloadPostsCsv(posts, filename) {
       post.priority,
       post.color,
       post.owner,
+      post.designer,
       post.goal,
       post.theme,
       post.themeOther,
@@ -5683,6 +5712,7 @@ function normalizePost(post) {
     priority: post.priority || "Media",
     color: isValidColor(post.color) ? post.color : pastelColors[0].value,
     owner: post.owner || "",
+    designer: post.designer || "",
     goal: post.goal || "",
     theme: post.theme || post.category || "",
     themeOther: post.themeOther || "",
@@ -5782,6 +5812,7 @@ function rowToPost(row) {
     priority: row.priority,
     color: row.color,
     owner: row.owner,
+    designer: row.designer,
     goal: row.goal,
     theme: row.theme,
     themeOther: row.themeOther,
